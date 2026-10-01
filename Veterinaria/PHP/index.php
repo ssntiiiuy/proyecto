@@ -1,3 +1,35 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['correo'])) {
+    header("Location: LoginHTML.php");
+    exit();
+}
+
+
+require_once "Conexion.php";
+
+$nombreUsuario = "Usuario";
+
+try {
+    $conexion = (new Conexion())->establecerConexion();
+
+    $sql = "SELECT nombre FROM usuarios WHERE correo_login = :correo";
+    $stmt = $conexion->prepare($sql);
+    $stmt->execute([':correo' => $_SESSION['correo']]);
+
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($usuario && !empty($usuario['nombre'])) {
+        $nombreUsuario = $usuario['nombre'];
+    }
+} catch (PDOException $e) {
+    echo "<div style='color:red; background:#fee; padding:10px; border:1px solid red; margin:10px;'>";
+    echo "<b>Error SQL en index.php:</b> " . $e->getMessage();
+    echo "</div>";
+}
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -16,18 +48,57 @@
 
 <body>
 
-<?php
-  $paginaActiva = 'citas';
-  $mostrarCarrito = true;
-  include __DIR__ . '/includes/header.php';
-  ?>
+  <header class="site-header">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid px-3 px-lg-4">
 
-  <!-- ===================== CONTENIDO ===================== -->
+        <a class="navbar-brand d-flex align-items-center gap-2" href="../PHP/index.php">
+          <img src="img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+          <span class="brand-text">Clínica<br>Veterinaria<br>SIENRA</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Abrir menú">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMain">
+          <ul class="navbar-nav mx-auto gap-lg-2">
+            <li class="nav-item"><a class="nav-link" href="#">Catálogo</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Mascotas</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Citas</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Nosotros</a></li>
+          </ul>
+
+          <ul class="navbar-nav ms-lg-3 align-items-center gap-2">
+            <li class="nav-item">
+              <a class="nav-link icon-badge" href="#" aria-label="Carrito">
+                <i class="bi bi-cart3"></i>
+              </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link icon-badge icon-badge-user" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Usuario">
+                <i class="bi bi-person-fill"></i>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                <li><span class="dropdown-item-text text-muted small"><?= htmlspecialchars($nombreUsuario) ?></span></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item" href="#">Mi perfil</a></li>
+                <li><a class="dropdown-item" href="../PHP/loginHTML.php">Cerrar sesión</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
   <main class="dashboard">
     <div class="container-lg py-4">
 
       <div class="greeting-card">
-        <h1>Hola, Jorge!</h1>
+        <h1>Hola, <?= htmlspecialchars($nombreUsuario) ?>!</h1>
       </div>
 
       <div class="alert-banner d-flex align-items-center justify-content-between flex-wrap gap-3">
@@ -40,7 +111,6 @@
 
       <div class="row g-3 mt-1">
 
-        <!-- Columna izquierda -->
         <div class="col-lg-6 d-flex flex-column gap-3">
 
           <div class="panel-card">
@@ -81,7 +151,6 @@
 
         </div>
 
-        <!-- Columna derecha -->
         <div class="col-lg-6 d-flex flex-column gap-3">
 
           <div class="panel-card flex-grow-1">
@@ -121,7 +190,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/main.js"></script>
 </body>
 
 </html>
