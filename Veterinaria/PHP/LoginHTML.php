@@ -38,11 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <nav class="navbar">
             <div class="container-fluid px-3 px-lg-4 justify-content-between">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
-                    <img src="../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+                    <img src="img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
                     <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
                 </a>
 
-                <a class="nav-link icon-badge icon-badge-user" href="loginHTML.php" aria-label="Cuenta">
+                <a class="nav-link icon-badge icon-badge-user" href="LoginHTML.php" aria-label="Cuenta">
                     <i class="bi bi-person-fill"></i>
                 </a>
             </div>
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </header>
 
     <main class="auth-main d-flex align-items-center justify-content-center">
-        <form class="auth-form" action="loginHTML.php" method="post">
+        <form class="auth-form" action="LoginHTML.php" method="post">
             <h1 class="auth-title">Iniciar sesión</h1>
 
             <?php if (!empty($error)): ?>
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn btn-cta auth-submit">Ingresar</button>
 
             <p class="auth-footer-text">
-                ¿No tenés cuenta? <a href="registroHTML.php" class="auth-link">Registrate</a>
+                ¿No tenés cuenta? <a href="RegistroHTML.php" class="auth-link">Registrate</a>
             </p>
         </form>
     </main>

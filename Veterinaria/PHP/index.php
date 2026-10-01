@@ -63,10 +63,10 @@ try {
 
         <div class="collapse navbar-collapse" id="navMain">
           <ul class="navbar-nav mx-auto gap-lg-2">
-            <li class="nav-item"><a class="nav-link" href="#">Catálogo</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Mascotas</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Citas</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Nosotros</a></li>
+            <li class="nav-item"><a class="nav-link" href="catalogo.php">Catálogo</a></li>
+            <li class="nav-item"><a class="nav-link" href="mascotas.php">Mascotas</a></li>
+            <li class="nav-item"><a class="nav-link" href="index.php">Citas</a></li>
+            <li class="nav-item"><a class="nav-link" href="nosotros.php">Nosotros</a></li>
           </ul>
 
           <ul class="navbar-nav ms-lg-3 align-items-center gap-2">
@@ -85,7 +85,7 @@ try {
                   <hr class="dropdown-divider">
                 </li>
                 <li><a class="dropdown-item" href="#">Mi perfil</a></li>
-                <li><a class="dropdown-item" href="../PHP/loginHTML.php">Cerrar sesión</a></li>
+                <li><a class="dropdown-item" href="LoginHTML.php">Cerrar sesión</a></li>
               </ul>
             </li>
           </ul>

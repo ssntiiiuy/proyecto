@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($resultado) {
             $_SESSION["correo"] = $correo;
-            header("Location: loginHTML.php");
+            header("Location: LoginHTML.php");
             exit();
         }
     }
@@ -65,11 +65,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <nav class="navbar">
             <div class="container-fluid px-3 px-lg-4 justify-content-between">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
-                    <img src="../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+                    <img src="img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
                     <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
                 </a>
 
-                <a class="nav-link icon-badge icon-badge-user" href="loginHTML.php" aria-label="Cuenta">
+                <a class="nav-link icon-badge icon-badge-user" href="LoginHTML.php" aria-label="Cuenta">
                     <i class="bi bi-person-fill"></i>
                 </a>
             </div>
@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" name="boton" class="btn btn-cta auth-submit mt-2">Crear cuenta</button>
 
             <p class="auth-footer-text mt-3 mb-0">
-                ¿Ya tenés cuenta? <a href="loginHTML.php" class="auth-link">Iniciá sesión</a>
+                ¿Ya tenés cuenta? <a href="LoginHTML.php" class="auth-link">Iniciá sesión</a>
             </p>
         </form>
     </main>
