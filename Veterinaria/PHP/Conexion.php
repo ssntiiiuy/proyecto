@@ -10,12 +10,12 @@ class Conexion
     public function establecerConexion(): PDO
     {
         if ($this->pdo !== null) {
-            echo "Conexion establecida.\n";
+            // echo "Conexion establecida.\n";
             return $this->pdo;
         }
         try {
             $this->pdo = new PDO($this->dsn, $this->usuario, $this->password);
-            echo "Conexion establecida por primera vez.\n";
+            // echo "Conexion establecida por primera vez.\n";
             return $this->pdo;
         } catch (PDOException $e) {
             throw new PDOException("Error de conexión: " . $e->getMessage());

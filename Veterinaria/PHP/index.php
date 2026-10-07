@@ -1,12 +1,6 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['correo'])) {
-    header("Location: LoginHTML.php");
-    exit();
-}
-
-
 require_once "Conexion.php";
 
 $nombreUsuario = "Usuario";

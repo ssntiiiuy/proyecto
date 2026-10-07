@@ -2,15 +2,30 @@
 require_once "Conexion.php";
 require_once "Login.php";
 
+session_start();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $correo = trim($_POST['email'] ?? '');
-    $pass   = $_POST['password'] ?? '';
+    $correo = trim($_POST['email']);
+    $pass   = $_POST['password'];
 
     $login = new Login();
     if ($login->validar($correo, $pass)) {
-        $_SESSION["correo"] = $correo;
-        header("Location: index.php");
-        exit();
+
+        $conexion = new Conexion();
+
+        $sql = "SELECT tipoUsuario FROM login WHERE correo = :correo";
+        $stmt = $conexion->establecerConexion()->prepare($sql);
+
+        $stmt->execute([':correo' => $correo]);
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($usuario['tipoUsuario'] === 'admin') {
+            header("Location: indexEncargado.php");
+        } elseif ($usuario['tipoUsuario'] === 'veterinario') {
+            header("Location: indexVeterinario.php");
+        } else {
+            header("Location: index.php");
+        }
     } else {
         $error = "Correo o contraseña incorrectos.";
     }
@@ -37,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <header class="site-header site-header-dark">
         <nav class="navbar">
             <div class="container-fluid px-3 px-lg-4 justify-content-between">
-                <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
+                <a class="navbar-brand d-flex align-items-center gap-2">
                     <img src="img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
                     <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
                 </a>

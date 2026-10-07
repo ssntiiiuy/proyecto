@@ -9,14 +9,16 @@ class Usuario
     private ?string $apellido;
     private ?string $telefono;
     private ?string $direccion;
+    private ?string $tipoUsuario;
 
-    public function __construct(?string $ci = null, ?string $nombre = null, ?string $apellido = null, ?string $telefono = null, ?string $direccion = null)
+    public function __construct(?string $ci = null, ?string $nombre = null, ?string $apellido = null, ?string $telefono = null, ?string $direccion = null, ?string $tipoUsuario = null)
     {
         $this->ci = $ci;
         $this->nombre = $nombre;
         $this->apellido = $apellido;
         $this->telefono = $telefono;
         $this->direccion = $direccion;
+        $this->tipoUsuario = $tipoUsuario;
     }
 
     public function getCi(): string
@@ -78,16 +80,17 @@ class Usuario
         echo "Dirección: " . $this->getDireccion() . "\n";
     }
 
-    public function registrar(string $ci, string $nombre, string $apellido, string $correo, string $telefono, string $direccion, string $contraseña): bool {
+    public function registrar(string $ci, string $nombre, string $apellido, string $correo, string $telefono, string $direccion, string $contraseña, string $tipoUsuario): bool {
         try {
             $conexion = (new Conexion())->establecerConexion();
 
             $passHash = password_hash($contraseña, PASSWORD_DEFAULT);
 
-            $sqlLogin = "INSERT INTO login (correo, contrasena) VALUES (:correo, :pass)";
+            $sqlLogin = "INSERT INTO login (correo, tipoUsuario, contrasena) VALUES (:correo, :tipoUsuario, :pass)";
             $stmt = $conexion->prepare($sqlLogin);
             $stmt->execute([
                 ':correo' => $correo,
+                ':tipoUsuario' => $tipoUsuario,
                 ':pass'   => $passHash
             ]);
 
@@ -100,7 +103,7 @@ class Usuario
                 ':apellido'  => $apellido,
                 ':telefono'  => $telefono,
                 ':direccion' => $direccion,
-                ':correo'    => $correo
+                ':correo'    => $correo,
             ]);
 
             return true;

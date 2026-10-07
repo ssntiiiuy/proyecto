@@ -9,29 +9,34 @@ require_once "Conexion.php";
 require_once "Login.php";
 require_once "Usuario.php";
 
+$error = "";
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $ci         = trim($_POST['ci']);
-    $nombre     = trim($_POST['nombre']);
-    $apellido   = trim($_POST['apellido']);
-    $correo     = trim($_POST['correo']);
-    $telefono   = trim($_POST['telefono']);
-    $calle1     = trim($_POST['calle1']);
-    $calle2     = trim($_POST['calle2']);
-    $direccion  = $calle1 .  " y " . $calle2;
-    $contraseña = $_POST['password'];
-    $confirmar  = $_POST['confirm_password'];
+    $ci          = trim($_POST['ci']);
+    $nombre      = trim($_POST['nombre']);
+    $apellido    = trim($_POST['apellido']);
+    $correo      = trim($_POST['correo']);
+    $telefono    = trim($_POST['telefono']);
+    $calle1      = trim($_POST['calle1']);
+    $calle2      = trim($_POST['calle2']);
+    $direccion   = $calle1 . ", " . $calle2;
+    $contraseña  = $_POST['password'];
+    $confirmar   = $_POST['confirm_password'];
+    $tipoUsuario = $_POST['tipo_usuario'];
 
     if ($contraseña !== $confirmar) {
-        echo "<script>alert('Las contraseñas no coinciden.');</script>";
+        $error = "Las contraseñas no coinciden.";
     } else {
         $usuario = new Usuario();
-        $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña);
+        $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario);
 
         if ($resultado) {
             $_SESSION["correo"] = $correo;
             header("Location: LoginHTML.php");
             exit();
+        } else {
+            $error = "No se pudo completar el registro. Verifica si el correo o la C.I. ya existen.";
         }
     }
 }
@@ -77,8 +82,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </header>
 
     <main class="auth-main d-flex align-items-center justify-content-center py-3">
-       <form class="auth-form auth-form-wide" action="RegistroHTML.php" method="post">
+        <form class="auth-form auth-form-wide" action="RegistroHTML.php" method="post">
             <h1 class="auth-title mb-3 text-center">Crear cuenta</h1>
+
+            <?php if (!empty($error)): ?>
+                <div class="alert alert-danger py-2 text-center" role="alert">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
 
             <div class="row g-2">
 
@@ -98,6 +109,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-6 mb-2">
                     <label for="apellido" class="form-label">Apellido</label>
                     <input type="text" class="form-control auth-input" id="apellido" name="apellido" placeholder="Pérez" required>
+                </div>
+
+                <div class="col-12 mb-2">
+                    <label for="Tipo de usuario" class="form-label">Tipo de usuario</label>
+                    <select class="form-control auth-input" id="tipo_usuario" name="tipo_usuario" required>
+                        <option value="">Seleccionar</option>
+                        <option value="cliente">Cliente</option>
+                        <option value="empleado">Empleado</option>
+                        <option value="admin">Admin</option>
+                    </select>
                 </div>
 
                 <div class="col-6 mb-2">
