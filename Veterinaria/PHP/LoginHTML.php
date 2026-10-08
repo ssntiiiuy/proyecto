@@ -82,10 +82,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-2">
                 <label for="password" class="form-label">Contraseña</label>
                 <div class="input-group">
-                    <input type="password" class="form-control auth-input" id="password" name="password" placeholder="Ingresa tu contraseña" required>
-                    <button class="btn auth-eye-btn" type="button" id="togglePassword" aria-label="Mostrar contraseña">
-                        <i class="bi bi-eye" id="toggleIcon"></i>
-                    </button>
+                    <input type="checkbox" id="togglePassword" class="d-none">
+
+                    <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="Ingresa tu contraseña" required>
+
+                    <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
+                        <i class="bi bi-eye icon-eye"></i>
+                        <i class="bi bi-eye-slash icon-eye-slash"></i>
+                    </label>
                 </div>
             </div>
 

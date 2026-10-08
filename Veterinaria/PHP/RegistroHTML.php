@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -95,11 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="col-6 mb-2">
                     <label for="ci" class="form-label">C.I.</label>
-                    <input type="text" class="form-control auth-input" id="ci" name="ci" placeholder="1.234.567-8" required>
+                    <input type="text" class="form-control auth-input" id="ci" name="ci" placeholder="1.234.567-8" pattern="[0-9]{8}" required>
                 </div>
                 <div class="col-6 mb-2">
                     <label for="telefono" class="form-label">Teléfono</label>
-                    <input type="tel" class="form-control auth-input" id="telefono" name="telefono" placeholder="097 654 321" required>
+                    <input type="tel" class="form-control auth-input" id="telefono" name="telefono" placeholder="097 654 321" pattern="[0-9]{9}" required>
                 </div>
 
                 <div class="col-6 mb-2">
@@ -135,21 +136,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="email" class="form-control auth-input" id="correo" name="correo" placeholder="jorgeperez@gmail.com" required>
                 </div>
 
-                <div class="col-6 mb-3">
+                <div class="col-6 mb-2">
                     <label for="password" class="form-label">Contraseña</label>
-                    <input type="password" class="form-control auth-input" id="password" name="password" placeholder="*******" required>
+                    <div class="input-group">
+                        <input type="checkbox" id="togglePassword" class="d-none toggle-check">
+                        <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
+                        <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
+                            <i class="bi bi-eye icon-eye"></i>
+                            <i class="bi bi-eye-slash icon-eye-slash"></i>
+                        </label>
+                    </div>
                 </div>
-                <div class="col-6 mb-3">
+
+                <div class="col-6 mb-2">
                     <label for="confirm_password" class="form-label">Repetir contraseña</label>
-                    <input type="password" class="form-control auth-input" id="confirm_password" name="confirm_password" placeholder="*******" required>
+                    <div class="input-group">
+                        <input type="checkbox" id="toggleConfirmPassword" class="d-none toggle-check">
+                        <input type="text" class="form-control auth-input input-password" id="confirm_password" name="confirm_password" placeholder="******" required>
+                        <label for="toggleConfirmPassword" class="btn auth-eye-btn d-flex align-items-center">
+                            <i class="bi bi-eye icon-eye"></i>
+                            <i class="bi bi-eye-slash icon-eye-slash"></i>
+                        </label>
+                    </div>
                 </div>
-            </div>
 
-            <button type="submit" name="boton" class="btn btn-cta auth-submit mt-2">Crear cuenta</button>
+                <button type="submit" name="boton" class="btn btn-cta auth-submit mt-2">Crear cuenta</button>
 
-            <p class="auth-footer-text mt-3 mb-0">
-                ¿Ya tenés cuenta? <a href="LoginHTML.php" class="auth-link">Iniciá sesión</a>
-            </p>
+                <p class="auth-footer-text mt-3 mb-0">
+                    ¿Ya tenés cuenta? <a href="LoginHTML.php" class="auth-link">Iniciá sesión</a>
+                </p>
         </form>
     </main>
 

@@ -19,7 +19,6 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* ===== Header ===== */
 .site-header {
   background-color: var(--sienra-header);
 }
@@ -829,3 +828,30 @@ body {
   border: 0;
   border-radius: 8px;
 }
+
+    .auth-form-wide {
+        width: 100%;
+        max-width: 560px;
+    }
+
+    .input-password {
+        -webkit-text-security: disc;
+        text-security: disc;
+    }
+
+    .toggle-check:checked ~ .input-password {
+        -webkit-text-security: none;
+        text-security: none;
+    }
+
+    .icon-eye-slash {
+        display: none;
+    }
+
+    .toggle-check:checked ~ label .icon-eye {
+        display: none;
+    }
+
+    .toggle-check:checked ~ label .icon-eye-slash {
+        display: inline-block;
+    }
