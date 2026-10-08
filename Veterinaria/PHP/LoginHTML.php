@@ -79,19 +79,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="email" class="form-control auth-input" id="email" name="email" placeholder="nombre@correo.com" required>
             </div>
 
-            <div class="mb-2">
-                <label for="password" class="form-label">Contraseña</label>
-                <div class="input-group">
-                    <input type="checkbox" id="togglePassword" class="d-none">
-
-                    <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="Ingresa tu contraseña" required>
-
-                    <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
-                        <i class="bi bi-eye icon-eye"></i>
-                        <i class="bi bi-eye-slash icon-eye-slash"></i>
-                    </label>
+            <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <div class="input-group">
+                        <input type="checkbox" id="togglePassword" class="d-none toggle-check">
+                        <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
+                        <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
+                            <i class="bi bi-eye icon-eye"></i>
+                            <i class="bi bi-eye-slash icon-eye-slash"></i>
+                        </label>
+                    </div>
                 </div>
-            </div>
 
             <div class="mb-4">
                 <a href="#" class="auth-link">Olvidé mi contraseña</a>
