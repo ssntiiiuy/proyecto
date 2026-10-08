@@ -855,3 +855,453 @@ body {
     .toggle-check:checked ~ label .icon-eye-slash {
         display: inline-block;
     }
+/* Admin */
+.admin-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-contenido {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* el offcanvas-lg queda transparente en pantallas grandes, por eso el fondo va en el contenedor */
+.admin-sidebar .offcanvas-lg {
+  --bs-offcanvas-bg: var(--sienra-ink);
+  --bs-offcanvas-width: 240px;
+  color: var(--sienra-text);
+}
+
+.admin-sidebar .offcanvas-body {
+  width: 100%;
+  padding: 0.5rem 0.75rem 1.5rem;
+}
+
+@media (min-width: 992px) {
+  .admin-sidebar {
+    flex: 0 0 240px;
+    background-color: var(--sienra-ink);
+  }
+  .admin-sidebar .offcanvas-lg {
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+}
+
+.admin-brand {
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 0.5rem;
+  text-decoration: none;
+}
+
+.admin-brand .brand-logo {
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.admin-brand-text {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #ffffff;
+}
+
+.admin-sidebar-divider {
+  border-color: rgba(255, 255, 255, 0.15);
+  margin: 0.5rem 0;
+}
+
+.admin-sidebar-heading {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sienra-text-muted);
+  margin: 0.5rem 0.75rem 0.25rem;
+}
+
+.admin-sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--sienra-text-muted);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+}
+
+.admin-sidebar .nav-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.admin-sidebar .nav-link.active {
+  color: #ffffff;
+  background-color: var(--sienra-panel-2);
+}
+
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: var(--sienra-header);
+  color: var(--sienra-ink);
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+@media (min-width: 992px) {
+  .admin-topbar {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+.admin-topbar-toggle {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--sienra-ink);
+  padding: 0.25rem 0.5rem;
+}
+
+.admin-topbar-titulo {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.admin-usuario {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--sienra-ink);
+  text-decoration: none;
+}
+
+/* cards de resumen con el borde de color a la izquierda, como en SB Admin 2 */
+.admin-stat {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background-color: var(--sienra-panel);
+  border-left: 4px solid var(--admin-color);
+  border-radius: 10px;
+  padding: 1.1rem 1.3rem;
+}
+
+.admin-stat-info {
+  --admin-color: #4A8FD4;
+}
+
+.admin-stat-danger {
+  --admin-color: #D46A6A;
+}
+
+.admin-stat-warning {
+  --admin-color: #D9A441;
+}
+
+.admin-stat-success {
+  --admin-color: #3E9E62;
+}
+
+.admin-stat-label {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--admin-color);
+  margin-bottom: 0.25rem;
+}
+
+.admin-stat-valor {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #ffffff;
+  margin: 0;
+}
+
+.admin-stat > i {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.admin-card {
+  background-color: var(--sienra-panel);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.admin-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-card-header h2 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #ffffff;
+  margin: 0;
+}
+
+.admin-card-link {
+  font-size: 0.85rem;
+  color: var(--sienra-text-muted);
+}
+
+.admin-card-link:hover {
+  color: #ffffff;
+}
+
+.admin-tabla {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--sienra-text);
+  --bs-table-border-color: rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.admin-tabla thead th {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--sienra-text-muted);
+}
+
+.admin-tabla th,
+.admin-tabla td {
+  padding: 0.75rem 0.9rem;
+  vertical-align: middle;
+}
+
+/* botones y modal que se repiten en las pantallas de gestión */
+.admin-filtro {
+  width: auto;
+  background-color: var(--sienra-panel-2);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.admin-btn-agregar {
+  background-color: #2E8B4F;
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+}
+
+.admin-btn-agregar:hover {
+  background-color: #257a42;
+  color: #ffffff;
+}
+
+.admin-btn-cancelar {
+  background-color: transparent;
+  color: var(--sienra-text);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+}
+
+.admin-btn-cancelar:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.admin-btn-icono {
+  color: var(--sienra-text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 0.2rem 0.45rem;
+}
+
+.admin-btn-icono:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-btn-eliminar:hover {
+  color: var(--sienra-danger-text);
+  border-color: var(--sienra-danger-text);
+}
+
+.admin-modal .modal-content {
+  background-color: var(--sienra-panel);
+  color: var(--sienra-text);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+}
+
+.admin-modal .modal-header,
+.admin-modal .modal-footer {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-modal .modal-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.admin-modal .form-label {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--sienra-text-muted);
+}
+
+.admin-modal .form-control,
+.admin-modal .form-select {
+  background-color: var(--sienra-bg);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.admin-tabs {
+  gap: 0.25rem;
+}
+
+.admin-tabs .nav-link {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--sienra-text-muted);
+  border-radius: 6px;
+  padding: 0.35rem 0.9rem;
+}
+
+.admin-tabs .nav-link:hover {
+  color: #ffffff;
+}
+
+.admin-tabs .nav-link.active {
+  color: #ffffff;
+  background-color: var(--sienra-panel-2);
+}
+
+.admin-aclaracion {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
+.admin-subtexto {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--sienra-text-muted);
+}
+
+/* descripciones largas: que bajen de línea en vez de estirar la tabla */
+.admin-celda-texto {
+  white-space: normal;
+  min-width: 220px;
+  max-width: 340px;
+}
+
+.badge-tipo-consulta {
+  background-color: var(--sienra-info);
+  color: #BFD8F2;
+}
+
+.badge-tipo-vacunacion {
+  background-color: var(--sienra-success);
+  color: var(--sienra-success-text);
+}
+
+.badge-tipo-peluqueria {
+  background-color: #5A4A1F;
+  color: #F2D9A0;
+}
+
+.badge-tipo-cirugia {
+  background-color: var(--sienra-danger);
+  color: var(--sienra-danger-text);
+}
+
+.admin-sin-dato {
+  color: var(--sienra-text-muted);
+}
+
+.admin-celda-corta {
+  white-space: normal;
+  min-width: 130px;
+}
+
+.admin-badge-abajo {
+  display: block;
+  width: fit-content;
+  margin-top: 0.25rem;
+}
+
+.admin-factura-datos {
+  padding: 1.1rem 1.3rem 0.4rem;
+}
+
+.admin-dato-label {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sienra-text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.admin-dato-valor {
+  color: #ffffff;
+}
+
+.admin-factura-totales {
+  margin: 0 0 0 auto;
+  max-width: 320px;
+  padding: 1rem 1.3rem 1.2rem;
+}
+
+.admin-factura-totales div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.admin-factura-totales dt {
+  font-weight: 500;
+  color: var(--sienra-text-muted);
+}
+
+.admin-factura-totales dd {
+  margin: 0;
+}
+
+.admin-factura-total {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin-top: 0.4rem;
+  padding-top: 0.6rem !important;
+}
+
+.admin-factura-total dt,
+.admin-factura-total dd {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #ffffff;
+}
