@@ -1,3 +1,36 @@
+<?php
+require_once __DIR__ . '/../Conexion.php';
+
+try {
+  $conexion = (new Conexion())->establecerConexion();
+
+  $sqlClientes = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion, h.Correo, l.FechaCreado,
+                          GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
+                   FROM CLIENTE c
+                   INNER JOIN USUARIO u ON c.CI = u.CI
+                   INNER JOIN HACE h ON u.CI = h.CI
+                   INNER JOIN LOGIN l ON h.Correo = l.Correo
+                   LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
+                   GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, h.Correo, l.FechaCreado";
+  $stmtClientes = $conexion->query($sqlClientes);
+  $clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
+
+  $sqlEmpleados = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado,
+                           GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
+                    FROM EMPLEADO e
+                    INNER JOIN USUARIO u ON e.CI = u.CI
+                    INNER JOIN HACE h ON u.CI = h.CI
+                    INNER JOIN LOGIN l ON h.Correo = l.Correo
+                    LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
+                    GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado";
+  $stmtEmpleados = $conexion->query($sqlEmpleados);
+  $empleados = $stmtEmpleados->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+  echo "Error al cargar usuarios: " . $e->getMessage();
+  $clientes = [];
+  $empleados = [];
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -32,7 +65,6 @@
 
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
-            <!-- las pestañas las maneja el bundle de Bootstrap -->
             <ul class="nav admin-tabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tabClientes" data-bs-toggle="tab" data-bs-target="#panelClientes" type="button" role="tab" aria-controls="panelClientes" aria-selected="true">Clientes</button>
@@ -48,132 +80,72 @@
 
           <div class="tab-content">
             <div class="tab-pane fade show active" id="panelClientes" role="tabpanel" aria-labelledby="tabClientes" tabindex="0">
-          <div class="table-responsive">
-            <table class="table admin-tabla mb-0">
-              <thead>
-                <tr>
-                  <th scope="col">C.I.</th>
-                  <th scope="col">Nombre</th>
-                  <th scope="col" class="d-none d-xxl-table-cell">Dirección</th>
-                  <th scope="col">Teléfono</th>
-                  <th scope="col">Correo</th>
-                  <th scope="col">Fecha de alta</th>
-                  <th scope="col" class="text-end">Acciones</th>
-                </tr>
-              </thead>
-              <!-- TODO BD: USUARIO + CLIENTE, teléfonos de TELEFONO_USUARIO y correo/fecha de LOGIN vía HACE -->
-              <tbody>
-                <tr>
-                  <td>4.567.890-1</td>
-                  <td>Jorge Pérez</td>
-                  <td class="d-none d-xxl-table-cell">18 de Julio 1450</td>
-                  <td>097 654 321</td>
-                  <td>jorgeperez@gmail.com</td>
-                  <td>12/03/2025</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>3.876.543-2</td>
-                  <td>María González</td>
-                  <td class="d-none d-xxl-table-cell">Sarandí 830</td>
-                  <td>099 123 456<br>4222 3344</td>
-                  <td>mariagonzalez@hotmail.com</td>
-                  <td>28/05/2025</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>5.123.456-7</td>
-                  <td>Lucía Fernández</td>
-                  <td class="d-none d-xxl-table-cell">Ventura Alegre 512</td>
-                  <td>091 987 654</td>
-                  <td>luciaf@gmail.com</td>
-                  <td>02/08/2026</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>4.234.567-8</td>
-                  <td>Martín Silva</td>
-                  <td class="d-none d-xxl-table-cell">Florida 1023</td>
-                  <td>098 456 789</td>
-                  <td>martinsilva@gmail.com</td>
-                  <td>15/09/2026</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+              <div class="table-responsive">
+                <table class="table admin-tabla mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col">C.I.</th>
+                      <th scope="col">Nombre</th>
+                      <th scope="col" class="d-none d-xxl-table-cell">Dirección</th>
+                      <th scope="col">Teléfono</th>
+                      <th scope="col">Correo</th>
+                      <th scope="col">Fecha de alta</th>
+                      <th scope="col" class="text-end">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($clientes as $cli): ?>
+                      <tr>
+                        <td><?= htmlspecialchars($cli['CI']) ?></td>
+                        <td><?= htmlspecialchars($cli['Nombre'] . ' ' . $cli['Apellido']) ?></td>
+                        <td class="d-none d-xxl-table-cell"><?= htmlspecialchars($cli['Direccion'] ?? 'Sin dirección') ?></td>
+                        <td><?= $cli['Telefonos'] ?? 'Sin teléfono' ?></td>
+                        <td><?= htmlspecialchars($cli['Correo']) ?></td>
+                        <td><?= date('d/m/Y', strtotime($cli['FechaCreado'])) ?></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
+                          <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
             </div>
             <div class="tab-pane fade" id="panelEmpleados" role="tabpanel" aria-labelledby="tabEmpleados" tabindex="0">
-          <div class="table-responsive">
-            <table class="table admin-tabla mb-0">
-              <thead>
-                <tr>
-                  <th scope="col">C.I.</th>
-                  <th scope="col">Nombre</th>
-                  <th scope="col" class="d-none d-xxl-table-cell">Dirección</th>
-                  <th scope="col">Teléfono</th>
-                  <th scope="col">Correo</th>
-                  <th scope="col">Rol</th>
-                  <th scope="col">Fecha de alta</th>
-                  <th scope="col" class="text-end">Acciones</th>
-                </tr>
-              </thead>
-              <!-- TODO BD: USUARIO + EMPLEADO (Rol), teléfonos y correo/fecha igual que clientes -->
-              <tbody>
-                <tr>
-                  <td>3.456.789-0</td>
-                  <td>Ana Rodríguez</td>
-                  <td class="d-none d-xxl-table-cell">Dodera 745</td>
-                  <td>099 888 777</td>
-                  <td>ana.rodriguez@sienra.com.uy</td>
-                  <td>Encargada</td>
-                  <td>10/01/2024</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>2.987.654-3</td>
-                  <td>Pablo Méndez</td>
-                  <td class="d-none d-xxl-table-cell">Rincón 980</td>
-                  <td>094 321 654</td>
-                  <td>pablo.mendez@sienra.com.uy</td>
-                  <td>Veterinario</td>
-                  <td>10/01/2024</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>4.876.543-1</td>
-                  <td>Carolina Díaz</td>
-                  <td class="d-none d-xxl-table-cell">Joaquín de Viana 640</td>
-                  <td>092 555 111</td>
-                  <td>carolina.diaz@sienra.com.uy</td>
-                  <td>Peluquera</td>
-                  <td>03/06/2025</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+              <div class="table-responsive">
+                <table class="table admin-tabla mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col">C.I.</th>
+                      <th scope="col">Nombre</th>
+                      <th scope="col" class="d-none d-xxl-table-cell">Dirección</th>
+                      <th scope="col">Teléfono</th>
+                      <th scope="col">Correo</th>
+                      <th scope="col">Rol</th>
+                      <th scope="col">Fecha de alta</th>
+                      <th scope="col" class="text-end">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($empleados as $emp): ?>
+                      <tr>
+                        <td><?= htmlspecialchars($emp['CI']) ?></td>
+                        <td><?= htmlspecialchars($emp['Nombre'] . ' ' . $emp['Apellido']) ?></td>
+                        <td class="d-none d-xxl-table-cell"><?= htmlspecialchars($emp['Direccion']) ?></td>
+                        <td><?= $emp['Telefonos'] ?></td>
+                        <td><?= htmlspecialchars($emp['Correo']) ?></td>
+                        <td><?= htmlspecialchars($emp['Rol'] ?? 'Empleado') ?></td>
+                        <td><?= date('d/m/Y', strtotime($emp['FechaCreado'])) ?></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
+                          <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

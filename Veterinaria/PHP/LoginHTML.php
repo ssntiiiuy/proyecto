@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($usuario['tipoUsuario'] === 'admin') {
-            header("Location: indexEncargado.php");
+            header("Location: ../PHP/admin/index.php");
         } elseif ($usuario['tipoUsuario'] === 'veterinario') {
             header("Location: indexVeterinario.php");
         } else {

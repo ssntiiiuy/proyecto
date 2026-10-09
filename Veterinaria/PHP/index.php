@@ -6,21 +6,22 @@ require_once "Conexion.php";
 $nombreUsuario = "Usuario";
 
 try {
-    $conexion = (new Conexion())->establecerConexion();
+  $conexion = (new Conexion())->establecerConexion();
 
-    $sql = "SELECT nombre FROM usuario WHERE correo_login = :correo"; // esto hay que cambiarlo por las nuevas tablas
-    $stmt = $conexion->prepare($sql);
-    $stmt->execute([':correo' => $_SESSION['correo']]);
+  $sql = "SELECT usuario.Nombre FROM USUARIO INNER JOIN HACE ON usuario.CI = hace.CI WHERE hace.Correo = :correo";
 
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+  $stmt = $conexion->prepare($sql);
+  $stmt->execute([':correo' => $_SESSION['correo']]);
 
-    if ($usuario && !empty($usuario['nombre'])) {
-        $nombreUsuario = $usuario['nombre'];
+  $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  if ($usuario) {
+        $nombreUsuario = $usuario['Nombre'];
     }
 } catch (PDOException $e) {
-    echo "<div style='color:red; background:#fee; padding:10px; border:1px solid red; margin:10px;'>";
-    echo "<b>Error SQL en index.php:</b> " . $e->getMessage();
-    echo "</div>";
+  echo "<div style='color:red; background:#fee; padding:10px; border:1px solid red; margin:10px;'>";
+  echo "<b>Error SQL en index.php:</b> " . $e->getMessage();
+  echo "</div>";
 }
 ?>
 
