@@ -37,15 +37,15 @@ class Login
         try {
             $conectar = (new Conexion())->establecerConexion();
 
-            $sqlquery = "SELECT * FROM login WHERE correo = :correo";
+            $sqlquery = "SELECT * FROM login WHERE Correo = :correo";
             $statement = $conectar->prepare($sqlquery);
             $statement->execute([":correo" => $correo]);
 
             $userFromBd = $statement->fetch(PDO::FETCH_ASSOC);
 
             if ($userFromBd) {
-                
-                $hashEnBD = $userFromBd['contrasena'];
+
+                $hashEnBD = $userFromBd['Contraseña'];
 
                 if (password_verify($contraseña, $hashEnBD)) {
                     return true;

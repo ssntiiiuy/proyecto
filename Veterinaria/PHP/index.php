@@ -8,7 +8,7 @@ $nombreUsuario = "Usuario";
 try {
     $conexion = (new Conexion())->establecerConexion();
 
-    $sql = "SELECT nombre FROM usuarios WHERE correo_login = :correo";
+    $sql = "SELECT nombre FROM usuario WHERE correo_login = :correo"; // esto hay que cambiarlo por las nuevas tablas
     $stmt = $conexion->prepare($sql);
     $stmt->execute([':correo' => $_SESSION['correo']]);
 

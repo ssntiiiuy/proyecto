@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $conexion = new Conexion();
 
-        $sql = "SELECT tipoUsuario FROM login WHERE correo = :correo";
+        $sql = "SELECT tipoUsuario FROM login WHERE Correo = :correo";
         $stmt = $conexion->establecerConexion()->prepare($sql);
 
         $stmt->execute([':correo' => $correo]);

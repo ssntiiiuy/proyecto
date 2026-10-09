@@ -80,32 +80,62 @@ class Usuario
         echo "Dirección: " . $this->getDireccion() . "\n";
     }
 
-    public function registrar(string $ci, string $nombre, string $apellido, string $correo, string $telefono, string $direccion, string $contraseña, string $tipoUsuario): bool {
+    public function registrar(string $ci, string $nombre, string $apellido, string $correo, string $telefono, string $direccion, string $contraseña, string $tipoUsuario): bool
+    {
         try {
             $conexion = (new Conexion())->establecerConexion();
 
             $passHash = password_hash($contraseña, PASSWORD_DEFAULT);
 
-            $sqlLogin = "INSERT INTO login (correo, tipoUsuario, contrasena) VALUES (:correo, :tipoUsuario, :pass)";
-            $stmt = $conexion->prepare($sqlLogin);
-            $stmt->execute([
-                ':correo' => $correo,
+            $sqlLogin = "INSERT INTO LOGIN (Correo, Contraseña, TipoUsuario, FechaCreado)
+                     VALUES (:correo, :pass, :tipoUsuario, :fechaCreado)";
+            $stmtLogin = $conexion->prepare($sqlLogin);
+            $stmtLogin->execute([
+                ':correo'      => $correo,
+                ':pass'        => $passHash,
                 ':tipoUsuario' => $tipoUsuario,
-                ':pass'   => $passHash
+                ':fechaCreado' => date('Y-m-d-H:i:s')
             ]);
 
-            $sqlUsuario = "INSERT INTO usuarios (ci, nombre, apellido, telefono, direccion, correo_login)
-                           VALUES (:ci, :nombre, :apellido, :telefono, :direccion, :correo)";
+            $sqlUsuario = "INSERT INTO USUARIO (CI, Nombre, Apellido, Direccion)
+                       VALUES (:ci, :nombre, :apellido, :direccion)";
             $stmtUsuario = $conexion->prepare($sqlUsuario);
             $stmtUsuario->execute([
                 ':ci'        => $ci,
                 ':nombre'    => $nombre,
                 ':apellido'  => $apellido,
-                ':telefono'  => $telefono,
-                ':direccion' => $direccion,
-                ':correo'    => $correo,
+                ':direccion' => $direccion
             ]);
 
+            $sqlHace = "INSERT INTO HACE (Correo, CI) VALUES (:correo, :ci)";
+            $stmtHace = $conexion->prepare($sqlHace);
+            $stmtHace->execute([
+                ':correo' => $correo,
+                ':ci'     => $ci
+            ]);
+
+            $sqlTel = "INSERT INTO TELEFONO_USUARIO (CI, numTelUsuario) VALUES (:ci, :telefono)";
+            $stmtTel = $conexion->prepare($sqlTel);
+            $stmtTel->execute([
+                ':ci'       => $ci,
+                ':telefono' => $telefono
+            ]);
+
+
+            if ($tipoUsuario === 'empleado' || $tipoUsuario === 'admin') {
+                $sqlEmpleado = "INSERT INTO EMPLEADO (CI, Rol) VALUES (:ci, :rol)";
+                $stmtEmpleado = $conexion->prepare($sqlEmpleado);
+                $stmtEmpleado->execute([
+                    ':ci'  => $ci,
+                    ':rol' => $tipoUsuario
+                ]);
+            } else {
+                $sqlCliente = "INSERT INTO CLIENTE (CI) VALUES (:ci)";
+                $stmtCliente = $conexion->prepare($sqlCliente);
+                $stmtCliente->execute([
+                    ':ci' => $ci
+                ]);
+            }
             return true;
         } catch (PDOException $e) {
             return false;
