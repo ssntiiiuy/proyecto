@@ -1,36 +1,46 @@
 <?php
 require_once __DIR__ . '/../Conexion.php';
+require_once __DIR__ . '/../Usuario.php';
 
-try {
-  $conexion = (new Conexion())->establecerConexion();
+$datosUsuarios = Usuario::listadoUsuarios();
 
-  $sqlClientes = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion, h.Correo, l.FechaCreado,
-                          GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
-                   FROM CLIENTE c
-                   INNER JOIN USUARIO u ON c.CI = u.CI
-                   INNER JOIN HACE h ON u.CI = h.CI
-                   INNER JOIN LOGIN l ON h.Correo = l.Correo
-                   LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
-                   GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, h.Correo, l.FechaCreado";
-  $stmtClientes = $conexion->query($sqlClientes);
-  $clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
+/* funcion para guardar los datos */
+$clientes = $datosUsuarios['clientes'];
+$empleados = $datosUsuarios['empleados'];
 
-  $sqlEmpleados = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado,
-                           GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
-                    FROM EMPLEADO e
-                    INNER JOIN USUARIO u ON e.CI = u.CI
-                    INNER JOIN HACE h ON u.CI = h.CI
-                    INNER JOIN LOGIN l ON h.Correo = l.Correo
-                    LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
-                    GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado";
-  $stmtEmpleados = $conexion->query($sqlEmpleados);
-  $empleados = $stmtEmpleados->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-  echo "Error al cargar usuarios: " . $e->getMessage();
-  $clientes = [];
-  $empleados = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  $ci          = trim($_POST['ci']);
+  $nombre      = trim($_POST['nombre']);
+  $apellido    = trim($_POST['apellido']);
+  $correo      = trim($_POST['correo']);
+  $telefono    = trim($_POST['telefono']);
+  $direccion   = trim($_POST['direccion']);
+  $contraseña  = $_POST['contrasena'];
+  $tipoUsuario = $_POST['tipo_usuario'];
+
+  $usuario = new Usuario();
+  $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario);
+
+  if ($resultado) {
+    $_SESSION["correo"] = $correo;
+    header("Location: usuarios.php");
+    exit();
+  } else {
+    $error = "No se pudo completar el registro. Verifica si el correo o la C.I. ya existen.";
+    /* para que no se borren los datos */
+    $_POST['ci'] = $ci;
+    $_POST['nombre'] = $nombre;
+    $_POST['apellido'] = $apellido;
+    $_POST['correo'] = $correo;
+    $_POST['telefono'] = $telefono;
+    $_POST['direccion'] = $direccion;
+    $_POST['tipo_usuario'] = $tipoUsuario;
+  }
+
+
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -63,6 +73,7 @@ try {
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
+        <!-- listado de usuarios -->
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <ul class="nav admin-tabs" role="tablist">
@@ -94,12 +105,14 @@ try {
                     </tr>
                   </thead>
                   <tbody>
+
                     <?php foreach ($clientes as $cli): ?>
+
                       <tr>
                         <td><?= htmlspecialchars($cli['CI']) ?></td>
                         <td><?= htmlspecialchars($cli['Nombre'] . ' ' . $cli['Apellido']) ?></td>
-                        <td class="d-none d-xxl-table-cell"><?= htmlspecialchars($cli['Direccion'] ?? 'Sin dirección') ?></td>
-                        <td><?= $cli['Telefonos'] ?? 'Sin teléfono' ?></td>
+                        <td class="d-none d-xxl-table-cell"><?= htmlspecialchars($cli['Direccion']) ?></td>
+                        <td><?= $cli['Telefonos'] ?></td>
                         <td><?= htmlspecialchars($cli['Correo']) ?></td>
                         <td><?= date('d/m/Y', strtotime($cli['FechaCreado'])) ?></td>
                         <td class="text-end">
@@ -128,7 +141,11 @@ try {
                     </tr>
                   </thead>
                   <tbody>
-                    <?php foreach ($empleados as $emp): ?>
+
+                    <?php
+                    Usuario::ListadoUsuarios($empleados);
+                    foreach ($empleados as $emp):
+                    ?>
                       <tr>
                         <td><?= htmlspecialchars($emp['CI']) ?></td>
                         <td><?= htmlspecialchars($emp['Nombre'] . ' ' . $emp['Apellido']) ?></td>
@@ -154,7 +171,7 @@ try {
     </div>
   </div>
 
-  <!-- modal para agregar usuario, por ahora no guarda nada -->
+  <!-- Agregar usuario -->
   <div class="modal fade admin-modal" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioTitulo" aria-hidden="true" data-bs-theme="dark">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <form class="modal-content" action="#" method="post">
@@ -165,36 +182,36 @@ try {
         <div class="modal-body">
           <div class="row g-3">
             <div class="col-sm-6">
-              <label class="form-label" for="CI">C.I.</label>
-              <input class="form-control" type="text" id="CI" name="CI" placeholder="45678901" inputmode="numeric" pattern="[0-9]{7,8}" required>
+              <label class="form-label" for="ci">C.I.</label>
+              <input class="form-control" type="text" id="ci" name="ci" placeholder="45678901" inputmode="numeric" pattern="[0-9]{7,8}" required>
             </div>
             <div class="col-sm-6">
-              <label class="form-label" for="numTelUsuario">Teléfono</label>
-              <input class="form-control" type="tel" id="numTelUsuario" name="numTelUsuario" placeholder="097 654 321" required>
+              <label class="form-label" for="telefono">Teléfono</label>
+              <input class="form-control" type="tel" id="telefono" name="telefono" placeholder="097 654 321" required>
             </div>
             <div class="col-sm-6">
-              <label class="form-label" for="Nombre">Nombre</label>
-              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Jorge" required>
+              <label class="form-label" for="nombre">Nombre</label>
+              <input class="form-control" type="text" id="nombre" name="nombre" placeholder="Jorge" required>
             </div>
             <div class="col-sm-6">
-              <label class="form-label" for="Apellido">Apellido</label>
-              <input class="form-control" type="text" id="Apellido" name="Apellido" placeholder="Pérez" required>
+              <label class="form-label" for="apellido">Apellido</label>
+              <input class="form-control" type="text" id="apellido" name="apellido" placeholder="Pérez" required>
             </div>
             <div class="col-12">
-              <label class="form-label" for="Direccion">Dirección</label>
-              <input class="form-control" type="text" id="Direccion" name="Direccion" placeholder="18 de Julio 1450">
+              <label class="form-label" for="direccion">Dirección</label>
+              <input class="form-control" type="text" id="direccion" name="direccion" placeholder="18 de Julio 1450">
             </div>
             <div class="col-sm-6">
-              <label class="form-label" for="Correo">Correo</label>
-              <input class="form-control" type="email" id="Correo" name="Correo" placeholder="nombre@correo.com" required>
+              <label class="form-label" for="correo">Correo</label>
+              <input class="form-control" type="email" id="correo" name="correo" placeholder="nombre@correo.com" required>
             </div>
             <div class="col-sm-6">
-              <label class="form-label" for="Contrasena">Contraseña</label>
-              <input class="form-control" type="password" id="Contrasena" name="Contraseña" required>
+              <label class="form-label" for="contrasena">Contraseña</label>
+              <input class="form-control" type="password" id="contrasena" name="contrasena" required>
             </div>
             <div class="col-sm-6">
-              <label class="form-label" for="TipoUsuario">Tipo de usuario</label>
-              <select class="form-select" id="TipoUsuario" name="TipoUsuario" required>
+              <label class="form-label" for="tipo_usuario">Tipo de usuario</label>
+              <select class="form-select" id="tipo_usuario" name="tipo_usuario" required>
                 <option value="" selected disabled>Elegir tipo</option>
                 <option value="cliente">Cliente</option>
                 <option value="empleado">Empleado</option>
@@ -209,7 +226,7 @@ try {
         </div>
         <div class="modal-footer">
           <button type="button" class="btn admin-btn-cancelar" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn admin-btn-agregar">Guardar</button>
+          <button type="submit" class="btn admin-btn-agregar" name="guardar">Guardar</button>
         </div>
       </form>
     </div>

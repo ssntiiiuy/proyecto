@@ -71,13 +71,44 @@ class Usuario
         $this->direccion = $direccion;
     }
 
-    public function presentarse(): void
+    public static function listadoUsuarios(): array
     {
-        echo "CI: " . $this->getCi() . "\n";
-        echo "Nombre: " . $this->getNombre() . "\n";
-        echo "Apellido: " . $this->getApellido() . "\n";
-        echo "Teléfono: " . $this->getTelefono() . "\n";
-        echo "Dirección: " . $this->getDireccion() . "\n";
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sqlClientes = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion, h.Correo, l.FechaCreado,
+                          GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
+                   FROM CLIENTE c
+                   INNER JOIN USUARIO u ON c.CI = u.CI
+                   INNER JOIN HACE h ON u.CI = h.CI
+                   INNER JOIN LOGIN l ON h.Correo = l.Correo
+                   LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
+                   GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, h.Correo, l.FechaCreado";
+            $stmtClientes = $conexion->query($sqlClientes);
+            $clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
+
+            $sqlEmpleados = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado,
+                           GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
+                    FROM EMPLEADO e
+                    INNER JOIN USUARIO u ON e.CI = u.CI
+                    INNER JOIN HACE h ON u.CI = h.CI
+                    INNER JOIN LOGIN l ON h.Correo = l.Correo
+                    LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
+                    GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado";
+            $stmtEmpleados = $conexion->query($sqlEmpleados);
+            $empleados = $stmtEmpleados->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'clientes' => $clientes,
+                'empleados' => $empleados
+            ];
+        } catch (PDOException $e) {
+            echo "Error al cargar usuarios: " . $e->getMessage();
+            return [
+                'clientes' => [],
+                'empleados' => []
+            ];
+        }
     }
 
     public function registrar(string $ci, string $nombre, string $apellido, string $correo, string $telefono, string $direccion, string $contraseña, string $tipoUsuario): bool
@@ -127,7 +158,7 @@ class Usuario
                 $stmtEmpleado = $conexion->prepare($sqlEmpleado);
                 $stmtEmpleado->execute([
                     ':ci'  => $ci,
-                    ':rol' => $tipoUsuario
+                    ':rol' => $tipoUsuario /* TIPO USUARIO NO ES LO MISMO QUE ROL */
                 ]);
             } else {
                 $sqlCliente = "INSERT INTO CLIENTE (CI) VALUES (:ci)";

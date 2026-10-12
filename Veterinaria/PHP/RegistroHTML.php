@@ -37,6 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         } else {
             $error = "No se pudo completar el registro. Verifica si el correo o la C.I. ya existen.";
+            /* para que no se borren los datos */
+            $_POST['ci'] = $ci;
+            $_POST['nombre'] = $nombre;
+            $_POST['apellido'] = $apellido;
+            $_POST['correo'] = $correo;
+            $_POST['telefono'] = $telefono;
+            $_POST['calle1'] = $calle1;
+            $_POST['calle2'] = $calle2;
+            $_POST['tipo_usuario'] = $tipoUsuario;
         }
     }
 }

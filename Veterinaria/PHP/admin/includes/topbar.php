@@ -37,7 +37,7 @@ try {
       <span class="icon-badge icon-badge-user"><i class="bi bi-person-fill"></i></span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminUsuario">
-      <li><span class="dropdown-item-text text-muted small">Encargada</span></li>
+      <li><span class="dropdown-item-text text-muted small">Encargado</span></li>
       <li>
         <hr class="dropdown-divider">
       </li>
