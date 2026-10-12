@@ -105,44 +105,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="col-6 mb-2">
                     <label for="ci" class="form-label">C.I.</label>
-                    <input type="text" class="form-control auth-input" id="ci" name="ci" placeholder="1.234.567-8" pattern="[0-9]{8}" required>
+                    <input type="text" class="form-control auth-input" id="ci" name="ci" placeholder="1.234.567-8" pattern="[0-9]{8}" value="<?= htmlspecialchars($_POST['ci'] ?? '') ?>" required>
                 </div>
                 <div class="col-6 mb-2">
                     <label for="telefono" class="form-label">Teléfono</label>
-                    <input type="tel" class="form-control auth-input" id="telefono" name="telefono" placeholder="097 654 321" pattern="[0-9]{9}" required>
+                    <input type="tel" class="form-control auth-input" id="telefono" name="telefono" placeholder="097 654 321" pattern="[0-9]{9}" value="<?= htmlspecialchars($_POST['telefono'] ?? '') ?>" required>
                 </div>
 
                 <div class="col-6 mb-2">
                     <label for="nombre" class="form-label">Nombre</label>
-                    <input type="text" class="form-control auth-input" id="nombre" name="nombre" placeholder="Jorge" required>
+                    <input type="text" class="form-control auth-input" id="nombre" name="nombre" placeholder="Jorge" value="<?= htmlspecialchars($_POST['nombre'] ?? '') ?>" required>
                 </div>
                 <div class="col-6 mb-2">
                     <label for="apellido" class="form-label">Apellido</label>
-                    <input type="text" class="form-control auth-input" id="apellido" name="apellido" placeholder="Pérez" required>
+                    <input type="text" class="form-control auth-input" id="apellido" name="apellido" placeholder="Pérez" value="<?= htmlspecialchars($_POST['apellido'] ?? '') ?>" required>
                 </div>
 
                 <div class="col-12 mb-2">
                     <label for="Tipo de usuario" class="form-label">Tipo de usuario</label>
                     <select class="form-control auth-input" id="tipo_usuario" name="tipo_usuario" required>
-                        <option value="">Seleccionar</option>
-                        <option value="cliente">Cliente</option>
-                        <option value="empleado">Empleado</option>
-                        <option value="admin">Admin</option>
+                        <option value="" <?= empty($_POST['tipo_usuario']) ? 'selected' : '' ?>>Seleccionar</option>
+                        <option value="cliente" <?= (($_POST['tipo_usuario'] ?? '') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
+                        <option value="empleado" <?= (($_POST['tipo_usuario'] ?? '') === 'empleado') ? 'selected' : '' ?>>Empleado</option>
+                        <option value="admin" <?= (($_POST['tipo_usuario'] ?? '') === 'admin') ? 'selected' : '' ?>>Admin</option>
                     </select>
                 </div>
 
                 <div class="col-6 mb-2">
                     <label for="calle1" class="form-label">Calle 1</label>
-                    <input type="text" class="form-control auth-input" id="calle1" name="calle1" placeholder="18 de Julio" required>
+                    <input type="text" class="form-control auth-input" id="calle1" name="calle1" placeholder="18 de Julio" value="<?= htmlspecialchars($_POST['calle1'] ?? '') ?>" required>
                 </div>
                 <div class="col-6 mb-2">
                     <label for="calle2" class="form-label">Calle 2</label>
-                    <input type="text" class="form-control auth-input" id="calle2" name="calle2" placeholder="Arturo Santana">
+                    <input type="text" class="form-control auth-input" id="calle2" name="calle2" placeholder="Arturo Santana" value="<?= htmlspecialchars($_POST['calle2'] ?? '') ?>">
                 </div>
 
                 <div class="col-12 mb-2">
                     <label for="correo" class="form-label">Correo electrónico</label>
-                    <input type="email" class="form-control auth-input" id="correo" name="correo" placeholder="jorgeperez@gmail.com" required>
+                    <input type="email" class="form-control auth-input" id="correo" name="correo" placeholder="jorgeperez@gmail.com" value="<?= htmlspecialchars($_POST['correo'] ?? '') ?>" required>
                 </div>
 
                 <div class="col-6 mb-2">

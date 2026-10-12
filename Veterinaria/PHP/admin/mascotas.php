@@ -9,20 +9,26 @@ $mascotas = $datosMascotas['mascotas'];
 $conexion = (new Conexion())->establecerConexion();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  $datosForm = $_POST;
+
   $nombre = trim($_POST['Nombre']);
   $especie = trim($_POST['Especie']);
   $raza = trim($_POST['Raza']);
   $fechaNacimiento = trim($_POST['FechaNacimiento']);
   $ciDueño = trim($_POST['CI']);
 
-  $mascota = new Mascota();
-  $resultado = $mascota->crearMascota($nombre, $especie, $raza, $fechaNacimiento, $ciDueño);
-
-  if ($resultado) {
-    header("Location: mascotas.php");
-    exit();
+  if (!empty($fechaNacimiento) && $fechaNacimiento > date('Y-m-d')) {
+    $error = "La fecha de nacimiento no puede ser posterior a hoy.";
   } else {
-    $error = "No se pudo completar el registro.";
+    $mascota = new Mascota();
+    $resultado = $mascota->crearMascota($nombre, $especie, $raza, $fechaNacimiento, $ciDueño);
+
+    if ($resultado) {
+      header("Location: mascotas.php");
+      exit();
+    } else {
+      $error = "No se pudo completar el registro.";
+    }
   }
 }
 ?>
@@ -82,21 +88,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               </thead>
               <tbody>
 
-              <?php foreach ($mascotas as $masc): ?>
+                <?php foreach ($mascotas as $masc): ?>
 
-                      <tr>
-                        <td><?= htmlspecialchars($masc['IdMascota']) ?></td>
-                        <td><?= htmlspecialchars($masc['Nombre']) ?></td>
-                        <td><?= htmlspecialchars($masc['Especie']) ?></td>
-                        <td><?= htmlspecialchars($masc['Raza']) ?></td>
-                        <td><?= date('d/m/Y', strtotime($masc['FechaNacimiento'])) ?></td>
-                        <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
-                        <td class="text-end">
-                          <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                          <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                        </td>
-                      </tr>
-                    <?php endforeach; ?>
+                  <tr>
+                    <td><?= htmlspecialchars($masc['IdMascota']) ?></td>
+                    <td><?= htmlspecialchars($masc['Nombre']) ?></td>
+                    <td><?= htmlspecialchars($masc['Especie']) ?></td>
+                    <td><?= htmlspecialchars($masc['Raza']) ?></td>
+                    <td><?= date('d/m/Y', strtotime($masc['FechaNacimiento'])) ?></td>
+                    <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
+                    <td class="text-end">
+                      <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
 
               </tbody>
             </table>
@@ -118,40 +124,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="row g-3">
             <div class="col-sm-12">
               <label class="form-label" for="Nombre">Nombre</label>
-              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Rex" required>
+              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Rex" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Especie">Especie</label>
               <select class="form-select" id="Especie" name="Especie" required>
-                <option value="" selected disabled>Elegir especie</option>
-                <option value="Perro">Perro</option>
-                <option value="Gato">Gato</option>
-                <option value="Otro">Otro</option>
+                <option value="" <?= empty($datosForm['Especie']) ? 'selected' : '' ?> disabled>Elegir especie</option>
+                <option value="Perro" <?= (($datosForm['Especie'] ?? '') === 'Perro') ? 'selected' : '' ?>>Perro</option>
+                <option value="Gato" <?= (($datosForm['Especie'] ?? '') === 'Gato') ? 'selected' : '' ?>>Gato</option>
+                <option value="Otro" <?= (($datosForm['Especie'] ?? '') === 'Otro') ? 'selected' : '' ?>>Otro</option>
               </select>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Raza">Raza</label>
-              <input class="form-control" type="text" id="Raza" name="Raza" placeholder="Labrador">
+              <input class="form-control" type="text" id="Raza" name="Raza" placeholder="Labrador" value="<?= htmlspecialchars($datosForm['Raza'] ?? '') ?>">
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="FechaNacimiento">Fecha de nacimiento</label>
-              <input class="form-control" type="date" id="FechaNacimiento" name="FechaNacimiento">
+              <input class="form-control" type="date" id="FechaNacimiento" name="FechaNacimiento"
+                max="<?= date('Y-m-d') ?>"
+                value="<?= htmlspecialchars($datosForm['FechaNacimiento'] ?? '') ?>">
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="CI">Dueño</label>
               <select class="form-select" id="CI" name="CI" required>
-                <option value="" selected disabled>Elegir cliente</option>
-
-                <!-- listado de clientes -->
+                <option value="" <?= empty($datosForm['CI']) ? 'selected' : '' ?> disabled>Elegir cliente</option>
                 <?php
                 $stmtCli = $conexion->query("SELECT u.CI, u.Nombre, u.Apellido FROM CLIENTE c INNER JOIN USUARIO u ON c.CI = u.CI");
                 while ($cli = $stmtCli->fetch(PDO::FETCH_ASSOC)):
                 ?>
-                  <option value="<?= $cli['CI'] ?>">
+                  <option value="<?= $cli['CI'] ?>" <?= (($datosForm['CI'] ?? '') == $cli['CI']) ? 'selected' : '' ?>>
                     <?= htmlspecialchars($cli['Nombre'] . ' ' . $cli['Apellido']) ?> (CI: <?= $cli['CI'] ?>)
                   </option>
                 <?php endwhile; ?>
-
               </select>
             </div>
           </div>
@@ -165,6 +170,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <?php if ($error): ?>
+    <script>
+      new bootstrap.Modal(document.getElementById('modalMascota')).show();
+    </script>
+  <?php endif; ?>
+
+  <?php if (!empty($error)): ?>
+    <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
+  <?php endif; ?>
 </body>
 
 </html>
