@@ -6,6 +6,8 @@ require_once __DIR__ . '/../Mascota.php';
 $datosMascotas = Mascota::listadoMascotas();
 $mascotas = $datosMascotas['mascotas'];
 
+$conexion = (new Conexion())->establecerConexion();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $nombre = trim($_POST['Nombre']);
   $especie = trim($_POST['Especie']);

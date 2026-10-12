@@ -111,7 +111,7 @@ class Usuario
         }
     }
 
-    public function registrar(string $ci, string $nombre, string $apellido, string $correo, string $telefono, string $direccion, string $contraseña, string $tipoUsuario): bool
+    public function registrar(string $ci, string $nombre, string $apellido, string $correo, string $telefono, string $direccion, string $contraseña, string $tipoUsuario, ?string $rol = null): bool
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
@@ -158,7 +158,7 @@ class Usuario
                 $stmtEmpleado = $conexion->prepare($sqlEmpleado);
                 $stmtEmpleado->execute([
                     ':ci'  => $ci,
-                    ':rol' => $tipoUsuario /* TIPO USUARIO NO ES LO MISMO QUE ROL */
+                    ':rol' => $rol
                 ]);
             } else {
                 $sqlCliente = "INSERT INTO CLIENTE (CI) VALUES (:ci)";

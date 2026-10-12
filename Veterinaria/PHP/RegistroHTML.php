@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Las contraseñas no coinciden.";
     } else {
         $usuario = new Usuario();
-        $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario);
+        $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario, 'null');
 
         if ($resultado) {
             $_SESSION["correo"] = $correo;

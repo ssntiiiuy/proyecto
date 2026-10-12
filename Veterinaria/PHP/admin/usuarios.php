@@ -2,13 +2,16 @@
 require_once __DIR__ . '/../Conexion.php';
 require_once __DIR__ . '/../Usuario.php';
 
-/* funcion para guardar los datos */
 $datosUsuarios = Usuario::listadoUsuarios();
-
 $clientes = $datosUsuarios['clientes'];
 $empleados = $datosUsuarios['empleados'];
 
+$error = null;
+$datosForm = []; /* se guardan los datos del formulario para repoblarlo en caso de error */
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  $datosForm = $_POST;
+
   $ci = trim($_POST['ci']);
   $nombre = trim($_POST['nombre']);
   $apellido = trim($_POST['apellido']);
@@ -17,26 +20,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $direccion = trim($_POST['direccion']);
   $contraseña = $_POST['contrasena'];
   $tipoUsuario = $_POST['tipo_usuario'];
+  $rol = null;
 
-  $usuario = new Usuario();
-  $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario);
-
-  if ($resultado) {
-    header("Location: usuarios.php");
-    exit();
-  } else {
-    $error = "No se pudo completar el registro. Verifica si el correo o la C.I. ya existen.";
-    /* para que no se borren los datos */
-    $_POST['ci'] = $ci;
-    $_POST['nombre'] = $nombre;
-    $_POST['apellido'] = $apellido;
-    $_POST['correo'] = $correo;
-    $_POST['telefono'] = $telefono;
-    $_POST['direccion'] = $direccion;
-    $_POST['tipo_usuario'] = $tipoUsuario;
+  if ($tipoUsuario === 'empleado') {
+    if (empty($_POST['rol'])) {
+      $error = "Debe seleccionar un rol para el empleado.";
+    } else {
+      $rol = trim($_POST['rol']);
+    }
+  } elseif ($tipoUsuario === 'admin') {
+    $rol = 'admin';
   }
 
+  if (empty($error)) {
+    $usuario = new Usuario();
+    $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario, $rol);
 
+    if ($resultado) {
+      header("Location: usuarios.php");
+      exit();
+    } else {
+      $error = "No se pudo completar el registro. Verifica si el correo o la C.I. ya existen.";
+    }
+  }
 }
 ?>
 
@@ -120,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                         </td>
                       </tr>
                     <?php endforeach; ?>
-                    
+
                   </tbody>
                 </table>
               </div>
@@ -143,7 +149,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                   <tbody>
 
                     <?php
-                    Usuario::ListadoUsuarios($empleados);
                     foreach ($empleados as $emp):
                     ?>
                       <tr>
@@ -180,30 +185,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
         <div class="modal-body">
+
+          <!-- Mensaje de error -->
+          <?php if (!empty($error)): ?>
+            <div class="alert alert-danger" role="alert">
+              <?= htmlspecialchars($error) ?>
+            </div>
+          <?php endif; ?>
+
           <div class="row g-3">
             <div class="col-sm-6">
               <label class="form-label" for="ci">C.I.</label>
-              <input class="form-control" type="text" id="ci" name="ci" placeholder="45678901" inputmode="numeric" pattern="[0-9]{7,8}" required>
+              <input class="form-control" type="text" id="ci" name="ci" placeholder="45678901" inputmode="numeric" pattern="[0-9]{7,8}" value="<?= htmlspecialchars($datosForm['ci'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="telefono">Teléfono</label>
-              <input class="form-control" type="tel" id="telefono" name="telefono" placeholder="097 654 321" required>
+              <input class="form-control" type="tel" id="telefono" name="telefono" placeholder="097 654 321" value="<?= htmlspecialchars($datosForm['telefono'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="nombre">Nombre</label>
-              <input class="form-control" type="text" id="nombre" name="nombre" placeholder="Jorge" required>
+              <input class="form-control" type="text" id="nombre" name="nombre" placeholder="Jorge" value="<?= htmlspecialchars($datosForm['nombre'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="apellido">Apellido</label>
-              <input class="form-control" type="text" id="apellido" name="apellido" placeholder="Pérez" required>
+              <input class="form-control" type="text" id="apellido" name="apellido" placeholder="Pérez" value="<?= htmlspecialchars($datosForm['apellido'] ?? '') ?>" required>
             </div>
             <div class="col-12">
               <label class="form-label" for="direccion">Dirección</label>
-              <input class="form-control" type="text" id="direccion" name="direccion" placeholder="18 de Julio 1450">
+              <input class="form-control" type="text" id="direccion" name="direccion" placeholder="18 de Julio 1450" value="<?= htmlspecialchars($datosForm['direccion'] ?? '') ?>">
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="correo">Correo</label>
-              <input class="form-control" type="email" id="correo" name="correo" placeholder="nombre@correo.com" required>
+              <input class="form-control" type="email" id="correo" name="correo" placeholder="nombre@correo.com" value="<?= htmlspecialchars($datosForm['correo'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="contrasena">Contraseña</label>
@@ -212,15 +225,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             <div class="col-sm-6">
               <label class="form-label" for="tipo_usuario">Tipo de usuario</label>
               <select class="form-select" id="tipo_usuario" name="tipo_usuario" required>
-                <option value="" selected disabled>Elegir tipo</option>
-                <option value="cliente">Cliente</option>
-                <option value="empleado">Empleado</option>
-                <option value="admin">Admin</option>
+                <option value="" <?= empty($datosForm['tipo_usuario']) ? 'selected' : '' ?> disabled>Elegir tipo</option>
+                <option value="cliente" <?= (($datosForm['tipo_usuario'] ?? '') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
+                <option value="empleado" <?= (($datosForm['tipo_usuario'] ?? '') === 'empleado') ? 'selected' : '' ?>>Empleado</option>
+                <option value="admin" <?= (($datosForm['tipo_usuario'] ?? '') === 'admin') ? 'selected' : '' ?>>Admin</option>
               </select>
             </div>
+
             <div class="col-sm-6">
-              <label class="form-label" for="Rol">Rol <span class="admin-aclaracion">(solo empleados)</span></label>
-              <input class="form-control" type="text" id="Rol" name="Rol" placeholder="Veterinario">
+              <label class="form-label" for="rol">Rol <span class="admin-aclaracion">(Completar solo si es empleado)</span></label>
+              <select class="form-select" id="rol" name="rol">
+                <option value="" <?= empty($datosForm['rol']) ? 'selected' : '' ?> disabled>Elegir rol</option>
+                <option value="Veterinario" <?= (($datosForm['rol'] ?? '') === 'Veterinario') ? 'selected' : '' ?>>Veterinario</option>
+                <option value="Cirujano" <?= (($datosForm['rol'] ?? '') === 'Cirujano') ? 'selected' : '' ?>>Cirujano</option>
+                <option value="Peluquero" <?= (($datosForm['rol'] ?? '') === 'Peluquero') ? 'selected' : '' ?>>Peluquero</option>
+                <option value="Cajero" <?= (($datosForm['rol'] ?? '') === 'Cajero') ? 'selected' : '' ?>>Cajero</option>
+              </select>
             </div>
           </div>
         </div>
@@ -232,7 +252,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<?php if ($error): ?>
+<script>
+  new bootstrap.Modal(document.getElementById('modalUsuario')).show();
+</script>
+<?php endif; ?>
+
 </body>
 
 </html>
