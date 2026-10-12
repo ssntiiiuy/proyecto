@@ -1,3 +1,30 @@
+<?php
+require_once __DIR__ . '/../Conexion.php';
+require_once __DIR__ . '/../Mascota.php';
+
+/* funcion para guardar los datos */
+$datosMascotas = Mascota::listadoMascotas();
+$mascotas = $datosMascotas['mascotas'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  $nombre = trim($_POST['Nombre']);
+  $especie = trim($_POST['Especie']);
+  $raza = trim($_POST['Raza']);
+  $fechaNacimiento = trim($_POST['FechaNacimiento']);
+  $ciDueño = trim($_POST['CI']);
+
+  $mascota = new Mascota();
+  $resultado = $mascota->crearMascota($nombre, $especie, $raza, $fechaNacimiento, $ciDueño);
+
+  if ($resultado) {
+    header("Location: mascotas.php");
+    exit();
+  } else {
+    $error = "No se pudo completar el registro.";
+  }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -51,56 +78,24 @@
                   <th scope="col" class="text-end">Acciones</th>
                 </tr>
               </thead>
-              <!-- TODO BD: MASCOTA con nombre del dueño (USUARIO por CI) -->
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Rex</td>
-                  <td>Perro</td>
-                  <td>Labrador</td>
-                  <td>05/08/2015</td>
-                  <td>Jorge Pérez<span class="admin-subtexto">4.567.890-1</span></td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>Luna</td>
-                  <td>Gato</td>
-                  <td>Siamés</td>
-                  <td>12/03/2021</td>
-                  <td>María González<span class="admin-subtexto">3.876.543-2</span></td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>Milo</td>
-                  <td>Gato</td>
-                  <td>Común europeo</td>
-                  <td>20/01/2023</td>
-                  <td>Lucía Fernández<span class="admin-subtexto">5.123.456-7</span></td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>4</td>
-                  <td>Toby</td>
-                  <td>Perro</td>
-                  <td>Caniche</td>
-                  <td>20/11/2019</td>
-                  <td>Martín Silva<span class="admin-subtexto">4.234.567-8</span></td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
+
+              <?php foreach ($mascotas as $masc): ?>
+
+                      <tr>
+                        <td><?= htmlspecialchars($masc['IdMascota']) ?></td>
+                        <td><?= htmlspecialchars($masc['Nombre']) ?></td>
+                        <td><?= htmlspecialchars($masc['Especie']) ?></td>
+                        <td><?= htmlspecialchars($masc['Raza']) ?></td>
+                        <td><?= date('d/m/Y', strtotime($masc['FechaNacimiento'])) ?></td>
+                        <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
+                        <td class="text-end">
+                          <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
+                          <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+
               </tbody>
             </table>
           </div>
@@ -110,7 +105,6 @@
     </div>
   </div>
 
-  <!-- modal para agregar mascota, por ahora no guarda nada -->
   <div class="modal fade admin-modal" id="modalMascota" tabindex="-1" aria-labelledby="modalMascotaTitulo" aria-hidden="true" data-bs-theme="dark">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" action="#" method="post">
@@ -120,11 +114,7 @@
         </div>
         <div class="modal-body">
           <div class="row g-3">
-            <div class="col-sm-4">
-              <label class="form-label" for="IdMascota">Id</label>
-              <input class="form-control" type="number" id="IdMascota" name="IdMascota" min="1" placeholder="5" required>
-            </div>
-            <div class="col-sm-8">
+            <div class="col-sm-12">
               <label class="form-label" for="Nombre">Nombre</label>
               <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Rex" required>
             </div>
@@ -147,20 +137,26 @@
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="CI">Dueño</label>
-              <!-- TODO BD: clientes (CLIENTE + USUARIO) -->
               <select class="form-select" id="CI" name="CI" required>
                 <option value="" selected disabled>Elegir cliente</option>
-                <option value="45678901">Jorge Pérez</option>
-                <option value="38765432">María González</option>
-                <option value="51234567">Lucía Fernández</option>
-                <option value="42345678">Martín Silva</option>
+
+                <!-- listado de clientes -->
+                <?php
+                $stmtCli = $conexion->query("SELECT u.CI, u.Nombre, u.Apellido FROM CLIENTE c INNER JOIN USUARIO u ON c.CI = u.CI");
+                while ($cli = $stmtCli->fetch(PDO::FETCH_ASSOC)):
+                ?>
+                  <option value="<?= $cli['CI'] ?>">
+                    <?= htmlspecialchars($cli['Nombre'] . ' ' . $cli['Apellido']) ?> (CI: <?= $cli['CI'] ?>)
+                  </option>
+                <?php endwhile; ?>
+
               </select>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn admin-btn-cancelar" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn admin-btn-agregar">Guardar</button>
+          <button type="submit" class="btn admin-btn-agregar" name="guardar">Guardar</button>
         </div>
       </form>
     </div>

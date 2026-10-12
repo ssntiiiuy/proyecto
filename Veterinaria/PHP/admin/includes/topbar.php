@@ -1,9 +1,14 @@
 <?php
-// cada página setea $tituloPagina antes del include
-$tituloPagina = $tituloPagina ?? '';
 
-session_start();
+/* iniciar sesion si no esta iniciada */
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once __DIR__ . '/../../Conexion.php';
+
+$nombreUsuario = 'Usuario';
+
 try {
   if (!empty($_SESSION['correo'])) {
     $conexion = (new Conexion())->establecerConexion();

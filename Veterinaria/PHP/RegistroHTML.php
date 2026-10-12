@@ -13,16 +13,16 @@ $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $ci          = trim($_POST['ci']);
-    $nombre      = trim($_POST['nombre']);
-    $apellido    = trim($_POST['apellido']);
-    $correo      = trim($_POST['correo']);
-    $telefono    = trim($_POST['telefono']);
-    $calle1      = trim($_POST['calle1']);
-    $calle2      = trim($_POST['calle2']);
-    $direccion   = $calle1 . ", " . $calle2;
-    $contraseña  = $_POST['password'];
-    $confirmar   = $_POST['confirm_password'];
+    $ci = trim($_POST['ci']);
+    $nombre = trim($_POST['nombre']);
+    $apellido = trim($_POST['apellido']);
+    $correo = trim($_POST['correo']);
+    $telefono = trim($_POST['telefono']);
+    $calle1 = trim($_POST['calle1']);
+    $calle2 = trim($_POST['calle2']);
+    $direccion = $calle1 . ", " . $calle2;
+    $contraseña = $_POST['password'];
+    $confirmar = $_POST['confirm_password'];
     $tipoUsuario = $_POST['tipo_usuario'];
 
     if ($contraseña !== $confirmar) {

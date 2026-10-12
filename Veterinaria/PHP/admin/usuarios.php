@@ -2,27 +2,26 @@
 require_once __DIR__ . '/../Conexion.php';
 require_once __DIR__ . '/../Usuario.php';
 
+/* funcion para guardar los datos */
 $datosUsuarios = Usuario::listadoUsuarios();
 
-/* funcion para guardar los datos */
 $clientes = $datosUsuarios['clientes'];
 $empleados = $datosUsuarios['empleados'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
-  $ci          = trim($_POST['ci']);
-  $nombre      = trim($_POST['nombre']);
-  $apellido    = trim($_POST['apellido']);
-  $correo      = trim($_POST['correo']);
-  $telefono    = trim($_POST['telefono']);
-  $direccion   = trim($_POST['direccion']);
-  $contraseña  = $_POST['contrasena'];
+  $ci = trim($_POST['ci']);
+  $nombre = trim($_POST['nombre']);
+  $apellido = trim($_POST['apellido']);
+  $correo = trim($_POST['correo']);
+  $telefono = trim($_POST['telefono']);
+  $direccion = trim($_POST['direccion']);
+  $contraseña = $_POST['contrasena'];
   $tipoUsuario = $_POST['tipo_usuario'];
 
   $usuario = new Usuario();
   $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario);
 
   if ($resultado) {
-    $_SESSION["correo"] = $correo;
     header("Location: usuarios.php");
     exit();
   } else {
@@ -121,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                         </td>
                       </tr>
                     <?php endforeach; ?>
+                    
                   </tbody>
                 </table>
               </div>
