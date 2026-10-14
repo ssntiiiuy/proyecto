@@ -1,3 +1,34 @@
+<?php
+require_once __DIR__ . '/../Conexion.php';
+require_once __DIR__ . '/../Proveedor.php';
+
+$datosProveedores = Proveedor::listadoProveedor();
+$proveedores = $datosProveedores['proveedores'];
+
+$error = null;
+$datosForm = []; /* se guardan los datos del formulario para repoblarlo en caso de error */
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  $datosForm = $_POST;
+
+  $nombre = trim($_POST['Nombre']);
+  $empresa = trim($_POST['NombreEmpresa']);
+  $Telefono = trim($_POST['numTelProveedor']);
+
+  if (empty($error)) {
+    $usuario = new Proveedor();
+    $resultado = $usuario->crearProveedor($nombre, $empresa, $Telefono);
+
+    if ($resultado) {
+      header("Location: proveedores.php");
+      exit();
+    } else {
+      $error = "No se pudo completar el registro.";
+    }
+  }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -50,41 +81,23 @@
                   <th scope="col" class="text-end">Acciones</th>
                 </tr>
               </thead>
-              <!-- TODO BD: PROVEEDOR + teléfonos de TELEFONO_PROVEEDOR + nombres de productos por PROVEE -->
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Carlos Núñez</td>
-                  <td>Nutripet S.A.</td>
-                  <td>2604 1122<br>099 456 123</td>
-                  <td class="admin-celda-texto">Comida para perros 3kg, Comida para gatos 1.5kg</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>Laura Benítez</td>
-                  <td>Accesorios del Este</td>
-                  <td>4223 5566</td>
-                  <td class="admin-celda-texto">Plato para perros, Plato para mascotas plateado, Plato para gatos</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>Gonzalo Ferreira</td>
-                  <td>Mascotienda Mayorista</td>
-                  <td>2908 7744<br>098 222 333</td>
-                  <td class="admin-celda-texto">Cucha para perros, Juguete para gatos, Rascador para gatos</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
+
+              <?php foreach ($proveedores as $proveedor): ?>
+
+                  <tr>
+                    <td><?= htmlspecialchars($proveedor['IdProveedor']) ?></td>
+                    <td><?= htmlspecialchars($proveedor['Nombre']) ?></td>
+                    <td><?= htmlspecialchars($proveedor['NombreEmpresa']) ?></td>
+                    <td><?= htmlspecialchars($proveedor['numTelProveedor']) ?></td>
+                    <td><?= htmlspecialchars($proveedor['NombreProducto'] ?? '-') ?></td>
+                    <td class="text-end">
+                      <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+
               </tbody>
             </table>
           </div>
@@ -94,7 +107,7 @@
     </div>
   </div>
 
-  <!-- modal para agregar proveedor, por ahora no guarda nada -->
+  <!-- agregar proveedor -->
   <div class="modal fade admin-modal" id="modalProveedor" tabindex="-1" aria-labelledby="modalProveedorTitulo" aria-hidden="true" data-bs-theme="dark">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" action="#" method="post">
@@ -104,33 +117,36 @@
         </div>
         <div class="modal-body">
           <div class="row g-3">
-            <div class="col-sm-4">
-              <label class="form-label" for="IdProveedor">Id</label>
-              <input class="form-control" type="number" id="IdProveedor" name="IdProveedor" min="1" placeholder="4" required>
-            </div>
-            <div class="col-sm-8">
+            <div class="col-sm-12">
               <label class="form-label" for="Nombre">Nombre de contacto</label>
-              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Carlos Núñez" required>
+              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Carlos Núñez" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="NombreEmpresa">Empresa</label>
-              <input class="form-control" type="text" id="NombreEmpresa" name="NombreEmpresa" placeholder="Nutripet S.A." required>
+              <input class="form-control" type="text" id="NombreEmpresa" name="NombreEmpresa" placeholder="Nutripet S.A." value="<?= htmlspecialchars($datosForm['NombreEmpresa'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="numTelProveedor">Teléfono</label>
-              <input class="form-control" type="tel" id="numTelProveedor" name="numTelProveedor" placeholder="2604 1122" required>
+              <input class="form-control" type="tel" id="numTelProveedor" name="numTelProveedor" placeholder="2604 1122" value="<?= htmlspecialchars($datosForm['numTelProveedor'] ?? '') ?>" required>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn admin-btn-cancelar" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn admin-btn-agregar">Guardar</button>
+          <button type="submit" class="btn admin-btn-agregar" name="guardar">Guardar</button>
         </div>
       </form>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <?php if ($error): ?>
+    <script>
+      new bootstrap.Modal(document.getElementById('modalProveedor')).show();
+    </script>
+  <?php endif; ?>
+
 </body>
 
 </html>
