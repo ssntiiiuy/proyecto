@@ -83,14 +83,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               </thead>
               <tbody>
 
-              <?php foreach ($proveedores as $proveedor): ?>
-
+                <?php foreach ($proveedores as $proveedor): ?>
                   <tr>
                     <td><?= htmlspecialchars($proveedor['IdProveedor']) ?></td>
                     <td><?= htmlspecialchars($proveedor['Nombre']) ?></td>
                     <td><?= htmlspecialchars($proveedor['NombreEmpresa']) ?></td>
-                    <td><?= htmlspecialchars($proveedor['numTelProveedor']) ?></td>
-                    <td><?= htmlspecialchars($proveedor['NombreProducto'] ?? '-') ?></td>
+                    <td>
+                      <?php
+                      $telefonos = $proveedor['Telefonos'] ? explode('|', $proveedor['Telefonos']) : [];
+                      echo nl2br(htmlspecialchars(implode("\n", $telefonos)));
+                      ?>
+                    </td>
+                    <td><?= htmlspecialchars($proveedor['Productos'] ?? '-') ?></td>
                     <td class="text-end">
                       <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
                       <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>

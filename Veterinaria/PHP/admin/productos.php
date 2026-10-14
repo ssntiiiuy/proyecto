@@ -2,16 +2,35 @@
 require_once __DIR__ . '/../Conexion.php';
 require_once __DIR__ . '/../Producto.php';
 
-$datosForm = [];
-$error = null;
+/* funcion para guardar los datos */
+$datosProductos = Producto::listadoProductos();
+$productos = $datosProductos['productos'];
 
-try {
-  $conexion = (new Conexion())->establecerConexion();
-} catch (PDOException $e) {
-  $conexion = null;
-  $error = "No se pudo conectar a la base de datos.";
+$conexion = (new Conexion())->establecerConexion();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  $datosForm = $_POST;
+
+  $nombre = trim($_POST['Nombre']);
+  $categoria = trim($_POST['Categoria']);
+  $precio = trim($_POST['Precio']);
+  $stock = trim($_POST['Stock']);
+  $stockMinimo = trim($_POST['StockMinimo']);
+  $fechaVencimiento = trim($_POST['FechaVencimiento']);
+  $nombreEmpresa = trim($_POST['NombreEmpresa']);
+
+  $producto = new Producto();
+  $resultado = $producto->crearProducto($nombre, $categoria, $precio, $stock, $stockMinimo, $fechaVencimiento, $nombreEmpresa);
+
+  if ($resultado) {
+    header("Location: productos.php");
+    exit();
+  } else {
+    $error = "No se pudo completar el registro.";
+  }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -67,120 +86,27 @@ try {
                   <th scope="col" class="text-end">Acciones</th>
                 </tr>
               </thead>
-              <!-- TODO BD: PRODUCTO + proveedor por PROVEE. Stock bajo si Stock < StockMinimo, por vencer si vence en 30 días o menos -->
+              <!-- listado de productos -->
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td class="admin-celda-corta">Comida para perros 3kg</td>
-                  <td>Alimentos</td>
-                  <td>$ 1.299</td>
-                  <td>4<span class="badge badge-danger admin-badge-abajo">Stock bajo</span></td>
-                  <td>10</td>
-                  <td>15/03/2027</td>
-                  <td class="admin-celda-corta">Nutripet S.A.</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td class="admin-celda-corta">Plato para perros</td>
-                  <td>Accesorios</td>
-                  <td>$ 499</td>
-                  <td>25</td>
-                  <td>5</td>
-                  <td><span class="admin-sin-dato">—</span></td>
-                  <td class="admin-celda-corta">Accesorios del Este</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td class="admin-celda-corta">Cucha para perros</td>
-                  <td>Accesorios</td>
-                  <td>$ 899</td>
-                  <td>2<span class="badge badge-danger admin-badge-abajo">Stock bajo</span></td>
-                  <td>3</td>
-                  <td><span class="admin-sin-dato">—</span></td>
-                  <td class="admin-celda-corta">Mascotienda Mayorista</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>4</td>
-                  <td class="admin-celda-corta">Plato para mascotas plateado</td>
-                  <td>Accesorios</td>
-                  <td>$ 499</td>
-                  <td>12</td>
-                  <td>5</td>
-                  <td><span class="admin-sin-dato">—</span></td>
-                  <td class="admin-celda-corta">Accesorios del Este</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>5</td>
-                  <td class="admin-celda-corta">Comida para gatos 1.5kg</td>
-                  <td>Alimentos</td>
-                  <td>$ 799</td>
-                  <td>18</td>
-                  <td>8</td>
-                  <td>25/10/2026<span class="badge badge-tipo-peluqueria admin-badge-abajo">Por vencer</span></td>
-                  <td class="admin-celda-corta">Nutripet S.A.</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>6</td>
-                  <td class="admin-celda-corta">Plato para gatos</td>
-                  <td>Accesorios</td>
-                  <td>$ 499</td>
-                  <td>9</td>
-                  <td>5</td>
-                  <td><span class="admin-sin-dato">—</span></td>
-                  <td class="admin-celda-corta">Accesorios del Este</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>7</td>
-                  <td class="admin-celda-corta">Juguete para gatos</td>
-                  <td>Accesorios</td>
-                  <td>$ 299</td>
-                  <td>30</td>
-                  <td>10</td>
-                  <td><span class="admin-sin-dato">—</span></td>
-                  <td class="admin-celda-corta">Mascotienda Mayorista</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>8</td>
-                  <td class="admin-celda-corta">Rascador para gatos</td>
-                  <td>Accesorios</td>
-                  <td>$ 899</td>
-                  <td>6</td>
-                  <td>3</td>
-                  <td><span class="admin-sin-dato">—</span></td>
-                  <td class="admin-celda-corta">Mascotienda Mayorista</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
+
+                <?php foreach ($productos as $prod): ?>
+
+                  <tr>
+                    <td><?= htmlspecialchars($prod['IdProducto']) ?></td>
+                    <td><?= htmlspecialchars($prod['Nombre']) ?></td>
+                    <td><?= htmlspecialchars($prod['Categoria']) ?></td>
+                    <td><?= htmlspecialchars($prod['Precio']) ?></td>
+                    <td><?= htmlspecialchars($prod['Stock']) ?></td>
+                    <td><?= htmlspecialchars($prod['StockMinimo']) ?></td>
+                    <td><?= date('d/m/Y', strtotime($prod['FechaVencimiento']) ?? '-') ?> </td>
+                    <td><?= htmlspecialchars($prod['NombreEmpresa']) ?></td>
+                    <td class="text-end">
+                      <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+
               </tbody>
             </table>
           </div>
@@ -200,45 +126,41 @@ try {
         </div>
         <div class="modal-body">
           <div class="row g-3">
-            <div class="col-sm-4">
-              <label class="form-label" for="IdProducto">Id</label>
-              <input class="form-control" type="number" id="IdProducto" name="IdProducto" min="1" placeholder="9" required>
-            </div>
-            <div class="col-sm-8">
+            <div class="col-sm-12">
               <label class="form-label" for="Nombre">Nombre</label>
-              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Comida para perros 3kg" required>
+              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Comida para perros 3kg" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Categoria">Categoría</label>
               <select class="form-select" id="Categoria" name="Categoria" required>
-                <option value="" selected disabled>Elegir categoría</option>
-                <option value="Accesorios">Accesorios</option>
-                <option value="Alimentos">Alimentos</option>
-                <option value="Farmacia">Farmacia</option>
-                <option value="Higiene">Higiene</option>
+                <option value="" <?= empty($datosForm['Categoria']) ? 'selected' : '' ?> disabled>Elegir categoría</option>
+                <option value="Accesorios" <?= (($datosForm['Categoria'] ?? '') === 'Accesorios') ? 'selected' : '' ?>>Accesorios</option>
+                <option value="Alimentos" <?= (($datosForm['Categoria'] ?? '') === 'Alimentos') ? 'selected' : '' ?>>Alimentos</option>
+                <option value="Farmacia" <?= (($datosForm['Categoria'] ?? '') === 'Farmacia') ? 'selected' : '' ?>>Farmacia</option>
+                <option value="Higiene" <?= (($datosForm['Categoria'] ?? '') === 'Higiene') ? 'selected' : '' ?>>Higiene</option>
               </select>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Precio">Precio ($)</label>
-              <input class="form-control" type="number" id="Precio" name="Precio" min="0" step="0.01" placeholder="1299" required>
+              <input class="form-control" type="number" id="Precio" name="Precio" min="0" step="1" placeholder="1299" value="<?= htmlspecialchars($datosForm['Precio'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Stock">Stock</label>
-              <input class="form-control" type="number" id="Stock" name="Stock" min="0" placeholder="20">
+              <input class="form-control" type="number" id="Stock" name="Stock" min="0" placeholder="20" value="<?= htmlspecialchars($datosForm['Stock'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="StockMinimo">Stock mínimo</label>
-              <input class="form-control" type="number" id="StockMinimo" name="StockMinimo" min="0" placeholder="5">
+              <input class="form-control" type="number" id="StockMinimo" name="StockMinimo" min="0" placeholder="5" value="<?= htmlspecialchars($datosForm['StockMinimo'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="FechaVencimiento">Vencimiento <span class="admin-aclaracion">(si corresponde)</span></label>
-              <input class="form-control" type="date" id="FechaVencimiento" name="FechaVencimiento">
+              <input class="form-control" type="date" id="FechaVencimiento" name="FechaVencimiento" value="<?= htmlspecialchars($datosForm['FechaVencimiento'] ?? '') ?>">
             </div>
 
             <!-- listado de proveedores -->
             <div class="col-sm-6">
               <label class="form-label" for="IdProveedor">Proveedor</label>
-              <select class="form-select" id="IdProveedor" name="IdProveedor" required>
+              <select class="form-select" id="NombreEmpresa" name="NombreEmpresa" required>
                 <option value="" <?= empty($datosForm['IdProveedor']) ? 'selected' : '' ?> disabled>Elegir proveedor</option>
                 <?php
                 $stmtProveedores = $conexion->query("SELECT p.NombreEmpresa FROM PROVEEDOR p");
@@ -261,6 +183,17 @@ try {
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <?php if ($error): ?>
+    <script>
+      new bootstrap.Modal(document.getElementById('modalProducto')).show();
+    </script>
+  <?php endif; ?>
+
+  <?php if (!empty($error)): ?>
+    <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
+  <?php endif; ?>
+
 </body>
 
 </html>

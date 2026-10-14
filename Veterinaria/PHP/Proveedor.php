@@ -69,26 +69,29 @@ class Proveedor
     }
 
     public static function listadoProveedor(): array
-    {
-        try {
-            $conexion = (new Conexion())->establecerConexion();
+{
+    try {
+        $conexion = (new Conexion())->establecerConexion();
 
-            $sqlProveedor = "SELECT p.IdProveedor, p.Nombre, p.NombreEmpresa, tp.numTelProveedor, pro.Nombre AS NombreProducto
+        $sqlProveedor = "SELECT p.IdProveedor, p.Nombre, p.NombreEmpresa,
+               GROUP_CONCAT(DISTINCT tp.numTelProveedor ORDER BY tp.numTelProveedor SEPARATOR '|') AS Telefonos,
+               GROUP_CONCAT(DISTINCT pro.Nombre ORDER BY pro.Nombre SEPARATOR ', ') AS Productos
                FROM PROVEEDOR p
-               INNER JOIN TELEFONO_PROVEEDOR tp ON p.IdProveedor = tp.IdProveedor
+               LEFT JOIN TELEFONO_PROVEEDOR tp ON p.IdProveedor = tp.IdProveedor
                LEFT JOIN PROVEE pr ON p.IdProveedor = pr.IdProveedor
-               LEFT JOIN producto pro ON pr.IdProducto = pro.IdProducto";
-            $stmtProveedor = $conexion->query($sqlProveedor);
-            $proveedores = $stmtProveedor->fetchAll(PDO::FETCH_ASSOC);
+               LEFT JOIN producto pro ON pr.IdProducto = pro.IdProducto
+               GROUP BY p.IdProveedor, p.Nombre, p.NombreEmpresa";
+        $stmtProveedor = $conexion->query($sqlProveedor);
+        $proveedores = $stmtProveedor->fetchAll(PDO::FETCH_ASSOC);
 
-            return ['proveedores' => $proveedores];
-        } catch (PDOException $e) {
-            echo "Error al cargar proveedores: " . $e->getMessage();
-            return [
-                'proveedores' => []
-            ];
-        }
+        return ['proveedores' => $proveedores];
+    } catch (PDOException $e) {
+        echo "Error al cargar proveedores: " . $e->getMessage();
+        return [
+            'proveedores' => []
+        ];
     }
+}
 
     public function crearProveedor(string $nombre, string $empresa, string $telefono): bool
     {
