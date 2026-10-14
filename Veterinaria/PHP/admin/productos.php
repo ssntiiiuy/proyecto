@@ -234,6 +234,8 @@ try {
               <label class="form-label" for="FechaVencimiento">Vencimiento <span class="admin-aclaracion">(si corresponde)</span></label>
               <input class="form-control" type="date" id="FechaVencimiento" name="FechaVencimiento">
             </div>
+
+            <!-- listado de proveedores -->
             <div class="col-sm-6">
               <label class="form-label" for="IdProveedor">Proveedor</label>
               <select class="form-select" id="IdProveedor" name="IdProveedor" required>
