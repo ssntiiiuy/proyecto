@@ -113,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     </div>
   </div>
 
+  <!-- agregar mascota -->
   <div class="modal fade admin-modal" id="modalMascota" tabindex="-1" aria-labelledby="modalMascotaTitulo" aria-hidden="true" data-bs-theme="dark">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" action="#" method="post">

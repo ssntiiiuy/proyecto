@@ -1,3 +1,17 @@
+<?php
+require_once __DIR__ . '/../Conexion.php';
+require_once __DIR__ . '/../Producto.php';
+
+$datosForm = [];
+$error = null;
+
+try {
+  $conexion = (new Conexion())->establecerConexion();
+} catch (PDOException $e) {
+  $conexion = null;
+  $error = "No se pudo conectar a la base de datos.";
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -176,7 +190,7 @@
     </div>
   </div>
 
-  <!-- modal para agregar producto, por ahora no guarda nada -->
+  <!-- agregar producto -->
   <div class="modal fade admin-modal" id="modalProducto" tabindex="-1" aria-labelledby="modalProductoTitulo" aria-hidden="true" data-bs-theme="dark">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" action="#" method="post">
@@ -222,19 +236,23 @@
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="IdProveedor">Proveedor</label>
-              <!-- TODO BD: proveedores (PROVEEDOR), se guarda en PROVEE -->
               <select class="form-select" id="IdProveedor" name="IdProveedor" required>
-                <option value="" selected disabled>Elegir proveedor</option>
-                <option value="1">Nutripet S.A.</option>
-                <option value="2">Accesorios del Este</option>
-                <option value="3">Mascotienda Mayorista</option>
+                <option value="" <?= empty($datosForm['IdProveedor']) ? 'selected' : '' ?> disabled>Elegir proveedor</option>
+                <?php
+                $stmtProveedores = $conexion->query("SELECT p.NombreEmpresa FROM PROVEEDOR p");
+                while ($prov = $stmtProveedores->fetch(PDO::FETCH_ASSOC)):
+                ?>
+                  <option value="<?= $prov['NombreEmpresa'] ?>" <?= (($datosForm['IdProveedor'] ?? '') === $prov['NombreEmpresa']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($prov['NombreEmpresa']) ?>
+                  </option>
+                <?php endwhile; ?>
               </select>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn admin-btn-cancelar" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn admin-btn-agregar">Guardar</button>
+          <button type="submit" class="btn admin-btn-agregar" name="guardar">Guardar</button>
         </div>
       </form>
     </div>
