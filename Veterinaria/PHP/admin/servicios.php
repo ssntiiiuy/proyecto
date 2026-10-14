@@ -1,3 +1,58 @@
+<?php
+require_once __DIR__ . '/../Conexion.php';
+require_once __DIR__ . '/../Servicio.php';
+
+
+/* funcion para guardar los datos */
+$datosServicios = Servicio::listadoServicios();
+$servicios = $datosServicios['servicios'];
+
+$conexion = (new Conexion())->establecerConexion();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  $datosForm = $_POST;
+
+  $nombre = trim($_POST['Nombre']);
+  $tipo = trim($_POST['TipoServicio']);
+  $precio = trim($_POST['Precio']);
+  $descripcion = trim($_POST['Descripcion']);
+  $duracion = trim($_POST['Duracion']);
+
+  $servicio = new Servicio();
+  $resultado = $servicio->crearServicio($tipo, $nombre, $precio, $descripcion, $duracion, $_POST);
+
+  if ($resultado) {
+    header("Location: servicios.php");
+    exit();
+  } else {
+    $error = "No se pudo completar el registro.";
+  }
+}
+
+/* para los colores de servicio */
+function obtenerClaseBadge($tipo)
+{
+  $tipoLimpio = strtolower(trim($tipo));
+
+  switch ($tipoLimpio) {
+    case 'consulta':
+      return 'badge-tipo-consulta';
+    case 'vacunación':
+    case 'vacunacion':
+      return 'badge-tipo-vacunacion';
+    case 'peluquería':
+    case 'peluqueria':
+      return 'badge-tipo-peluqueria';
+    case 'cirugía':
+    case 'cirugia':
+      return 'badge-tipo-cirugia';
+    default:
+      return 'bg-secondary';
+  }
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -51,57 +106,43 @@
                   <th scope="col" class="text-end">Acciones</th>
                 </tr>
               </thead>
-              <!-- TODO BD: SERVICIO + el tipo sale de la tabla de subtipo donde esté el IdServicio -->
+
+              <!-- listado de servicios -->
+              <!-- listado de servicios dinámico -->
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Consulta general</td>
-                  <td><span class="badge badge-tipo-consulta">Consulta</span></td>
-                  <td class="admin-celda-texto">Revisión clínica completa, diagnóstico e indicaciones.</td>
-                  <td>30 min</td>
-                  <td>$ 900</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>Vacuna antirrábica</td>
-                  <td><span class="badge badge-tipo-vacunacion">Vacunación</span></td>
-                  <td class="admin-celda-texto">Aplicación anual de la vacuna contra la rabia.</td>
-                  <td>15 min</td>
-                  <td>$ 750</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>Baño y corte</td>
-                  <td><span class="badge badge-tipo-peluqueria">Peluquería</span></td>
-                  <td class="admin-celda-texto">Baño, secado, corte de pelo y de uñas.</td>
-                  <td>90 min</td>
-                  <td>$ 1.200</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>4</td>
-                  <td>Castración</td>
-                  <td><span class="badge badge-tipo-cirugia">Cirugía</span></td>
-                  <td class="admin-celda-texto">Castración con anestesia general y control posoperatorio.</td>
-                  <td>120 min</td>
-                  <td>$ 6.500</td>
-                  <td class="text-end">
-                    <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
-                  </td>
-                </tr>
+                <?php if (!empty($servicios)): ?>
+                  <?php foreach ($servicios as $serv): ?>
+                    <tr>
+                      <!-- Ajusta los nombres de las columnas ['id'], ['nombre'], etc., según tu base de datos -->
+                      <td><?= htmlspecialchars($serv['id'] ?? $serv['id_servicio'] ?? '') ?></td>
+                      <td><?= htmlspecialchars($serv['nombre'] ?? '') ?></td>
+
+                      <td>
+                        <?php
+                        $tipoServicio = $serv['tipo'] ?? $serv['tipo_servicio'] ?? '';
+                        $claseBadge = obtenerClaseBadge($tipoServicio);
+                        ?>
+                        <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($tipoServicio) ?></span>
+                      </td>
+
+                      <td class="admin-celda-texto"><?= htmlspecialchars($serv['descripcion'] ?? '') ?></td>
+                      <td><?= htmlspecialchars($serv['duracion'] ?? '') ?> min</td>
+                      <td>$ <?= number_format($serv['precio'] ?? 0, 0, ',', '.') ?></td>
+
+                      <td class="text-end">
+                        <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
+
+
             </table>
           </div>
         </div>
@@ -110,7 +151,7 @@
     </div>
   </div>
 
-  <!-- modal para agregar servicio, los campos de cada subtipo quedan para después -->
+  <!-- agregar servicio -->
   <div class="modal fade admin-modal" id="modalServicio" tabindex="-1" aria-labelledby="modalServicioTitulo" aria-hidden="true" data-bs-theme="dark">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" action="#" method="post">
@@ -120,22 +161,18 @@
         </div>
         <div class="modal-body">
           <div class="row g-3">
-            <div class="col-sm-4">
-              <label class="form-label" for="IdServicio">Id</label>
-              <input class="form-control" type="number" id="IdServicio" name="IdServicio" min="1" placeholder="5" required>
-            </div>
-            <div class="col-sm-8">
+            <div class="col-sm-12">
               <label class="form-label" for="Nombre">Nombre</label>
               <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Consulta general" required>
             </div>
             <div class="col-12">
               <label class="form-label" for="TipoServicio">Tipo</label>
-              <select class="form-select" id="TipoServicio" name="TipoServicio" required>
+              <select class="form-select" id="TipoServicio" name="TipoServicio" required onchange="mostrarCamposTipo(this.value)">
                 <option value="" selected disabled>Elegir tipo</option>
-                <option value="CONSULTA">Consulta</option>
-                <option value="VACUNACION">Vacunación</option>
-                <option value="PELUQUERIA">Peluquería</option>
-                <option value="CIRUGIA">Cirugía</option>
+                <option value="Consulta">Consulta</option>
+                <option value="Vacunación">Vacunación</option>
+                <option value="Peluquería">Peluquería</option>
+                <option value="Cirugía">Cirugía</option>
               </select>
             </div>
             <div class="col-12">
@@ -150,17 +187,99 @@
               <label class="form-label" for="Precio">Precio ($)</label>
               <input class="form-control" type="number" id="Precio" name="Precio" min="0" step="0.01" placeholder="900">
             </div>
+            <div id="camposConsulta" class="campos-tipo d-none row g-3">
+              <div class="col-sm-12">
+                <label class="form-label" for="Motivo">Motivo</label>
+                <input class="form-control" type="text" id="Motivo" name="Motivo">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="EsEmergencia">¿Es emergencia?</label>
+                <select class="form-select" id="EsEmergencia" name="EsEmergencia">
+                  <option value="0">No</option>
+                  <option value="1">Sí</option>
+                </select>
+              </div>
+              <div class="col-sm-12">
+                <label class="form-label" for="IndicacionesRecetadas">Indicaciones</label>
+                <textarea class="form-control" id="IndicacionesRecetadas" name="IndicacionesRecetadas"></textarea>
+              </div>
+            </div>
+
+            <div id="camposVacunacion" class="campos-tipo d-none row g-3">
+              <div class="col-sm-4">
+                <label class="form-label" for="LoteVacuna">Lote</label>
+                <input class="form-control" type="text" id="LoteVacuna" name="LoteVacuna">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="TipoVacuna">Tipo de vacuna</label>
+                <input class="form-control" type="text" id="TipoVacuna" name="TipoVacuna">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="LaboratorioFabricante">Laboratorio</label>
+                <input class="form-control" type="text" id="LaboratorioFabricante" name="LaboratorioFabricante">
+              </div>
+            </div>
+
+            <div id="camposPeluqueria" class="campos-tipo d-none row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="TipoCorte">Tipo de corte</label>
+                <input class="form-control" type="text" id="TipoCorte" name="TipoCorte">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="TipoShampoo">Tipo de shampoo</label>
+                <input class="form-control" type="text" id="TipoShampoo" name="TipoShampoo">
+              </div>
+            </div>
+
+            <div id="camposCirugia" class="campos-tipo d-none row g-3">
+              <div class="col-sm-4">
+                <label class="form-label" for="TipoAnestesia">Anestesia</label>
+                <input class="form-control" type="text" id="TipoAnestesia" name="TipoAnestesia">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="RiesgoQuirurgico">Riesgo quirúrgico</label>
+                <input class="form-control" type="text" id="RiesgoQuirurgico" name="RiesgoQuirurgico">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="AutorizacionFirmada">¿Autorización firmada?</label>
+                <select class="form-select" id="AutorizacionFirmada" name="AutorizacionFirmada">
+                  <option value="0">No</option>
+                  <option value="1">Sí</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn admin-btn-cancelar" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn admin-btn-agregar">Guardar</button>
+          <button type="submit" class="btn admin-btn-agregar" name="guardar">Guardar</button>
         </div>
       </form>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function mostrarCamposTipo(tipo) {
+      document.querySelectorAll('.campos-tipo').forEach(div => {
+        div.classList.add('d-none');
+        div.querySelectorAll('input, select, textarea').forEach(campo => campo.required = false);
+      });
+
+      const mapa = {
+        'Consulta': 'camposConsulta',
+        'Vacunación': 'camposVacunacion',
+        'Peluquería': 'camposPeluqueria',
+        'Cirugía': 'camposCirugia'
+      };
+
+      const idDiv = mapa[tipo];
+      if (idDiv) {
+        const div = document.getElementById(idDiv);
+        div.classList.remove('d-none');
+      }
+    }
+  </script>
 </body>
 
 </html>
