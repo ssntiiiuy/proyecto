@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../Conexion.php';
 require_once __DIR__ . '/../Servicio.php';
 
-
 /* funcion para guardar los datos */
 $datosServicios = Servicio::listadoServicios();
 $servicios = $datosServicios['servicios'];
@@ -37,13 +36,10 @@ function obtenerClaseBadge($tipo)
   switch ($tipoLimpio) {
     case 'consulta':
       return 'badge-tipo-consulta';
-    case 'vacunación':
     case 'vacunacion':
       return 'badge-tipo-vacunacion';
-    case 'peluquería':
     case 'peluqueria':
       return 'badge-tipo-peluqueria';
-    case 'cirugía':
     case 'cirugia':
       return 'badge-tipo-cirugia';
     default:
@@ -108,26 +104,24 @@ function obtenerClaseBadge($tipo)
               </thead>
 
               <!-- listado de servicios -->
-              <!-- listado de servicios dinámico -->
               <tbody>
                 <?php if (!empty($servicios)): ?>
                   <?php foreach ($servicios as $serv): ?>
                     <tr>
-                      <!-- Ajusta los nombres de las columnas ['id'], ['nombre'], etc., según tu base de datos -->
-                      <td><?= htmlspecialchars($serv['id'] ?? $serv['id_servicio'] ?? '') ?></td>
-                      <td><?= htmlspecialchars($serv['nombre'] ?? '') ?></td>
+                      <td><?= htmlspecialchars($serv['IdServicio']) ?></td>
+                      <td><?= htmlspecialchars($serv['Nombre']) ?></td>
 
                       <td>
                         <?php
-                        $tipoServicio = $serv['tipo'] ?? $serv['tipo_servicio'] ?? '';
+                        $tipoServicio = $serv['Tipo'];
                         $claseBadge = obtenerClaseBadge($tipoServicio);
                         ?>
                         <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($tipoServicio) ?></span>
                       </td>
 
-                      <td class="admin-celda-texto"><?= htmlspecialchars($serv['descripcion'] ?? '') ?></td>
-                      <td><?= htmlspecialchars($serv['duracion'] ?? '') ?> min</td>
-                      <td>$ <?= number_format($serv['precio'] ?? 0, 0, ',', '.') ?></td>
+                      <td class="admin-celda-texto"><?= htmlspecialchars($serv['Descripcion'] ?? '') ?></td>
+                      <td><?= htmlspecialchars($serv['Duracion'] ?? '') ?> min</td>
+                      <td>$ <?= number_format($serv['Precio'] ?? 0, 0, ',', '.') ?></td>
 
                       <td class="text-end">
                         <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar">
@@ -170,9 +164,9 @@ function obtenerClaseBadge($tipo)
               <select class="form-select" id="TipoServicio" name="TipoServicio" required onchange="mostrarCamposTipo(this.value)">
                 <option value="" selected disabled>Elegir tipo</option>
                 <option value="Consulta">Consulta</option>
-                <option value="Vacunación">Vacunación</option>
-                <option value="Peluquería">Peluquería</option>
-                <option value="Cirugía">Cirugía</option>
+                <option value="Vacunacion">Vacunación</option>
+                <option value="Peluqueria">Peluquería</option>
+                <option value="Cirugia">Cirugía</option>
               </select>
             </div>
             <div class="col-12">
@@ -268,9 +262,9 @@ function obtenerClaseBadge($tipo)
 
       const mapa = {
         'Consulta': 'camposConsulta',
-        'Vacunación': 'camposVacunacion',
-        'Peluquería': 'camposPeluqueria',
-        'Cirugía': 'camposCirugia'
+        'Vacunacion': 'camposVacunacion',
+        'Peluqueria': 'camposPeluqueria',
+        'Cirugia': 'camposCirugia'
       };
 
       const idDiv = mapa[tipo];

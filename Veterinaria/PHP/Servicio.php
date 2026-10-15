@@ -76,16 +76,17 @@ class Servicio
             $sql = "SELECT s.IdServicio, s.Nombre, s.Precio, s.Descripcion, s.Duracion,
                    CASE
                      WHEN c.IdServicio IS NOT NULL THEN 'Consulta'
-                     WHEN v.IdServicio IS NOT NULL THEN 'Vacunación'
-                     WHEN p.IdServicio IS NOT NULL THEN 'Peluquería'
-                     WHEN q.IdServicio IS NOT NULL THEN 'Cirugía'
+                     WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
+                     WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
+                     WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
                      ELSE 'Sin definir'
                    END AS Tipo
                 FROM SERVICIO s
                 LEFT JOIN CONSULTA c ON s.IdServicio = c.IdServicio
                 LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
                 LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
-                LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio";
+                LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
+                GROUP BY s.IdServicio, s.Nombre, Tipo, s.Descripcion, s.Duracion, s.Precio";
 
             $stmt = $conexion->query($sql);
             $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -101,8 +102,6 @@ class Servicio
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
-
-            // 1. INICIAR LA TRANSACCIÓN AQUÍ
             $conexion->beginTransaction();
 
             $sqlServicio = "INSERT INTO SERVICIO (Nombre, Precio, Descripcion, Duracion) VALUES (:nombre, :precio, :descripcion, :duracion)";
@@ -130,7 +129,6 @@ class Servicio
                     ]);
                     break;
 
-                case 'Vacunación':
                 case 'Vacunacion':
                     $sql = "INSERT INTO VACUNACION (IdServicio, LoteVacuna, TipoVacuna, LaboratorioFabricante)
                         VALUES (:id, :lote, :tipoVacuna, :laboratorio)";
@@ -143,7 +141,6 @@ class Servicio
                     ]);
                     break;
 
-                case 'Peluquería':
                 case 'Peluqueria':
                     $sql = "INSERT INTO PELUQUERIA (IdServicio, TipoCorte, TipoShampoo) VALUES (:id, :corte, :shampoo)";
                     $stmt = $conexion->prepare($sql);
@@ -154,7 +151,6 @@ class Servicio
                     ]);
                     break;
 
-                case 'Cirugía':
                 case 'Cirugia':
                     $sql = "INSERT INTO CIRUGIA (IdServicio, Anestesia, RiesgoQuirurgico, AutorizacionFirmada)
                         VALUES (:id, :anestesia, :riesgo, :autorizacion)";
