@@ -3,26 +3,28 @@ require_once 'Conexion.php';
 
 class Producto
 {
-    private ?string $id;
+    private ?int $id;
     private ?string $nombre;
     private ?string $categoria;
-    private ?string $stock;
-    private ?string $stockMinimo;
-    private ?string $fechaVencimiento;
+    private ?float $precio;
+    private ?int $stock;
+    private ?int $stockMinimo;
+    private ?DateTime $fechaVencimiento;
 
-    public function __construct(?string $id = null, ?string $nombre = null, ?string $categoria = null, ?string $stock = null, ?string $stockMinimo = null, ?string $fechaVencimiento = null)
+    public function __construct(?int $id = null, ?string $nombre = null, ?string $categoria = null, ?float $precio = null, ?int $stock = null, ?int $stockMinimo = null, ?DateTime $fechaVencimiento = null)
     {
         $this->id = $id;
         $this->nombre = $nombre;
         $this->categoria = $categoria;
+        $this->precio = $precio;
         $this->stock = $stock;
         $this->stockMinimo = $stockMinimo;
         $this->fechaVencimiento = $fechaVencimiento;
     }
 
-    public function getId(): string
+    public function getId(): int
     {
-        return $this->id ?? '';
+        return $this->id ?? 0;
     }
 
     public function getNombre(): string
@@ -35,14 +37,14 @@ class Producto
         return $this->categoria ?? '';
     }
 
-    public function getStock(): string
+    public function getStock(): int
     {
-        return $this->stock ?? '';
+        return $this->stock ?? 0;
     }
 
-    public function getStockMinimo(): string
+    public function getStockMinimo(): int
     {
-        return $this->stockMinimo ?? '';
+        return $this->stockMinimo ?? 0;
     }
 
     public function getFechaVencimiento(): string
@@ -50,11 +52,6 @@ class Producto
         return $this->fechaVencimiento ?? '';
     }
 
-
-    public function setId(string $id): void
-    {
-        $this->id = $id;
-    }
 
     public function setNombre(string $nombre): void
     {
@@ -66,17 +63,17 @@ class Producto
         $this->categoria = $categoria;
     }
 
-    public function setStock(string $stock): void
+    public function setStock(int $stock): void
     {
         $this->stock = $stock;
     }
 
-    public function setStockMinimo(string $stockMinimo): void
+    public function setStockMinimo(int $stockMinimo): void
     {
         $this->stockMinimo = $stockMinimo;
     }
 
-    public function setFechaVencimiento(string $fechaVencimiento): void
+    public function setFechaVencimiento(DateTime $fechaVencimiento): void
     {
         $this->fechaVencimiento = $fechaVencimiento;
     }

@@ -3,14 +3,14 @@ require_once 'Conexion.php';
 
 class Mascota
 {
-    private ?string $id;
+    private ?int $id;
     private ?string $nombre;
     private ?string $especie;
     private ?string $raza;
-    private ?string $fechaNacimiento;
-    private ?string $ciDueño;
+    private ?DateTime $fechaNacimiento;
+    private ?int $ciDueño;
 
-    public function __construct(?string $id = null, ?string $nombre = null, ?string $especie = null, ?string $raza = null, ?string $fechaNacimiento = null, ?string $ciDueño = null)
+    public function __construct(?int $id = null, ?string $nombre = null, ?string $especie = null, ?string $raza = null, ?DateTime $fechaNacimiento = null, ?int $ciDueño = null)
     {
         $this->id = $id;
         $this->nombre = $nombre;
@@ -20,9 +20,9 @@ class Mascota
         $this->ciDueño = $ciDueño;
     }
 
-    public function getId(): string
+    public function getId(): int
     {
-        return $this->id ?? '';
+        return $this->id ?? 0;
     }
 
     public function getNombre(): string
@@ -60,11 +60,6 @@ class Mascota
         return $this->direccion ?? '';
     }
 
-    public function setId(string $id): void
-    {
-        $this->id = $id;
-    }
-
     public function setNombre(string $nombre): void
     {
         $this->nombre = $nombre;
@@ -80,12 +75,12 @@ class Mascota
         $this->raza = $raza;
     }
 
-    public function setFechaNacimiento(string $fechaNacimiento): void
+    public function setFechaNacimiento(DateTime $fechaNacimiento): void
     {
         $this->fechaNacimiento = $fechaNacimiento;
     }
 
-    public function setCiDueño(string $ciDueño): void
+    public function setCiDueño(int $ciDueño): void
     {
         $this->ciDueño = $ciDueño;
     }

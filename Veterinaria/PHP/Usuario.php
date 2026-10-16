@@ -4,14 +4,14 @@ require_once 'Login.php';
 
 class Usuario
 {
-    private ?string $ci;
+    private ?int $ci;
     private ?string $nombre;
     private ?string $apellido;
-    private ?string $telefono;
+    private ?int $telefono;
     private ?string $direccion;
     private ?string $tipoUsuario;
 
-    public function __construct(?string $ci = null, ?string $nombre = null, ?string $apellido = null, ?string $telefono = null, ?string $direccion = null, ?string $tipoUsuario = null)
+    public function __construct(?int $ci = null, ?string $nombre = null, ?string $apellido = null, ?int $telefono = null, ?string $direccion = null, ?string $tipoUsuario = null)
     {
         $this->ci = $ci;
         $this->nombre = $nombre;
@@ -21,9 +21,9 @@ class Usuario
         $this->tipoUsuario = $tipoUsuario;
     }
 
-    public function getCi(): string
+    public function getCi(): int
     {
-        return $this->ci ?? '';
+        return $this->ci ?? 0;
     }
 
     public function getNombre(): string
@@ -36,9 +36,9 @@ class Usuario
         return $this->apellido ?? '';
     }
 
-    public function getTelefono(): string
+    public function getTelefono(): int
     {
-        return $this->telefono ?? '';
+        return $this->telefono ?? 0;
     }
 
     public function getDireccion(): string
@@ -46,7 +46,7 @@ class Usuario
         return $this->direccion ?? '';
     }
 
-    public function setCi(string $ci): void
+    public function setCi(int $ci): void
     {
         $this->ci = $ci;
     }
@@ -61,7 +61,7 @@ class Usuario
         $this->apellido = $apellido;
     }
 
-    public function setTelefono(string $telefono): void
+    public function setTelefono(int $telefono): void
     {
         $this->telefono = $telefono;
     }

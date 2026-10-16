@@ -3,11 +3,11 @@ require_once 'Conexion.php';
 
 class Servicio
 {
-    private ?string $id;
+    private ?int $id;
     private ?string $nombre;
-    private ?string $precio;
+    private ?float $precio;
     private ?string $descripcion;
-    private ?string $duracion;
+    private ?int $duracion;
 
     public function __construct(?string $id = null, ?string $nombre = null, ?string $precio = null, ?string $descripcion = null, ?string $duracion = null)
     {
@@ -18,9 +18,9 @@ class Servicio
         $this->duracion = $duracion;
     }
 
-    public function getId(): string
+    public function getId(): int
     {
-        return $this->id ?? '';
+        return $this->id ?? 0;
     }
 
     public function getNombre(): string
@@ -28,7 +28,7 @@ class Servicio
         return $this->nombre ?? '';
     }
 
-    public function getPrecio(): string
+    public function getPrecio(): float
     {
         return $this->precio ?? '';
     }
@@ -43,17 +43,13 @@ class Servicio
         return $this->duracion ?? '';
     }
 
-    public function setId(string $id): void
-    {
-        $this->id = $id;
-    }
 
     public function setNombre(string $nombre): void
     {
         $this->nombre = $nombre;
     }
 
-    public function setPrecio(string $precio): void
+    public function setPrecio(float $precio): void
     {
         $this->precio = $precio;
     }
@@ -63,7 +59,7 @@ class Servicio
         $this->descripcion = $descripcion;
     }
 
-    public function setDuracion(string $duracion): void
+    public function setDuracion(int $duracion): void
     {
         $this->duracion = $duracion;
     }

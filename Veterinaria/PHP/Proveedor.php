@@ -3,13 +3,13 @@ require_once 'Conexion.php';
 
 class Proveedor
 {
-    private ?string $id;
+    private ?int $id;
     private ?string $nombre;
     private ?string $empresa;
-    private ?string $telefono;
+    private ?int $telefono;
     private ?string $producto;
 
-    public function __construct(?string $id = null, ?string $nombre = null, ?string $empresa = null, ?string $telefono = null, ?string $producto = null)
+    public function __construct(?int $id = null, ?string $nombre = null, ?string $empresa = null, ?int $telefono = null, ?string $producto = null)
     {
         $this->id = $id;
         $this->nombre = $nombre;
@@ -18,9 +18,9 @@ class Proveedor
         $this->producto = $producto;
     }
 
-    public function getId(): string
+    public function getId(): int
     {
-        return $this->id ?? '';
+        return $this->id ?? 0;
     }
 
     public function getNombre(): string
@@ -33,9 +33,9 @@ class Proveedor
         return $this->empresa ?? '';
     }
 
-    public function getTelefono(): string
+    public function getTelefono(): int
     {
-        return $this->telefono ?? '';
+        return $this->telefono ?? 0;
     }
 
     public function getProducto(): string
@@ -43,10 +43,6 @@ class Proveedor
         return $this->producto ?? '';
     }
 
-    public function setId(string $id): void
-    {
-        $this->id = $id;
-    }
 
     public function setNombre(string $nombre): void
     {
@@ -58,7 +54,7 @@ class Proveedor
         $this->empresa = $empresa;
     }
 
-    public function setTelefono(string $telefono): void
+    public function setTelefono(int $telefono): void
     {
         $this->telefono = $telefono;
     }
