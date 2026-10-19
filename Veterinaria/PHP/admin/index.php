@@ -1,11 +1,21 @@
 <?php
 require_once __DIR__ . '/../Conexion.php';
 require_once __DIR__ . '/../Cita.php';
+require_once __DIR__ . '/../Producto.php';
 
 $estadoFiltro = $_GET['estado'] ?? '';
 $datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);
 $citas = $datosCitas['citas'];
 
+/* limitar a las próximas 5 citas en el dashboard */
+$citasProximas = array_slice($citas, 0, 5);
+
+$citasHoy = Cita::contarCitasHoy();
+$stockBajo = Producto::contarStockBajo();
+$porVencer = Producto::contarPorVencer();
+
+$conexion = (new Conexion())->establecerConexion();
+$clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fetchColumn();
 ?>
 
 <!DOCTYPE html>
@@ -46,7 +56,7 @@ $citas = $datosCitas['citas'];
             <div class="admin-stat admin-stat-info">
               <div>
                 <p class="admin-stat-label">Citas de hoy</p>
-                <p class="admin-stat-valor">3</p>
+                <p class="admin-stat-valor"><?= $citasHoy ?></p>
               </div>
               <i class="bi bi-calendar-check"></i>
             </div>
@@ -55,7 +65,7 @@ $citas = $datosCitas['citas'];
             <div class="admin-stat admin-stat-danger">
               <div>
                 <p class="admin-stat-label">Productos con stock bajo</p>
-                <p class="admin-stat-valor">2</p>
+                <p class="admin-stat-valor"><?= $stockBajo ?></p>
               </div>
               <i class="bi bi-box-seam"></i>
             </div>
@@ -73,7 +83,7 @@ $citas = $datosCitas['citas'];
             <div class="admin-stat admin-stat-success">
               <div>
                 <p class="admin-stat-label">Clientes registrados</p>
-                <p class="admin-stat-valor">48</p>
+                <p class="admin-stat-valor"><?= $clientesRegistrados ?></p>
               </div>
               <i class="bi bi-people"></i>
             </div>

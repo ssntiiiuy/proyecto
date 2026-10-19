@@ -91,7 +91,6 @@ class Producto
             $productos = $stmtProducto->fetchAll(PDO::FETCH_ASSOC);
 
             return ['productos' => $productos];
-
         } catch (PDOException $e) {
             echo "Error al cargar productos: " . $e->getMessage();
             return [
@@ -134,6 +133,38 @@ class Producto
             return true;
         } catch (PDOException $e) {
             return false;
+        }
+    }
+
+    public static function contarStockBajo(): int
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $sql = "SELECT COUNT(*) FROM PRODUCTO WHERE Stock <= StockMinimo";
+            $stmt = $conexion->query($sql);
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+
+    public static function contarPorVencer(int $dias = 30): int
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $sql = "SELECT COUNT(*) FROM PRODUCTO
+                WHERE FechaVencimiento IS NOT NULL
+                AND FechaVencimiento >= :hoy
+                AND FechaVencimiento <= DATE_ADD(:hoy2, INTERVAL :dias DAY)";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([
+                ':hoy' => date('Y-m-d'),
+                ':hoy2' => date('Y-m-d'),
+                ':dias' => $dias
+            ]);
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
         }
     }
 }
