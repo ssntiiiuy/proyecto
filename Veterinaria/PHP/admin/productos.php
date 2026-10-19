@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $stock = trim($_POST['Stock']);
   $stockMinimo = trim($_POST['StockMinimo']);
   $fechaVencimiento = trim($_POST['FechaVencimiento']);
+  $fechaVencimiento = $fechaVencimiento === '' ? null : $fechaVencimiento; /* si no pone nada en la fecha de vencimiento, lo establece como null */
   $nombreEmpresa = trim($_POST['NombreEmpresa']);
 
   $producto = new Producto();
@@ -96,9 +97,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                     <td><?= htmlspecialchars($prod['Nombre']) ?></td>
                     <td><?= htmlspecialchars($prod['Categoria']) ?></td>
                     <td><?= htmlspecialchars($prod['Precio']) ?></td>
-                    <td><?= htmlspecialchars($prod['Stock']) ?></td>
+
+                    <!-- alerta de stock si es menor al stock minimo -->
+                    <td>
+                      <?= htmlspecialchars($prod['Stock']) ?>
+                      <?php if ((int)$prod['Stock'] <= (int)$prod['StockMinimo']): ?>
+                        <br><span class="badge badge-danger">Stock bajo</span>
+                      <?php endif; ?>
+                    </td>
+
                     <td><?= htmlspecialchars($prod['StockMinimo']) ?></td>
-                    <td><?= date('d/m/Y', strtotime($prod['FechaVencimiento']) ?? '-') ?> </td>
+
+                    <!-- alerta de vencimiento si esta por vencer o ha vencido -->
+                    <td>
+                      <?php if (empty($prod['FechaVencimiento'])): ?>
+                        —
+                      <?php else:
+                        $fechaVenc = new DateTime($prod['FechaVencimiento']);
+                        $hoy = new DateTime();
+                        $diasRestantes = (int)$hoy->diff($fechaVenc)->format('%r%a');
+                      ?>
+                        <?= htmlspecialchars($fechaVenc->format('d/m/Y')) ?>
+                        <?php if ($diasRestantes < 0): ?>
+                          <br><span class="badge badge-danger">Vencido</span>
+                        <?php elseif ($diasRestantes <= 30): ?>
+                          <br><span class="badge badge-warning">Por vencer</span>
+                        <?php endif; ?>
+                      <?php endif; ?>
+                    </td>
+
                     <td><?= htmlspecialchars($prod['NombreEmpresa']) ?></td>
                     <td class="text-end">
                       <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>

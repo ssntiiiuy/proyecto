@@ -100,7 +100,7 @@ class Producto
         }
     }
 
-    public function crearProducto(string $nombre, string $categoria, string $precio, string $stock, string $stockMinimo, string $fechaVencimiento, string $NombreEmpresa): bool
+    public function crearProducto(string $nombre, string $categoria, string $precio, string $stock, string $stockMinimo, ?string $fechaVencimiento, string $NombreEmpresa): bool
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
