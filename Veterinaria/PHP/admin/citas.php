@@ -247,7 +247,7 @@ $modalAbierto = isset($_GET['ci']) || isset($error);
                 </div>
                 <div class="col-sm-6">
                   <label class="form-label" for="Fecha">Fecha</label>
-                  <input class="form-control" type="date" id="Fecha" name="Fecha" required>
+                  <input class="form-control" type="date" id="Fecha" name="Fecha" min="<?= date('Y-m-d') ?>" required>
                 </div>
                 <div class="col-sm-6">
                   <label class="form-label" for="Hora">Hora</label>
