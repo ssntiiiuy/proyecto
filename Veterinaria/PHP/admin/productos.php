@@ -2,8 +2,9 @@
 require_once __DIR__ . '/../Conexion.php';
 require_once __DIR__ . '/../Producto.php';
 
-/* funcion para guardar los datos */
-$datosProductos = Producto::listadoProductos();
+/* funcion para guardar los datos por tipo */
+$categoriaFiltro = $_GET['filtroCategoria'] ?? '';
+$datosProductos = Producto::listadoProductos($categoriaFiltro !== '' ? $categoriaFiltro : null);
 $productos = $datosProductos['productos'];
 
 $conexion = (new Conexion())->establecerConexion();
@@ -67,9 +68,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <h2>Listado de productos</h2>
-            <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalProducto">
-              <i class="bi bi-plus-lg"></i> Agregar producto
-            </button>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <form method="get" action="productos.php" class="d-flex gap-2">
+                <label class="visually-hidden" for="filtroCategoria">Filtrar por categoría</label>
+                <select class="form-select form-select-sm admin-filtro" id="filtroCategoria" name="filtroCategoria" data-bs-theme="dark">
+                  <option value="" <?= $categoriaFiltro === '' ? 'selected' : '' ?>>Todas las categorías</option>
+                  <option value="Accesorios" <?= $categoriaFiltro === 'Accesorios' ? 'selected' : '' ?>>Accesorios</option>
+                  <option value="Alimentos" <?= $categoriaFiltro === 'Alimentos' ? 'selected' : '' ?>>Alimentos</option>
+                  <option value="Farmacia" <?= $categoriaFiltro === 'Farmacia' ? 'selected' : '' ?>>Farmacia</option>
+                  <option value="Higiene" <?= $categoriaFiltro === 'Higiene' ? 'selected' : '' ?>>Higiene</option>
+                </select>
+                <button type="submit" class="btn btn-sm admin-btn-filtrar">Filtrar</button>
+              </form>
+              <button type="button" class="btn btn-sm admin-btn-agregar" data-bs-toggle="modal" data-bs-target="#modalProducto">
+  <i class="bi bi-plus-lg"></i> Agregar producto
+</button>
+            </div>
           </div>
 
           <div class="table-responsive">

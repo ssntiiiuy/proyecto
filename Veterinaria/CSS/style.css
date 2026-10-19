@@ -10,6 +10,8 @@
   --sienra-danger-text: #F2A9A9;
   --sienra-success: #1F5E3C;
   --sienra-success-text: #A9E3C0;
+  --sienra-warning: #5a4a23;
+  --sienra-warning-text: #e2d2a4;
   --sienra-info: #24405C;
 }
 
@@ -176,6 +178,11 @@ body {
 .badge-success {
   background-color: var(--sienra-success);
   color: var(--sienra-success-text);
+}
+
+.badge-warning {
+  background-color: var(--sienra-warning);
+  color: var(--sienra-warning-text);
 }
 
 /* ===== Botones ===== */
@@ -385,10 +392,12 @@ body {
     align-items: flex-start;
     gap: 0.4rem;
   }
+
   .registro-input {
     max-width: 100%;
     width: 100%;
   }
+
   .registro-actions {
     margin-left: 0;
   }
@@ -770,6 +779,7 @@ body {
     white-space: normal;
     font-size: 0.85rem;
   }
+
   .mascotas-tabla thead th,
   .mascotas-tabla tbody td {
     padding: 0.5rem 0.4rem;
@@ -829,32 +839,33 @@ body {
   border-radius: 8px;
 }
 
-    .auth-form-wide {
-        width: 100%;
-        max-width: 560px;
-    }
+.auth-form-wide {
+  width: 100%;
+  max-width: 560px;
+}
 
-    .input-password {
-        -webkit-text-security: disc;
-        text-security: disc;
-    }
+.input-password {
+  -webkit-text-security: disc;
+  text-security: disc;
+}
 
-    .toggle-check:checked ~ .input-password {
-        -webkit-text-security: none;
-        text-security: none;
-    }
+.toggle-check:checked~.input-password {
+  -webkit-text-security: none;
+  text-security: none;
+}
 
-    .icon-eye-slash {
-        display: none;
-    }
+.icon-eye-slash {
+  display: none;
+}
 
-    .toggle-check:checked ~ label .icon-eye {
-        display: none;
-    }
+.toggle-check:checked~label .icon-eye {
+  display: none;
+}
 
-    .toggle-check:checked ~ label .icon-eye-slash {
-        display: inline-block;
-    }
+.toggle-check:checked~label .icon-eye-slash {
+  display: inline-block;
+}
+
 /* Admin */
 .admin-wrapper {
   display: flex;
@@ -885,6 +896,7 @@ body {
     flex: 0 0 240px;
     background-color: var(--sienra-ink);
   }
+
   .admin-sidebar .offcanvas-lg {
     position: sticky;
     top: 0;
@@ -1037,7 +1049,7 @@ body {
   margin: 0;
 }
 
-.admin-stat > i {
+.admin-stat>i {
   font-size: 2rem;
   color: rgba(255, 255, 255, 0.2);
 }
@@ -1116,17 +1128,19 @@ body {
 }
 
 .admin-btn-filtrar {
-    background-color: transparent;
-    color: #e2e8f0;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 500;
-    border: 1px solid #64748b; /* Borde sutil */
-    border-radius: 6px;
+  background-color: transparent;
+  color: #e2e8f0;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  border: 1px solid #64748b;
+  /* Borde sutil */
+  border-radius: 6px;
 }
 
 .admin-btn-filtrar:hover {
-    background-color: rgba(255, 255, 255, 0.08); /* Fondo sutil al pasar el mouse */
-    color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+  /* Fondo sutil al pasar el mouse */
+  color: #ffffff;
 }
 
 .admin-btn-cancelar {

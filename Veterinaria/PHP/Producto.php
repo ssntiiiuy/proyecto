@@ -78,24 +78,32 @@ class Producto
         $this->fechaVencimiento = $fechaVencimiento;
     }
 
-    public static function listadoProductos(): array
+
+    public static function listadoProductos(?string $categoria = null): array
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
 
             $sqlProducto = "SELECT p.IdProducto, p.Nombre, p.Categoria, p.Precio, p.Stock, p.StockMinimo, p.FechaVencimiento, prov.NombreEmpresa
-                   FROM PRODUCTO p
-                   INNER JOIN PROVEE pr ON p.IdProducto = pr.IdProducto
-                   INNER JOIN PROVEEDOR prov ON pr.IdProveedor = prov.IdProveedor";
-            $stmtProducto = $conexion->query($sqlProducto);
-            $productos = $stmtProducto->fetchAll(PDO::FETCH_ASSOC);
+                            FROM PRODUCTO p
+                            INNER JOIN PROVEE pr ON p.IdProducto = pr.IdProducto
+                            INNER JOIN PROVEEDOR prov ON pr.IdProveedor = prov.IdProveedor";
+
+            $params = [];
+
+            if (!empty($categoria)) {
+                $sqlProducto .= " WHERE p.Categoria = :Categoria";
+                $params[':Categoria'] = $categoria;
+            }
+
+
+            $stmt = $conexion->prepare($sqlProducto);
+            $stmt->execute($params);
+            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return ['productos' => $productos];
         } catch (PDOException $e) {
-            echo "Error al cargar productos: " . $e->getMessage();
-            return [
-                'productos' => []
-            ];
+            return ['productos' => [], 'error' => $e->getMessage()];
         }
     }
 
