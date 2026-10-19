@@ -21,8 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($usuario['tipoUsuario'] === 'admin') {
             header("Location: ../PHP/admin/index.php");
-        } elseif ($usuario['tipoUsuario'] === 'veterinario') {
-            header("Location: indexVeterinario.php");
+        } elseif ($usuario['tipoUsuario'] === 'empleado') {
+            header("Location: ../PHP/empleado/index.php");
         } else {
             header("Location: index.php");
         }
