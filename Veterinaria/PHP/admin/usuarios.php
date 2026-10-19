@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $tipoUsuario = $_POST['tipo_usuario'];
   $rol = null;
 
+  /* asigna rol si es empleado, si es admin el rol es admin */
   if ($tipoUsuario === 'empleado') {
     if (empty($_POST['rol'])) {
       $error = "Debe seleccionar un rol para el empleado.";
