@@ -7,7 +7,7 @@ $estadoFiltro = $_GET['estado'] ?? '';
 $datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);
 $citas = $datosCitas['citas'];
 
-/* limitar a las próximas 5 citas en el dashboard */
+/* limita a las próximas 5 citas en el dashboard */
 $citasProximas = array_slice($citas, 0, 5);
 
 $citasHoy = Cita::contarCitasHoy();
@@ -50,7 +50,7 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
-        <!-- TODO BD: contar citas de hoy, stock bajo (Stock < StockMinimo), por vencer y clientes -->
+
         <div class="row g-3 mb-4">
           <div class="col-sm-6 col-xl-3">
             <div class="admin-stat admin-stat-info">
@@ -107,7 +107,7 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
                   <th scope="col">Estado</th>
                 </tr>
               </thead>
-              <!-- TODO BD: próximas citas con cliente, mascota y servicio -->
+              
               <tbody>
                 <?php if (empty($citas)): ?>
                   <tr>

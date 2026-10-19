@@ -11,6 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = new Login();
     if ($login->validar($correo, $pass)) {
 
+        $_SESSION['correo'] = $correo;
+
         $conexion = new Conexion();
 
         $sql = "SELECT tipoUsuario FROM login WHERE Correo = :correo";
