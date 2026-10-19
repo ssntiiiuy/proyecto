@@ -64,33 +64,40 @@ class Servicio
         $this->duracion = $duracion;
     }
 
-    public static function listadoServicios(): array
+    public static function listadoServicios(?string $estado = null): array
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
 
             $sql = "SELECT s.IdServicio, s.Nombre, s.Precio, s.Descripcion, s.Duracion,
-                   CASE
-                     WHEN c.IdServicio IS NOT NULL THEN 'Consulta'
-                     WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
-                     WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
-                     WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
-                     ELSE 'Sin definir'
-                   END AS Tipo
-                FROM SERVICIO s
-                LEFT JOIN CONSULTA c ON s.IdServicio = c.IdServicio
-                LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
-                LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
-                LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
-                GROUP BY s.IdServicio, s.Nombre, Tipo, s.Descripcion, s.Duracion, s.Precio";
+               CASE
+                 WHEN c.IdServicio IS NOT NULL THEN 'Consulta'
+                 WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
+                 WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
+                 WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
+                 ELSE 'Sin definir'
+               END AS Tipo
+            FROM SERVICIO s
+            LEFT JOIN CONSULTA c ON s.IdServicio = c.IdServicio
+            LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
+            LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
+            LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
+            GROUP BY s.IdServicio, s.Nombre, Tipo, s.Descripcion, s.Duracion, s.Precio";
 
-            $stmt = $conexion->query($sql);
+            $params = [];
+
+            if (!empty($estado)) {
+                $sql .= " HAVING Tipo = :estado";
+                $params[':estado'] = $estado;
+            }
+
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute($params);
             $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return ['servicios' => $servicios];
         } catch (PDOException $e) {
-            echo "Error al cargar servicios: " . $e->getMessage();
-            return ['servicios' => []];
+            return ['servicios' => [], 'error' => $e->getMessage()];
         }
     }
 

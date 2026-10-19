@@ -110,7 +110,7 @@ $modalAbierto = isset($_GET['ci']) || isset($error);
                   <option value="Confirmada" <?= $estadoFiltro === 'Confirmada' ? 'selected' : '' ?>>Confirmada</option>
                   <option value="Cancelada" <?= $estadoFiltro === 'Cancelada' ? 'selected' : '' ?>>Cancelada</option>
                 </select>
-                <button type="submit" class="btn btn-sm admin-btn-agregar">Filtrar</button>
+                <button type="submit" class="btn btn-sm admin-btn-filtrar">Filtrar</button>
               </form>
               <a href="citas.php?ci=" class="btn btn-sm admin-btn-agregar" role="button">
                 <i class="bi bi-plus-lg"></i> Agregar cita

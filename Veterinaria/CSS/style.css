@@ -1115,6 +1115,20 @@ body {
   color: #ffffff;
 }
 
+.admin-btn-filtrar {
+    background-color: transparent;
+    color: #e2e8f0;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    border: 1px solid #64748b; /* Borde sutil */
+    border-radius: 6px;
+}
+
+.admin-btn-filtrar:hover {
+    background-color: rgba(255, 255, 255, 0.08); /* Fondo sutil al pasar el mouse */
+    color: #ffffff;
+}
+
 .admin-btn-cancelar {
   background-color: transparent;
   color: var(--sienra-text);
