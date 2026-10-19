@@ -1,3 +1,13 @@
+<?php
+require_once __DIR__ . '/../Conexion.php';
+require_once __DIR__ . '/../Cita.php';
+
+$estadoFiltro = $_GET['estado'] ?? '';
+$datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);
+$citas = $datosCitas['citas'];
+
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -89,38 +99,35 @@
               </thead>
               <!-- TODO BD: próximas citas con cliente, mascota y servicio -->
               <tbody>
-                <tr>
-                  <td>08/10/2026</td>
-                  <td>09:30</td>
-                  <td>Jorge Pérez</td>
-                  <td>Rex</td>
-                  <td>Consulta general</td>
-                  <td><span class="badge badge-success">Confirmada</span></td>
-                </tr>
-                <tr>
-                  <td>08/10/2026</td>
-                  <td>11:00</td>
-                  <td>María González</td>
-                  <td>Luna</td>
-                  <td>Vacuna antirrábica</td>
-                  <td><span class="badge badge-success">Confirmada</span></td>
-                </tr>
-                <tr>
-                  <td>08/10/2026</td>
-                  <td>15:30</td>
-                  <td>Lucía Fernández</td>
-                  <td>Milo</td>
-                  <td>Baño y corte</td>
-                  <td><span class="badge badge-info">Pendiente</span></td>
-                </tr>
-                <tr>
-                  <td>09/10/2026</td>
-                  <td>10:00</td>
-                  <td>Martín Silva</td>
-                  <td>Toby</td>
-                  <td>Castración</td>
-                  <td><span class="badge badge-danger">Cancelada</span></td>
-                </tr>
+                <?php if (empty($citas)): ?>
+                  <tr>
+                    <td colspan="7" class="text-center">No hay citas registradas.</td>
+                  </tr>
+                  <?php else: foreach ($citas as $c): ?>
+                    <tr>
+                      <td><?= htmlspecialchars(date('d/m/Y', strtotime($c['Fecha']))) ?></td>
+                      <td><?= htmlspecialchars(substr($c['Hora'], 0, 5)) ?></td>
+                      <td><?= htmlspecialchars($c['ClienteNombre'] . ' ' . $c['ClienteApellido']) ?></td>
+                      <td><?= htmlspecialchars($c['MascotaNombre']) ?></td>
+                      <td><?= htmlspecialchars($c['ServicioNombre']) ?></td>
+                      <td>
+                        <?php
+                        $claseBadge = match ($c['Estado']) {
+                          'Confirmada' => 'badge-success',
+                          'Pendiente'  => 'badge-info',
+                          'Cancelada'  => 'badge-danger',
+                          default      => 'badge-secondary',
+                        };
+                        ?>
+                        <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($c['Estado']) ?></span>
+                      </td>
+                      <td class="text-end">
+                        <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                      </td>
+                    </tr>
+                <?php endforeach;
+                endif; ?>
               </tbody>
             </table>
           </div>
