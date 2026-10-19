@@ -148,7 +148,7 @@ class Servicio
                     break;
 
                 case 'Cirugia':
-                    $sql = "INSERT INTO CIRUGIA (IdServicio, Anestesia, RiesgoQuirurgico, AutorizacionFirmada)
+                    $sql = "INSERT INTO CIRUGIA (IdServicio, TipoAnestesia, RiesgoQuirurgico, AutorizacionFirmada)
                         VALUES (:id, :anestesia, :riesgo, :autorizacion)";
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([
