@@ -215,7 +215,7 @@ $modalAbierto = isset($_GET['ci']) || isset($error);
 
               <div class="mb-3">
                 <span class="text-muted">Cliente:</span>
-                <strong><?= htmlspecialchars($clienteEncontrado['Nombre']) ?></strong>
+                <strong><?= htmlspecialchars($clienteEncontrado['Nombre'] . ' ' . $clienteEncontrado['Apellido']) ?></strong>
                 <a href="citas.php" class="ms-2">(cambiar)</a>
               </div>
 
