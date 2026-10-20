@@ -1,13 +1,13 @@
 <?php
-require_once __DIR__ . '/../Conexion.php';
-require_once __DIR__ . '/../Cita.php';
-require_once __DIR__ . '/../Producto.php';
+require_once __DIR__ . '/../../Conexion.php';
+require_once __DIR__ . '/../../Cita.php';
+require_once __DIR__ . '/../../Producto.php';
 
 $estadoFiltro = $_GET['estado'] ?? '';
 $datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);
 $citas = $datosCitas['citas'];
 
-/* limita a las próximas 5 citas en el dashboard */
+/* limitar a las próximas 5 citas en el dashboard */
 $citasProximas = array_slice($citas, 0, 5);
 
 $citasHoy = Cita::contarCitasHoy();
@@ -31,7 +31,7 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="../../CSS/style.css">
+  <link rel="stylesheet" href="../../../CSS/style.css">
 </head>
 
 <body>
@@ -39,18 +39,18 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
   <div class="admin-wrapper">
     <?php
     $paginaActiva = 'dashboard';
-    include __DIR__ . '/includes/sidebar.php';
+    include __DIR__ . '/../includes/sidebar.php';
     ?>
 
     <div class="admin-contenido">
       <?php
       $tituloPagina = 'Dashboard';
-      include __DIR__ . '/includes/topbar.php';
+      include __DIR__ . '/../includes/topbar.php';
       ?>
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
-
+        <!-- TODO BD: contar citas de hoy, stock bajo (Stock < StockMinimo), por vencer y clientes -->
         <div class="row g-3 mb-4">
           <div class="col-sm-6 col-xl-3">
             <div class="admin-stat admin-stat-info">
@@ -107,7 +107,7 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
                   <th scope="col">Estado</th>
                 </tr>
               </thead>
-              
+              <!-- TODO BD: próximas citas con cliente, mascota y servicio -->
               <tbody>
                 <?php if (empty($citas)): ?>
                   <tr>

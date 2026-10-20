@@ -8,7 +8,7 @@ $gruposMenu = [
   ],
   'Gestión' => [
     'citas'     => ['citas.php', 'bi-calendar-check', 'Citas'],
-    'usuarios'  => ['usuarios.php', 'bi-people', 'Usuarios'],
+    'usuarios'  => ['/../PHP/empleado/usuarios.php', 'bi-people', 'Usuarios'],
     'mascotas'  => ['mascotas.php', 'bi-heart-pulse', 'Mascotas'],
     'servicios' => ['servicios.php', 'bi-clipboard2-pulse', 'Servicios'],
   ],

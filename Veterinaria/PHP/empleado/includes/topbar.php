@@ -8,6 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../../Conexion.php';
 
 $nombreUsuario = 'Usuario';
+$conexion = (new Conexion())->establecerConexion();
 
 try {
   if (!empty($_SESSION['correo'])) {
@@ -23,6 +24,17 @@ try {
       $nombreUsuario = $usuario['Nombre' ] . ' ' . $usuario['Apellido'];
     }
   }
+
+    $sqlRol = "SELECT login.tipoUsuario, e.rol
+        FROM login
+        INNER JOIN hace h ON login.Correo = h.Correo
+        INNER JOIN empleado e ON h.CI = e.CI
+        WHERE login.Correo = :correo";
+    $stmtRol = $conexion->prepare($sqlRol);
+    $stmtRol->execute([':correo' => $_SESSION['correo']]);
+    $rol = $stmtRol->fetch(PDO::FETCH_ASSOC);
+
+
 } catch (PDOException $e) {
   echo "<div style='color:red; background:#fee; padding:10px; border:1px solid red; margin:10px;'>";
   echo "<b>Error SQL en topbar.php:</b> " . $e->getMessage();
@@ -42,11 +54,11 @@ try {
       <span class="icon-badge icon-badge-user"><i class="bi bi-person-fill"></i></span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminUsuario">
-      <li><span class="dropdown-item-text text-muted small">Encargado</span></li>
+      <li><span class="dropdown-item-text text-muted small"><?= htmlspecialchars($rol['rol']) ?></span></li>
       <li>
         <hr class="dropdown-divider">
       </li>
-      <li><a class="dropdown-item" href="../LoginHTML.php">Cerrar sesión</a></li>
+      <li><a class="dropdown-item" href="/../../PHP/LoginHTML.php">Cerrar sesión</a></li>
     </ul>
   </div>
 </header>
