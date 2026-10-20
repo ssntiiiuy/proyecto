@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-require_once "Conexion.php";
+require_once __DIR__ . '/../Conexion.php';
 
 $nombreUsuario = "Usuario";
 
@@ -38,7 +38,7 @@ try {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="../CSS/style.css">
+  <link rel="stylesheet" href="../../CSS/style.css">
 </head>
 
 <body>
@@ -80,7 +80,7 @@ try {
                   <hr class="dropdown-divider">
                 </li>
                 <li><a class="dropdown-item" href="#">Mi perfil</a></li>
-                <li><a class="dropdown-item" href="LoginHTML.php">Cerrar sesión</a></li>
+                <li><a class="dropdown-item" href="../../PHP/LoginHTML.php">Cerrar sesión</a></li>
               </ul>
             </li>
           </ul>

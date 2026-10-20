@@ -53,7 +53,7 @@ $enlacesNav = [
                   <hr class="dropdown-divider">
                 </li>
                 <li><a class="dropdown-item" href="#">Mi perfil</a></li>
-                <li><a class="dropdown-item" href="LoginHTML.php">Cerrar sesión</a></li>
+                <li><a class="dropdown-item" href="../../PHP/LoginHTML.php">Cerrar sesión</a></li>
               </ul>
             </li>
           </ul>
