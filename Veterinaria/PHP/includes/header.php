@@ -15,7 +15,7 @@ $enlacesNav = [
       <div class="container-fluid px-3 px-lg-4">
 
         <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
-          <img src="img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+          <img src="../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
           <span class="brand-text">Clínica<br>Veterinaria<br>SIENRA</span>
         </a>
 

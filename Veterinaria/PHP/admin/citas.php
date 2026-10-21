@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../Conexion.php';
-require_once __DIR__ . '/../Cita.php';
+require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Cita.php';
 
 $estadoFiltro = $_GET['estado'] ?? '';
 $datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);
@@ -80,6 +80,7 @@ $modalAbierto = isset($_GET['ci']) || isset($error);
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="../../CSS/style.css">
+  <link rel="stylesheet" href="../../CSS/admin.css">
 </head>
 
 <body>
