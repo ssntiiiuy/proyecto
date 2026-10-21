@@ -2,8 +2,9 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Servicio.php';
 
-/* funcion para guardar los datos */
-$datosServicios = Servicio::listadoServicios();
+/* funcion para guardar los datos y filtrar por estado */
+$estadoFiltro = $_GET['estado'] ?? '';
+$datosServicios = Servicio::listadoServicios($estadoFiltro !== '' ? $estadoFiltro : null);
 $servicios = $datosServicios['servicios'];
 
 $conexion = (new Conexion())->establecerConexion();
@@ -85,9 +86,22 @@ function obtenerClaseBadge($tipo)
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <h2>Listado de servicios</h2>
-            <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalServicio">
-              <i class="bi bi-plus-lg"></i> Agregar servicio
-            </button>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <form method="get" action="servicios.php" class="d-flex gap-2">
+                <label class="visually-hidden" for="filtroEstado">Filtrar por categoría</label>
+                <select class="form-select form-select-sm admin-filtro" id="filtroEstado" name="estado" data-bs-theme="dark">
+                  <option value="" <?= $estadoFiltro === '' ? 'selected' : '' ?>>Todas las categorías</option>
+                  <option value="Consulta" <?= $estadoFiltro === 'Consulta' ? 'selected' : '' ?>>Consulta</option>
+                  <option value="Vacunacion" <?= $estadoFiltro === 'Vacunacion' ? 'selected' : '' ?>>Vacunación</option>
+                  <option value="Peluqueria" <?= $estadoFiltro === 'Peluqueria' ? 'selected' : '' ?>>Peluquería</option>
+                  <option value="Cirugia" <?= $estadoFiltro === 'Cirugia' ? 'selected' : '' ?>>Cirugía</option>
+                </select>
+                <button type="submit" class="btn btn-sm admin-btn-filtrar">Filtrar</button>
+              </form>
+              <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalServicio">
+                <i class="bi bi-plus-lg"></i> Agregar servicio
+              </button>
+            </div>
           </div>
 
           <div class="table-responsive">

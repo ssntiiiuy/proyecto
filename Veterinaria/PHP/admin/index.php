@@ -1,3 +1,23 @@
+<?php
+require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Cita.php';
+require_once __DIR__ . '/../clases/Producto.php';
+
+$estadoFiltro = $_GET['estado'] ?? '';
+$datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);
+$citas = $datosCitas['citas'];
+
+/* limitar a las próximas 5 citas en el dashboard */
+$citasProximas = array_slice($citas, 0, 5);
+
+$citasHoy = Cita::contarCitasHoy();
+$stockBajo = Producto::contarStockBajo();
+$porVencer = Producto::contarPorVencer();
+
+$conexion = (new Conexion())->establecerConexion();
+$clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fetchColumn();
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -37,7 +57,7 @@
             <div class="admin-stat admin-stat-info">
               <div>
                 <p class="admin-stat-label">Citas de hoy</p>
-                <p class="admin-stat-valor">3</p>
+                <p class="admin-stat-valor"><?= $citasHoy ?></p>
               </div>
               <i class="bi bi-calendar-check"></i>
             </div>
@@ -46,7 +66,7 @@
             <div class="admin-stat admin-stat-danger">
               <div>
                 <p class="admin-stat-label">Productos con stock bajo</p>
-                <p class="admin-stat-valor">2</p>
+                <p class="admin-stat-valor"><?= $stockBajo ?></p>
               </div>
               <i class="bi bi-box-seam"></i>
             </div>
@@ -64,7 +84,7 @@
             <div class="admin-stat admin-stat-success">
               <div>
                 <p class="admin-stat-label">Clientes registrados</p>
-                <p class="admin-stat-valor">48</p>
+                <p class="admin-stat-valor"><?= $clientesRegistrados ?></p>
               </div>
               <i class="bi bi-people"></i>
             </div>
@@ -90,38 +110,35 @@
               </thead>
               <!-- TODO BD: próximas citas con cliente, mascota y servicio -->
               <tbody>
-                <tr>
-                  <td>08/10/2026</td>
-                  <td>09:30</td>
-                  <td>Jorge Pérez</td>
-                  <td>Rex</td>
-                  <td>Consulta general</td>
-                  <td><span class="badge badge-success">Confirmada</span></td>
-                </tr>
-                <tr>
-                  <td>08/10/2026</td>
-                  <td>11:00</td>
-                  <td>María González</td>
-                  <td>Luna</td>
-                  <td>Vacuna antirrábica</td>
-                  <td><span class="badge badge-success">Confirmada</span></td>
-                </tr>
-                <tr>
-                  <td>08/10/2026</td>
-                  <td>15:30</td>
-                  <td>Lucía Fernández</td>
-                  <td>Milo</td>
-                  <td>Baño y corte</td>
-                  <td><span class="badge badge-info">Pendiente</span></td>
-                </tr>
-                <tr>
-                  <td>09/10/2026</td>
-                  <td>10:00</td>
-                  <td>Martín Silva</td>
-                  <td>Toby</td>
-                  <td>Castración</td>
-                  <td><span class="badge badge-danger">Cancelada</span></td>
-                </tr>
+                <?php if (empty($citas)): ?>
+                  <tr>
+                    <td colspan="7" class="text-center">No hay citas registradas.</td>
+                  </tr>
+                  <?php else: foreach ($citas as $c): ?>
+                    <tr>
+                      <td><?= htmlspecialchars(date('d/m/Y', strtotime($c['Fecha']))) ?></td>
+                      <td><?= htmlspecialchars(substr($c['Hora'], 0, 5)) ?></td>
+                      <td><?= htmlspecialchars($c['ClienteNombre'] . ' ' . $c['ClienteApellido']) ?></td>
+                      <td><?= htmlspecialchars($c['MascotaNombre']) ?></td>
+                      <td><?= htmlspecialchars($c['ServicioNombre']) ?></td>
+                      <td>
+                        <?php
+                        $claseBadge = match ($c['Estado']) {
+                          'Confirmada' => 'badge-success',
+                          'Pendiente'  => 'badge-info',
+                          'Cancelada'  => 'badge-danger',
+                          default      => 'badge-secondary',
+                        };
+                        ?>
+                        <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($c['Estado']) ?></span>
+                      </td>
+                      <td class="text-end">
+                        <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                      </td>
+                    </tr>
+                <?php endforeach;
+                endif; ?>
               </tbody>
             </table>
           </div>

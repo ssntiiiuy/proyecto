@@ -64,35 +64,48 @@ class Servicio
         $this->duracion = $duracion;
     }
 
-    public static function listadoServicios(): array
-    {
-        try {
-            $conexion = (new Conexion())->establecerConexion();
+    public static function listadoServicios($estado = null): array
+{
+    try {
+        $conexion = (new Conexion())->establecerConexion();
 
-            $sql = "SELECT s.IdServicio, s.Nombre, s.Precio, s.Descripcion, s.Duracion,
-                   CASE
-                     WHEN c.IdServicio IS NOT NULL THEN 'Consulta'
-                     WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
-                     WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
-                     WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
-                     ELSE 'Sin definir'
-                   END AS Tipo
-                FROM SERVICIO s
-                LEFT JOIN CONSULTA c ON s.IdServicio = c.IdServicio
-                LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
-                LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
-                LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
-                GROUP BY s.IdServicio, s.Nombre, Tipo, s.Descripcion, s.Duracion, s.Precio";
+        $sql = "SELECT s.IdServicio, s.Nombre, s.Precio, s.Descripcion, s.Duracion,
+           CASE
+             WHEN c.IdServicio IS NOT NULL THEN 'Consulta'
+             WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
+             WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
+             WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
+             ELSE 'Sin definir'
+           END AS Tipo
+        FROM SERVICIO s
+        LEFT JOIN CONSULTA c ON s.IdServicio = c.IdServicio
+        LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
+        LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
+        LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
+        GROUP BY s.IdServicio, s.Nombre, Tipo, s.Descripcion, s.Duracion, s.Precio";
 
-            $stmt = $conexion->query($sql);
-            $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $params = [];
 
-            return ['servicios' => $servicios];
-        } catch (PDOException $e) {
-            echo "Error al cargar servicios: " . $e->getMessage();
-            return ['servicios' => []];
+        if (!empty($estado)) {
+            $tipos = is_array($estado) ? $estado : [$estado];
+            $marcadores = [];
+            foreach ($tipos as $i => $tipoValor) {
+                $clave = ":estado{$i}";
+                $marcadores[] = $clave;
+                $params[$clave] = $tipoValor;
+            }
+            $sql .= " HAVING Tipo IN (" . implode(', ', $marcadores) . ")";
         }
+
+        $stmt = $conexion->prepare($sql);
+        $stmt->execute($params);
+        $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return ['servicios' => $servicios];
+    } catch (PDOException $e) {
+        return ['servicios' => [], 'error' => $e->getMessage()];
     }
+}
 
     public function crearServicio(string $tipo, string $nombre, float $precio, string $descripcion, int $duracion, array $datosEspecificos): bool
     {
@@ -148,7 +161,7 @@ class Servicio
                     break;
 
                 case 'Cirugia':
-                    $sql = "INSERT INTO CIRUGIA (IdServicio, Anestesia, RiesgoQuirurgico, AutorizacionFirmada)
+                    $sql = "INSERT INTO CIRUGIA (IdServicio, TipoAnestesia, RiesgoQuirurgico, AutorizacionFirmada)
                         VALUES (:id, :anestesia, :riesgo, :autorizacion)";
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([

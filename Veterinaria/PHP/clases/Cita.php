@@ -130,4 +130,17 @@ class Cita
             return false;
         }
     }
+
+    public static function contarCitasHoy(): int
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $sql = "SELECT COUNT(*) FROM CITA WHERE Fecha = :hoy";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([':hoy' => date('Y-m-d')]);
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
 }

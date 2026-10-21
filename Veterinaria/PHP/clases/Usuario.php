@@ -172,4 +172,21 @@ class Usuario
             return false;
         }
     }
+
+    public static function obtenerRolPorCorreo(?string $correo): ?string
+    {
+        if (!$correo) return null;
+
+        $conexion = (new Conexion())->establecerConexion();
+        $sql = "SELECT e.Rol
+            FROM empleado e
+            INNER JOIN usuario u ON e.CI = u.CI
+            INNER JOIN HACE h ON u.CI = h.CI
+            WHERE h.Correo = :correo";
+        $stmt = $conexion->prepare($sql);
+        $stmt->execute([':correo' => $correo]);
+
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $fila['Rol'] ?? null;
+    }
 }

@@ -1,7 +1,11 @@
 <?php
 session_start();
 
+<<<<<<< HEAD:Veterinaria/PHP/index.php
 require_once __DIR__ . '/clases/Conexion.php';
+=======
+require_once __DIR__ . '/../clases/Conexion.php';
+>>>>>>> 830c3856c2ae60746d91e4168bfaf50a8430974f:Veterinaria/PHP/usuario/index.php
 
 $nombreUsuario = "Usuario";
 
@@ -38,7 +42,7 @@ try {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="../CSS/style.css">
+  <link rel="stylesheet" href="../../CSS/style.css">
 </head>
 
 <body>
@@ -80,7 +84,7 @@ try {
                   <hr class="dropdown-divider">
                 </li>
                 <li><a class="dropdown-item" href="#">Mi perfil</a></li>
-                <li><a class="dropdown-item" href="LoginHTML.php">Cerrar sesión</a></li>
+                <li><a class="dropdown-item" href="../../PHP/LoginHTML.php">Cerrar sesión</a></li>
               </ul>
             </li>
           </ul>

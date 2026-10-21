@@ -13,7 +13,7 @@ try {
   if (!empty($_SESSION['correo'])) {
     $conexion = (new Conexion())->establecerConexion();
 
-    $sql = "SELECT usuario.Nombre, usuario.Apellido FROM usuario INNER JOIN HACE ON usuario.CI = hace.CI WHERE hace.Correo = :correo";
+    $sql = "SELECT usuario.Nombre, usuario.Apellido FROM usuario INNER JOIN HACE ON usuario.CI = HACE.CI WHERE HACE.Correo = :correo";
     $stmt = $conexion->prepare($sql);
     $stmt->execute([':correo' => $_SESSION['correo']]);
 

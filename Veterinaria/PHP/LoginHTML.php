@@ -1,6 +1,7 @@
 <?php
-require_once __DIR__ . '/clases/Conexion.php';
-require_once __DIR__ . '/clases/Login.php';
+require_once "clases/Conexion.php";
+require_once "clases/Login.php";
+require_once "clases/Usuario.php";
 
 session_start();
 
@@ -11,9 +12,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = new Login();
     if ($login->validar($correo, $pass)) {
 
+        $_SESSION['correo'] = $correo;
+        $_SESSION['rol'] = Usuario::obtenerRolPorCorreo($correo);
+
         $conexion = new Conexion();
 
-        $sql = "SELECT tipoUsuario FROM login WHERE Correo = :correo";
+        $sql = "SELECT login.tipoUsuario, e.rol
+        FROM login
+        INNER JOIN hace h ON login.Correo = h.Correo
+        INNER JOIN empleado e ON h.CI = e.CI
+        WHERE login.Correo = :correo";
         $stmt = $conexion->establecerConexion()->prepare($sql);
 
         $stmt->execute([':correo' => $correo]);
@@ -21,10 +29,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($usuario['tipoUsuario'] === 'admin') {
             header("Location: ../PHP/admin/index.php");
-        } elseif ($usuario['tipoUsuario'] === 'veterinario') {
-            header("Location: indexVeterinario.php");
+        } elseif ($usuario['tipoUsuario'] === 'empleado') {
+            switch ($usuario['rol']) {
+                case 'Veterinario':
+                    header("Location: ../PHP/empleado/veterinario/index.php");
+                    exit();
+                    break;
+                case 'Cajero':
+                    header("Location: ../PHP/empleado/cajero/index.php");
+                    exit();
+                    break;
+                case 'Peluquero':
+                    header("Location: ../PHP/empleado/peluquero/index.php");
+                    exit();
+                    break;
+                case 'Cirujano':
+                    header("Location: ../PHP/empleado/cirujano/index.php");
+                    exit();
+                    break;
+            }
         } else {
-            header("Location: index.php");
+            header("Location: ../PHP/usuario/index.php");
         }
     } else {
         $error = "Correo o contraseña incorrectos.";
@@ -53,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <nav class="navbar">
             <div class="container-fluid px-3 px-lg-4 justify-content-between">
                 <a class="navbar-brand d-flex align-items-center gap-2">
-                    <img src="../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+                    <img src="img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
                     <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
                 </a>
 
@@ -80,16 +105,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="mb-3">
-                    <label for="password" class="form-label">Contraseña</label>
-                    <div class="input-group">
-                        <input type="checkbox" id="togglePassword" class="d-none toggle-check">
-                        <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
-                        <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
-                            <i class="bi bi-eye icon-eye"></i>
-                            <i class="bi bi-eye-slash icon-eye-slash"></i>
-                        </label>
-                    </div>
+                <label for="password" class="form-label">Contraseña</label>
+                <div class="input-group">
+                    <input type="checkbox" id="togglePassword" class="d-none toggle-check">
+                    <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
+                    <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
+                        <i class="bi bi-eye icon-eye"></i>
+                        <i class="bi bi-eye-slash icon-eye-slash"></i>
+                    </label>
                 </div>
+            </div>
 
             <div class="mb-4">
                 <a href="#" class="auth-link">Olvidé mi contraseña</a>
