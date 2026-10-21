@@ -1,6 +1,7 @@
 <?php
 require_once "clases/Conexion.php";
 require_once "clases/Login.php";
+require_once "clases/Usuario.php";
 
 session_start();
 
@@ -12,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($login->validar($correo, $pass)) {
 
         $_SESSION['correo'] = $correo;
+        $_SESSION['rol'] = Usuario::obtenerRolPorCorreo($correo);
 
         $conexion = new Conexion();
 
