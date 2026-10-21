@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../Conexion.php';
-require_once __DIR__ . '/../Usuario.php';
+require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Usuario.php';
 
 $datosUsuarios = Usuario::listadoUsuarios();
 $clientes = $datosUsuarios['clientes'];

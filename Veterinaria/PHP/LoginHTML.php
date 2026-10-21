@@ -1,6 +1,6 @@
 <?php
-require_once "Conexion.php";
-require_once "Login.php";
+require_once "clases/Conexion.php";
+require_once "clases/Login.php";
 
 session_start();
 

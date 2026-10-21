@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../Conexion.php';
-require_once __DIR__ . '/../Cita.php';
+require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Cita.php';
 
 $estadoFiltro = $_GET['estado'] ?? '';
 $datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);

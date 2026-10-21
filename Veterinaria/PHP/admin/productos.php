@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../Conexion.php';
-require_once __DIR__ . '/../Producto.php';
+require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Producto.php';
 
 /* funcion para guardar los datos por tipo */
 $categoriaFiltro = $_GET['filtroCategoria'] ?? '';

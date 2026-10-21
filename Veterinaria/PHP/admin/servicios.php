@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../Conexion.php';
-require_once __DIR__ . '/../Servicio.php';
+require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Servicio.php';
 
 /* funcion para guardar los datos y filtrar por estado */
 $estadoFiltro = $_GET['estado'] ?? '';

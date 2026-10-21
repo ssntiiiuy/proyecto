@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../Conexion.php';
-require_once __DIR__ . '/../Mascota.php';
+require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Mascota.php';
 
 /* funcion para guardar los datos */
 $datosMascotas = Mascota::listadoMascotas();
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                     <td><?= htmlspecialchars($masc['Especie']) ?></td>
                     <td><?= htmlspecialchars($masc['Raza']) ?></td>
                     <td><?= date('d/m/Y', strtotime($masc['FechaNacimiento'])) ?></td>
-                    <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td> 
+                    <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
                     <td class="text-end">
                       <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
                       <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>

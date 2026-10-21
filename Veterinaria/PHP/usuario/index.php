@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/../Conexion.php';
+require_once __DIR__ . '/../clases/Conexion.php';
 
 $nombreUsuario = "Usuario";
 

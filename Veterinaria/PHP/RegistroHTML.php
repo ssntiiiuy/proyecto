@@ -5,9 +5,9 @@ error_reporting(E_ALL);
 
 session_start();
 
-require_once "Conexion.php";
-require_once "Login.php";
-require_once "Usuario.php";
+require_once "clases/Conexion.php";
+require_once "clases/Login.php";
+require_once "clases/Usuario.php";
 
 $error = "";
 

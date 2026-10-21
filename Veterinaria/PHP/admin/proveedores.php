@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../Conexion.php';
-require_once __DIR__ . '/../Proveedor.php';
+require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Proveedor.php';
 
 $datosProveedores = Proveedor::listadoProveedor();
 $proveedores = $datosProveedores['proveedores'];
