@@ -1,7 +1,11 @@
 <?php
 session_start();
 
+<<<<<<< HEAD:Veterinaria/PHP/index.php
+require_once __DIR__ . '/clases/Conexion.php';
+=======
 require_once __DIR__ . '/../clases/Conexion.php';
+>>>>>>> 830c3856c2ae60746d91e4168bfaf50a8430974f:Veterinaria/PHP/usuario/index.php
 
 $nombreUsuario = "Usuario";
 
@@ -48,7 +52,7 @@ try {
       <div class="container-fluid px-3 px-lg-4">
 
         <a class="navbar-brand d-flex align-items-center gap-2" href="../PHP/index.php">
-          <img src="img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+          <img src="../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
           <span class="brand-text">Clínica<br>Veterinaria<br>SIENRA</span>
         </a>
 

@@ -29,7 +29,7 @@ $gruposMenu = [
 
       <div class="offcanvas-body flex-column">
         <a class="admin-brand d-none d-lg-flex" href="index.php">
-          <img src="../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+          <img src="../../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
           <span class="admin-brand-text">Panel Sienra</span>
         </a>
 

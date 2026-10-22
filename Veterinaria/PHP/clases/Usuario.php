@@ -1,6 +1,6 @@
 <?php
-require_once 'Conexion.php';
-require_once 'Login.php';
+require_once __DIR__ . '/Conexion.php';
+require_once __DIR__ . '/Login.php';
 
 class Usuario
 {
