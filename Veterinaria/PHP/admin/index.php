@@ -51,7 +51,7 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
-
+        <!-- lleva a citas filtrado por "hoy" -->
         <div class="row g-3 mb-4">
           <div class="col-sm-6 col-xl-3">
             <a href="citas.php?filtro=hoy" class="admin-stat admin-stat-info text-decoration-none">
@@ -85,13 +85,13 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
           </div>
 
           <div class="col-sm-6 col-xl-3">
-            <div class="admin-stat admin-stat-success">
+            <a href="usuarios.php" class="admin-stat admin-stat-success text-decoration-none">
               <div>
                 <p class="admin-stat-label">Clientes registrados</p>
                 <p class="admin-stat-valor"><?= $clientesRegistrados ?></p>
               </div>
               <i class="bi bi-people"></i>
-            </div>
+            </a>
           </div>
         </div>
 
