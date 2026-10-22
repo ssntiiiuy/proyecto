@@ -79,23 +79,32 @@ class Producto
     }
 
 
-    public static function listadoProductos(?string $categoria = null): array
+    public static function listadoProductos(?string $categoria = null, ?string $filtroEspecial = null): array
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
 
             $sqlProducto = "SELECT p.IdProducto, p.Nombre, p.Categoria, p.Precio, p.Stock, p.StockMinimo, p.FechaVencimiento, prov.NombreEmpresa
-                            FROM PRODUCTO p
-                            INNER JOIN PROVEE pr ON p.IdProducto = pr.IdProducto
-                            INNER JOIN PROVEEDOR prov ON pr.IdProveedor = prov.IdProveedor";
+                        FROM PRODUCTO p
+                        INNER JOIN PROVEE pr ON p.IdProducto = pr.IdProducto
+                        INNER JOIN PROVEEDOR prov ON pr.IdProveedor = prov.IdProveedor
+                        WHERE 1=1";
 
             $params = [];
 
             if (!empty($categoria)) {
-                $sqlProducto .= " WHERE p.Categoria = :Categoria";
+                $sqlProducto .= " AND p.Categoria = :Categoria";
                 $params[':Categoria'] = $categoria;
             }
 
+            if ($filtroEspecial === 'stock_bajo') {
+                $sqlProducto .= " AND p.Stock <= p.StockMinimo";
+            } elseif ($filtroEspecial === 'por_vencer') {
+                $sqlProducto .= " AND p.FechaVencimiento IS NOT NULL
+                     AND p.FechaVencimiento >= :hoy
+                     AND p.FechaVencimiento <= DATE_ADD(:hoy, INTERVAL 30 DAY)";
+                $params[':hoy'] = date('Y-m-d');
+            }
 
             $stmt = $conexion->prepare($sqlProducto);
             $stmt->execute($params);

@@ -2,9 +2,10 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Producto.php';
 
-/* funcion para guardar los datos por tipo */
-$categoriaFiltro = $_GET['filtroCategoria'] ?? '';
-$datosProductos = Producto::listadoProductos($categoriaFiltro !== '' ? $categoriaFiltro : null);
+$categoria = $_GET['categoria'] ?? null;
+$filtroEspecial = $_GET['filtro'] ?? null;
+
+$datosProductos = Producto::listadoProductos($categoria, $filtroEspecial);
 $productos = $datosProductos['productos'];
 
 $conexion = (new Conexion())->establecerConexion();
@@ -72,11 +73,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               <form method="get" action="productos.php" class="d-flex gap-2">
                 <label class="visually-hidden" for="filtroCategoria">Filtrar por categoría</label>
                 <select class="form-select form-select-sm admin-filtro" id="filtroCategoria" name="filtroCategoria" data-bs-theme="dark">
-                  <option value="" <?= $categoriaFiltro === '' ? 'selected' : '' ?>>Todas las categorías</option>
-                  <option value="Accesorios" <?= $categoriaFiltro === 'Accesorios' ? 'selected' : '' ?>>Accesorios</option>
-                  <option value="Alimentos" <?= $categoriaFiltro === 'Alimentos' ? 'selected' : '' ?>>Alimentos</option>
-                  <option value="Farmacia" <?= $categoriaFiltro === 'Farmacia' ? 'selected' : '' ?>>Farmacia</option>
-                  <option value="Higiene" <?= $categoriaFiltro === 'Higiene' ? 'selected' : '' ?>>Higiene</option>
+                  <option value="" <?= $categoria === '' ? 'selected' : '' ?>>Todas las categorías</option>
+                  <option value="Accesorios" <?= $categoria === 'Accesorios' ? 'selected' : '' ?>>Accesorios</option>
+                  <option value="Alimentos" <?= $categoria === 'Alimentos' ? 'selected' : '' ?>>Alimentos</option>
+                  <option value="Farmacia" <?= $categoria === 'Farmacia' ? 'selected' : '' ?>>Farmacia</option>
+                  <option value="Higiene" <?= $categoria === 'Higiene' ? 'selected' : '' ?>>Higiene</option>
                 </select>
                 <button type="submit" class="btn btn-sm admin-btn-filtrar">Filtrar</button>
               </form>

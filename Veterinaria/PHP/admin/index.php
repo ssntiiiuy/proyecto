@@ -61,24 +61,28 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
               <i class="bi bi-calendar-check"></i>
             </div>
           </div>
+
+          <!-- modulo con href para stock bajo y productos por vencer -->
           <div class="col-sm-6 col-xl-3">
-            <div class="admin-stat admin-stat-danger">
+            <a href="productos.php?filtro=stock_bajo" class="admin-stat admin-stat-danger text-decoration-none">
               <div>
-                <p class="admin-stat-label">Productos con stock bajo</p>
-                <p class="admin-stat-valor"><?= $stockBajo ?></p>
+                <p class="admin-stat-label">PRODUCTOS CON STOCK BAJO</p>
+                <p class="admin-stat-valor"><?= Producto::contarStockBajo() ?></p>
               </div>
               <i class="bi bi-box-seam"></i>
-            </div>
+            </a>
           </div>
+
           <div class="col-sm-6 col-xl-3">
-            <div class="admin-stat admin-stat-warning">
+            <a href="productos.php?filtro=por_vencer" class="admin-stat admin-stat-warning text-decoration-none">
               <div>
-                <p class="admin-stat-label">Productos por vencer</p>
-                <p class="admin-stat-valor">1</p>
+                <p class="admin-stat-label">PRODUCTOS POR VENCER</p>
+                <p class="admin-stat-valor"><?= Producto::contarPorVencer() ?></p>
               </div>
               <i class="bi bi-hourglass-split"></i>
-            </div>
+            </a>
           </div>
+
           <div class="col-sm-6 col-xl-3">
             <div class="admin-stat admin-stat-success">
               <div>
@@ -107,7 +111,7 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
                   <th scope="col">Estado</th>
                 </tr>
               </thead>
-              <!-- TODO BD: próximas citas con cliente, mascota y servicio -->
+
               <tbody>
                 <?php if (empty($citas)): ?>
                   <tr>
