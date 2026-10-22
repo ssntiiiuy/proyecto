@@ -51,16 +51,16 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
-        <!-- TODO BD: contar citas de hoy, stock bajo (Stock < StockMinimo), por vencer y clientes -->
+
         <div class="row g-3 mb-4">
           <div class="col-sm-6 col-xl-3">
-            <div class="admin-stat admin-stat-info">
+            <a href="citas.php?filtro=hoy" class="admin-stat admin-stat-info text-decoration-none">
               <div>
                 <p class="admin-stat-label">Citas de hoy</p>
                 <p class="admin-stat-valor"><?= $citasHoy ?></p>
               </div>
               <i class="bi bi-calendar-check"></i>
-            </div>
+            </a>
           </div>
 
           <!-- modulo con href para stock bajo y productos por vencer -->

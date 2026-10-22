@@ -2,8 +2,10 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
 
-$estadoFiltro = $_GET['estado'] ?? '';
-$datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);
+$estado = $_GET['estado'] ?? null;
+$filtro = $_GET['filtro'] ?? null; //
+
+$datosCitas = Cita::listadoCita($estado, $filtro);
 $citas = $datosCitas['citas'];
 
 
@@ -106,10 +108,10 @@ $modalAbierto = isset($_GET['ci']) || isset($error);
               <form method="get" action="citas.php" class="d-flex gap-2">
                 <label class="visually-hidden" for="filtroEstado">Filtrar por estado</label>
                 <select class="form-select form-select-sm admin-filtro" id="filtroEstado" name="estado" data-bs-theme="dark">
-                  <option value="" <?= $estadoFiltro === '' ? 'selected' : '' ?>>Todos los estados</option>
-                  <option value="Pendiente" <?= $estadoFiltro === 'Pendiente' ? 'selected' : '' ?>>Pendiente</option>
-                  <option value="Confirmada" <?= $estadoFiltro === 'Confirmada' ? 'selected' : '' ?>>Confirmada</option>
-                  <option value="Cancelada" <?= $estadoFiltro === 'Cancelada' ? 'selected' : '' ?>>Cancelada</option>
+                  <option value="" <?= $estado === '' ? 'selected' : '' ?>>Todos los estados</option>
+                  <option value="Pendiente" <?= $estado === 'Pendiente' ? 'selected' : '' ?>>Pendiente</option>
+                  <option value="Confirmada" <?= $estado === 'Confirmada' ? 'selected' : '' ?>>Confirmada</option>
+                  <option value="Cancelada" <?= $estado === 'Cancelada' ? 'selected' : '' ?>>Cancelada</option>
                 </select>
                 <button type="submit" class="btn btn-sm admin-btn-filtrar">Filtrar</button>
               </form>

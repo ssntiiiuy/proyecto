@@ -73,7 +73,7 @@ class Cita
         $this->estado = $estado;
     }
 
-    public static function listadoCita(?string $estado = null): array
+    public static function listadoCita(?string $estado = null, ?string $filtro = null): array
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
@@ -86,13 +86,18 @@ class Cita
                 INNER JOIN CLIENTE cl ON c.CI = cl.CI
                 INNER JOIN USUARIO u ON cl.CI = u.CI
                 INNER JOIN MASCOTA m ON c.IdMascota = m.IdMascota
-                INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio";
+                INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
+                WHERE 1=1";
 
             $params = [];
 
             if (!empty($estado)) {
-                $sql .= " WHERE c.Estado = :estado";
+                $sql .= " AND c.Estado = :estado";
                 $params[':estado'] = $estado;
+            }
+
+            if ($filtro === 'hoy') {
+                $sql .= " AND c.Fecha = CURDATE()";
             }
 
             $sql .= " ORDER BY c.Fecha, c.Hora";
