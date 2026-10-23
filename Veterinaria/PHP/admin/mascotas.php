@@ -2,6 +2,35 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Mascota.php';
 
+$error = null;
+
+/* eliminar: solo se borra por POST, despues de confirmar */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
+  $mascota = new Mascota();
+  $resultado = $mascota->eliminarMascota((int) $_POST['IdMascota']);
+  header("Location: mascotas.php?msg=" . $resultado);
+  exit();
+}
+
+/* mensajes fijos que se muestran despues de editar o eliminar */
+$mensajes = [
+  'editado' => ['success', 'Los cambios de la mascota se guardaron.'],
+  'eliminado' => ['success', 'La mascota se eliminó.'],
+  'bloqueado' => ['danger', 'No se puede eliminar la mascota porque tiene citas, historial clínico, carnet de vacunación o servicios registrados.'],
+  'noexiste' => ['danger', 'La mascota no existe.'],
+  'error' => ['danger', 'No se pudo completar la operación.']
+];
+$mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
+
+/* confirmacion: mascotas.php?eliminar=Id muestra el aviso arriba del listado */
+$mascotaEliminar = null;
+if (isset($_GET['eliminar'])) {
+  $mascotaEliminar = Mascota::buscarPorId((int) $_GET['eliminar']);
+  if (!$mascotaEliminar) {
+    $mensaje = $mensajes['noexiste'];
+  }
+}
+
 /* funcion para guardar los datos */
 $datosMascotas = Mascota::listadoMascotas();
 $mascotas = $datosMascotas['mascotas'];
@@ -11,23 +40,41 @@ $conexion = (new Conexion())->establecerConexion();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $datosForm = $_POST;
 
-  $nombre = trim($_POST['Nombre']);
-  $especie = trim($_POST['Especie']);
-  $raza = trim($_POST['Raza']);
-  $fechaNacimiento = trim($_POST['FechaNacimiento']);
-  $ciDueño = trim($_POST['CI']);
+  $nombre = trim($_POST['Nombre'] ?? '');
+  $especie = trim($_POST['Especie'] ?? '');
+  $raza = trim($_POST['Raza'] ?? '');
+  $fechaNacimiento = trim($_POST['FechaNacimiento'] ?? '');
+  $ciDueño = trim($_POST['CI'] ?? '');
 
-  if (!empty($fechaNacimiento) && $fechaNacimiento > date('Y-m-d')) {
+  /* se valida antes de guardar */
+  if ($nombre === '') {
+    $error = "Falta el nombre de la mascota.";
+  } elseif (!in_array($especie, ['Perro', 'Gato', 'Otro'])) {
+    $error = "Elegí la especie de la mascota.";
+  } elseif ($ciDueño === '') {
+    $error = "Elegí el dueño de la mascota.";
+  } elseif ($fechaNacimiento !== '' && strtotime($fechaNacimiento) === false) {
+    $error = "La fecha de nacimiento no es válida.";
+  } elseif (!empty($fechaNacimiento) && $fechaNacimiento > date('Y-m-d')) {
     $error = "La fecha de nacimiento no puede ser posterior a hoy.";
   } else {
-    $mascota = new Mascota();
-    $resultado = $mascota->crearMascota($nombre, $especie, $raza, $fechaNacimiento, $ciDueño);
+    /* si la fecha queda vacia se guarda NULL */
+    if ($fechaNacimiento === '') {
+      $fechaNacimiento = null;
+    }
+
+    try {
+      $mascota = new Mascota();
+      $resultado = $mascota->crearMascota($nombre, $especie, $raza, $fechaNacimiento, $ciDueño);
+    } catch (Throwable $e) {
+      $resultado = false;
+    }
 
     if ($resultado) {
       header("Location: mascotas.php");
       exit();
     } else {
-      $error = "No se pudo completar el registro.";
+      $error = "No se pudo guardar la mascota. Revisá los datos.";
     }
   }
 }
@@ -66,6 +113,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
+        <?php if ($mensaje) { ?>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+        <?php } ?>
+
+        <?php if ($error) { ?>
+          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
+
+        <?php if ($mascotaEliminar) { ?>
+          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+            <form class="d-flex flex-wrap align-items-center gap-2" action="mascotas.php" method="post">
+              <span class="me-auto">
+                ¿Eliminar la mascota <strong><?= htmlspecialchars($mascotaEliminar['Nombre']) ?></strong> (Id <?= $mascotaEliminar['IdMascota'] ?>)? Esta acción no se puede deshacer.
+              </span>
+              <input type="hidden" name="IdMascota" value="<?= $mascotaEliminar['IdMascota'] ?>">
+              <a class="btn btn-sm admin-btn-cancelar" href="mascotas.php">Cancelar</a>
+              <button type="submit" class="btn btn-sm btn-danger" name="eliminar">Sí, eliminar</button>
+            </form>
+          </div>
+        <?php } ?>
+
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <h2>Listado de mascotas</h2>
@@ -96,11 +164,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                     <td><?= htmlspecialchars($masc['Nombre']) ?></td>
                     <td><?= htmlspecialchars($masc['Especie']) ?></td>
                     <td><?= htmlspecialchars($masc['Raza']) ?></td>
-                    <td><?= date('d/m/Y', strtotime($masc['FechaNacimiento'])) ?></td>
+                    <td><?= $masc['FechaNacimiento'] ? date('d/m/Y', strtotime($masc['FechaNacimiento'])) : '—' ?></td>
                     <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
                     <td class="text-end">
-                      <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                      <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                      <a class="btn btn-sm admin-btn-icono" href="editar_mascota.php?id=<?= $masc['IdMascota'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                      <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="mascotas.php?eliminar=<?= $masc['IdMascota'] ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                     </td>
                   </tr>
                 <?php endforeach; ?>
@@ -126,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="row g-3">
             <div class="col-sm-12">
               <label class="form-label" for="Nombre">Nombre</label>
-              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Rex" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
+              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Rex" maxlength="100" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Especie">Especie</label>
@@ -139,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Raza">Raza</label>
-              <input class="form-control" type="text" id="Raza" name="Raza" placeholder="Labrador" value="<?= htmlspecialchars($datosForm['Raza'] ?? '') ?>">
+              <input class="form-control" type="text" id="Raza" name="Raza" placeholder="Labrador" maxlength="100" value="<?= htmlspecialchars($datosForm['Raza'] ?? '') ?>">
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="FechaNacimiento">Fecha de nacimiento</label>
@@ -179,9 +247,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     </script>
   <?php endif; ?>
 
-  <?php if (!empty($error)): ?>
-    <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
-  <?php endif; ?>
 </body>
 
 </html>

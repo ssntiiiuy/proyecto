@@ -107,7 +107,7 @@ class Mascota
         }
     }
 
-    public function crearMascota(string $nombre, string $especie, string $raza, string $fechaNacimiento, string $ciDueño): bool
+    public function crearMascota(string $nombre, string $especie, string $raza, ?string $fechaNacimiento, string $ciDueño): bool
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
@@ -126,6 +126,68 @@ class Mascota
             return true;
         } catch (PDOException $e) {
             return false;
+        }
+    }
+
+    public static function buscarPorId(int $id): ?array
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sqlMascota = "SELECT IdMascota, Nombre, Raza, FechaNacimiento, Especie, CI
+                   FROM MASCOTA
+                   WHERE IdMascota = :id";
+            $stmtMascota = $conexion->prepare($sqlMascota);
+            $stmtMascota->execute([':id' => $id]);
+            $mascota = $stmtMascota->fetch(PDO::FETCH_ASSOC);
+
+            return $mascota ?: null;
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    public function editarMascota(int $id, string $nombre, string $especie, string $raza, ?string $fechaNacimiento, string $ciDueño): bool
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sqlMascota = "UPDATE MASCOTA
+                SET Nombre = :nombre, Raza = :raza, FechaNacimiento = :fechaNacimiento, Especie = :especie, CI = :ci
+                WHERE IdMascota = :id";
+            $stmtMascota = $conexion->prepare($sqlMascota);
+            $stmtMascota->execute([
+                ':nombre' => $nombre,
+                ':raza' => $raza,
+                ':fechaNacimiento' => $fechaNacimiento,
+                ':especie' => $especie,
+                ':ci' => $ciDueño,
+                ':id' => $id
+            ]);
+
+            return true;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    /* devuelve 'eliminado', 'bloqueado' (tiene datos asociados) o 'error' */
+    public function eliminarMascota(int $id): string
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sqlMascota = "DELETE FROM MASCOTA WHERE IdMascota = :id";
+            $stmtMascota = $conexion->prepare($sqlMascota);
+            $stmtMascota->execute([':id' => $id]);
+
+            return 'eliminado';
+        } catch (PDOException $e) {
+            /* 1451: otra tabla (CITA, HISTORIAL_CLINICO, CARNET_VACUNACION, ACCEDE) usa esta mascota */
+            if ($e->errorInfo[1] == 1451) {
+                return 'bloqueado';
+            }
+            return 'error';
         }
     }
 }

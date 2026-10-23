@@ -1,11 +1,7 @@
 <?php
 session_start();
 
-<<<<<<< HEAD:Veterinaria/PHP/index.php
-require_once __DIR__ . '/clases/Conexion.php';
-=======
 require_once __DIR__ . '/../clases/Conexion.php';
->>>>>>> 830c3856c2ae60746d91e4168bfaf50a8430974f:Veterinaria/PHP/usuario/index.php
 
 $nombreUsuario = "Usuario";
 

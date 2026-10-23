@@ -5,15 +5,9 @@ error_reporting(E_ALL);
 
 session_start();
 
-<<<<<<< HEAD
 require_once __DIR__ . '/clases/Conexion.php';
 require_once __DIR__ . '/clases/Login.php';
 require_once __DIR__ . '/clases/Usuario.php';
-=======
-require_once "clases/Conexion.php";
-require_once "clases/Login.php";
-require_once "clases/Usuario.php";
->>>>>>> 830c3856c2ae60746d91e4168bfaf50a8430974f
 
 $error = "";
 

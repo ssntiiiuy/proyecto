@@ -10,26 +10,60 @@ $productos = $datosProductos['productos'];
 
 $conexion = (new Conexion())->establecerConexion();
 
+$error = null;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $datosForm = $_POST;
 
-  $nombre = trim($_POST['Nombre']);
-  $categoria = trim($_POST['Categoria']);
-  $precio = trim($_POST['Precio']);
-  $stock = trim($_POST['Stock']);
-  $stockMinimo = trim($_POST['StockMinimo']);
-  $fechaVencimiento = trim($_POST['FechaVencimiento']);
+  $nombre = trim($_POST['Nombre'] ?? '');
+  $categoria = trim($_POST['Categoria'] ?? '');
+  $precio = trim($_POST['Precio'] ?? '');
+  $stock = trim($_POST['Stock'] ?? '');
+  $stockMinimo = trim($_POST['StockMinimo'] ?? '');
+  $fechaVencimiento = trim($_POST['FechaVencimiento'] ?? '');
   $fechaVencimiento = $fechaVencimiento === '' ? null : $fechaVencimiento; /* si no pone nada en la fecha de vencimiento, lo establece como null */
-  $nombreEmpresa = trim($_POST['NombreEmpresa']);
+  $nombreEmpresa = trim($_POST['NombreEmpresa'] ?? '');
 
-  $producto = new Producto();
-  $resultado = $producto->crearProducto($nombre, $categoria, $precio, $stock, $stockMinimo, $fechaVencimiento, $nombreEmpresa);
+  /* el proveedor elegido tiene que existir */
+  $sqlCheckProveedor = $conexion->prepare("SELECT 1 FROM PROVEEDOR WHERE NombreEmpresa = :nombreEmpresa");
+  $sqlCheckProveedor->execute([':nombreEmpresa' => $nombreEmpresa]);
+  $proveedorExiste = $sqlCheckProveedor->fetch();
 
-  if ($resultado) {
-    header("Location: productos.php");
-    exit();
+  /* se valida antes de guardar */
+  if ($nombre === '') {
+    $error = "Falta el nombre del producto.";
+  } elseif (!in_array($categoria, ['Accesorios', 'Alimentos', 'Farmacia', 'Higiene'])) {
+    $error = "Elegí la categoría del producto.";
+  } elseif ($precio === '') {
+    $error = "Falta el precio del producto.";
+  } elseif (!is_numeric($precio) || $precio < 0) {
+    $error = "El precio no puede ser negativo.";
+  } elseif ($stock === '') {
+    $error = "Falta el stock del producto.";
+  } elseif (!ctype_digit($stock)) {
+    $error = "El stock debe ser un número entero, 0 o mayor.";
+  } elseif ($stockMinimo === '') {
+    $error = "Falta el stock mínimo del producto.";
+  } elseif (!ctype_digit($stockMinimo)) {
+    $error = "El stock mínimo debe ser un número entero, 0 o mayor.";
+  } elseif ($fechaVencimiento !== null && strtotime($fechaVencimiento) === false) {
+    $error = "La fecha de vencimiento no es válida.";
+  } elseif (!$proveedorExiste) {
+    $error = "Elegí el proveedor del producto.";
   } else {
-    $error = "No se pudo completar el registro.";
+    try {
+      $producto = new Producto();
+      $resultado = $producto->crearProducto($nombre, $categoria, $precio, $stock, $stockMinimo, $fechaVencimiento, $nombreEmpresa);
+    } catch (Throwable $e) {
+      $resultado = false;
+    }
+
+    if ($resultado) {
+      header("Location: productos.php");
+      exit();
+    } else {
+      $error = "No se pudo guardar el producto. Revisá los datos.";
+    }
   }
 }
 ?>
@@ -67,13 +101,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
+        <?php if ($error) { ?>
+          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
+
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <h2>Listado de productos</h2>
             <div class="d-flex flex-wrap align-items-center gap-2">
               <form method="get" action="productos.php" class="d-flex gap-2">
                 <label class="visually-hidden" for="filtroCategoria">Filtrar por categoría</label>
-                <select class="form-select form-select-sm admin-filtro" id="filtroCategoria" name="filtroCategoria" data-bs-theme="dark">
+                <select class="form-select form-select-sm admin-filtro" id="filtroCategoria" name="categoria" data-bs-theme="dark">
                   <option value="" <?= $categoria === '' ? 'selected' : '' ?>>Todas las categorías</option>
                   <option value="Accesorios" <?= $categoria === 'Accesorios' ? 'selected' : '' ?>>Accesorios</option>
                   <option value="Alimentos" <?= $categoria === 'Alimentos' ? 'selected' : '' ?>>Alimentos</option>
@@ -171,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="row g-3">
             <div class="col-sm-12">
               <label class="form-label" for="Nombre">Nombre</label>
-              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Comida para perros 3kg" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
+              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Comida para perros 3kg" maxlength="100" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Categoria">Categoría</label>
@@ -185,15 +223,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Precio">Precio ($)</label>
-              <input class="form-control" type="number" id="Precio" name="Precio" min="0" step="1" placeholder="1299" value="<?= htmlspecialchars($datosForm['Precio'] ?? '') ?>" required>
+              <input class="form-control" type="number" id="Precio" name="Precio" min="0" step="0.01" placeholder="1299" value="<?= htmlspecialchars($datosForm['Precio'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Stock">Stock</label>
-              <input class="form-control" type="number" id="Stock" name="Stock" min="0" placeholder="20" value="<?= htmlspecialchars($datosForm['Stock'] ?? '') ?>" required>
+              <input class="form-control" type="number" id="Stock" name="Stock" min="0" step="1" placeholder="20" value="<?= htmlspecialchars($datosForm['Stock'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="StockMinimo">Stock mínimo</label>
-              <input class="form-control" type="number" id="StockMinimo" name="StockMinimo" min="0" placeholder="5" value="<?= htmlspecialchars($datosForm['StockMinimo'] ?? '') ?>" required>
+              <input class="form-control" type="number" id="StockMinimo" name="StockMinimo" min="0" step="1" placeholder="5" value="<?= htmlspecialchars($datosForm['StockMinimo'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="FechaVencimiento">Vencimiento <span class="admin-aclaracion">(si corresponde)</span></label>
@@ -204,12 +242,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             <div class="col-sm-6">
               <label class="form-label" for="IdProveedor">Proveedor</label>
               <select class="form-select" id="NombreEmpresa" name="NombreEmpresa" required>
-                <option value="" <?= empty($datosForm['IdProveedor']) ? 'selected' : '' ?> disabled>Elegir proveedor</option>
+                <option value="" <?= empty($datosForm['NombreEmpresa']) ? 'selected' : '' ?> disabled>Elegir proveedor</option>
                 <?php
                 $stmtProveedores = $conexion->query("SELECT p.NombreEmpresa FROM PROVEEDOR p");
                 while ($prov = $stmtProveedores->fetch(PDO::FETCH_ASSOC)):
                 ?>
-                  <option value="<?= $prov['NombreEmpresa'] ?>" <?= (($datosForm['IdProveedor'] ?? '') === $prov['NombreEmpresa']) ? 'selected' : '' ?>>
+                  <option value="<?= htmlspecialchars($prov['NombreEmpresa']) ?>" <?= (($datosForm['NombreEmpresa'] ?? '') === $prov['NombreEmpresa']) ? 'selected' : '' ?>>
                     <?= htmlspecialchars($prov['NombreEmpresa']) ?>
                   </option>
                 <?php endwhile; ?>
@@ -231,10 +269,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     <script>
       new bootstrap.Modal(document.getElementById('modalProducto')).show();
     </script>
-  <?php endif; ?>
-
-  <?php if (!empty($error)): ?>
-    <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
   <?php endif; ?>
 
 </body>

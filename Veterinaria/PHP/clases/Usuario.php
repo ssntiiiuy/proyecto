@@ -115,6 +115,7 @@ class Usuario
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
+            $conexion->beginTransaction();
 
             $passHash = password_hash($contraseña, PASSWORD_DEFAULT);
 
@@ -167,8 +168,13 @@ class Usuario
                     ':ci' => $ci
                 ]);
             }
+
+            $conexion->commit();
             return true;
         } catch (PDOException $e) {
+            if (isset($conexion) && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
             return false;
         }
     }

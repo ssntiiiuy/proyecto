@@ -110,6 +110,7 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
                   <th scope="col">Mascota</th>
                   <th scope="col">Servicio</th>
                   <th scope="col">Estado</th>
+                  <th scope="col" class="text-end">Acciones</th>
                 </tr>
               </thead>
 
@@ -137,8 +138,8 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
                         <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($c['Estado']) ?></span>
                       </td>
                       <td class="text-end">
-                        <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                        <a class="btn btn-sm admin-btn-icono" href="editar_cita.php?id=<?= $c['IdCita'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                        <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="citas.php?eliminar=<?= $c['IdCita'] ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                       </td>
                     </tr>
                 <?php endforeach;

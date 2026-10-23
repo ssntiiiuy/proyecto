@@ -9,23 +9,44 @@ $servicios = $datosServicios['servicios'];
 
 $conexion = (new Conexion())->establecerConexion();
 
+$error = null;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $datosForm = $_POST;
 
-  $nombre = trim($_POST['Nombre']);
-  $tipo = trim($_POST['TipoServicio']);
-  $precio = trim($_POST['Precio']);
-  $descripcion = trim($_POST['Descripcion']);
-  $duracion = trim($_POST['Duracion']);
+  $nombre = trim($_POST['Nombre'] ?? '');
+  $tipo = trim($_POST['TipoServicio'] ?? '');
+  $precio = trim($_POST['Precio'] ?? '');
+  $descripcion = trim($_POST['Descripcion'] ?? '');
+  $duracion = trim($_POST['Duracion'] ?? '');
 
-  $servicio = new Servicio();
-  $resultado = $servicio->crearServicio($tipo, $nombre, $precio, $descripcion, $duracion, $_POST);
-
-  if ($resultado) {
-    header("Location: servicios.php");
-    exit();
+  /* se valida antes de guardar */
+  if ($nombre === '') {
+    $error = "Falta el nombre del servicio.";
+  } elseif (!in_array($tipo, ['Consulta', 'Vacunacion', 'Peluqueria', 'Cirugia'])) {
+    $error = "Elegí el tipo de servicio.";
+  } elseif ($duracion === '') {
+    $error = "Falta la duración del servicio.";
+  } elseif (!ctype_digit($duracion) || (int)$duracion < 1) {
+    $error = "La duración debe ser un número entero mayor a 0.";
+  } elseif ($precio === '') {
+    $error = "Falta el precio del servicio.";
+  } elseif (!is_numeric($precio) || $precio < 0) {
+    $error = "El precio no puede ser negativo.";
   } else {
-    $error = "No se pudo completar el registro.";
+    try {
+      $servicio = new Servicio();
+      $resultado = $servicio->crearServicio($tipo, $nombre, (float)$precio, $descripcion, (int)$duracion, $_POST);
+    } catch (Throwable $e) {
+      $resultado = false;
+    }
+
+    if ($resultado) {
+      header("Location: servicios.php");
+      exit();
+    } else {
+      $error = "No se pudo guardar el servicio. Revisá los datos.";
+    }
   }
 }
 
@@ -82,6 +103,10 @@ function obtenerClaseBadge($tipo)
       ?>
 
       <main class="container-fluid px-3 px-lg-4 py-4">
+
+        <?php if ($error) { ?>
+          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
 
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
@@ -172,7 +197,7 @@ function obtenerClaseBadge($tipo)
           <div class="row g-3">
             <div class="col-sm-12">
               <label class="form-label" for="Nombre">Nombre</label>
-              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Consulta general" required>
+              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Consulta general" maxlength="100" required>
             </div>
             <div class="col-12">
               <label class="form-label" for="TipoServicio">Tipo</label>
@@ -190,16 +215,16 @@ function obtenerClaseBadge($tipo)
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Duracion">Duración (minutos)</label>
-              <input class="form-control" type="number" id="Duracion" name="Duracion" min="5" step="5" placeholder="30">
+              <input class="form-control" type="number" id="Duracion" name="Duracion" min="5" step="5" placeholder="30" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="Precio">Precio ($)</label>
-              <input class="form-control" type="number" id="Precio" name="Precio" min="0" step="0.01" placeholder="900">
+              <input class="form-control" type="number" id="Precio" name="Precio" min="0" step="0.01" placeholder="900" required>
             </div>
             <div id="camposConsulta" class="campos-tipo d-none row g-3">
               <div class="col-sm-12">
                 <label class="form-label" for="Motivo">Motivo</label>
-                <input class="form-control" type="text" id="Motivo" name="Motivo">
+                <input class="form-control" type="text" id="Motivo" name="Motivo" maxlength="255">
               </div>
               <div class="col-sm-6">
                 <label class="form-label" for="EsEmergencia">¿Es emergencia?</label>
@@ -210,44 +235,44 @@ function obtenerClaseBadge($tipo)
               </div>
               <div class="col-sm-12">
                 <label class="form-label" for="IndicacionesRecetadas">Indicaciones</label>
-                <textarea class="form-control" id="IndicacionesRecetadas" name="IndicacionesRecetadas"></textarea>
+                <textarea class="form-control" id="IndicacionesRecetadas" name="IndicacionesRecetadas" maxlength="255"></textarea>
               </div>
             </div>
 
             <div id="camposVacunacion" class="campos-tipo d-none row g-3">
               <div class="col-sm-4">
                 <label class="form-label" for="LoteVacuna">Lote</label>
-                <input class="form-control" type="text" id="LoteVacuna" name="LoteVacuna">
+                <input class="form-control" type="text" id="LoteVacuna" name="LoteVacuna" maxlength="150">
               </div>
               <div class="col-sm-4">
                 <label class="form-label" for="TipoVacuna">Tipo de vacuna</label>
-                <input class="form-control" type="text" id="TipoVacuna" name="TipoVacuna">
+                <input class="form-control" type="text" id="TipoVacuna" name="TipoVacuna" maxlength="100">
               </div>
               <div class="col-sm-4">
                 <label class="form-label" for="LaboratorioFabricante">Laboratorio</label>
-                <input class="form-control" type="text" id="LaboratorioFabricante" name="LaboratorioFabricante">
+                <input class="form-control" type="text" id="LaboratorioFabricante" name="LaboratorioFabricante" maxlength="100">
               </div>
             </div>
 
             <div id="camposPeluqueria" class="campos-tipo d-none row g-3">
               <div class="col-sm-6">
                 <label class="form-label" for="TipoCorte">Tipo de corte</label>
-                <input class="form-control" type="text" id="TipoCorte" name="TipoCorte">
+                <input class="form-control" type="text" id="TipoCorte" name="TipoCorte" maxlength="100">
               </div>
               <div class="col-sm-6">
                 <label class="form-label" for="TipoShampoo">Tipo de shampoo</label>
-                <input class="form-control" type="text" id="TipoShampoo" name="TipoShampoo">
+                <input class="form-control" type="text" id="TipoShampoo" name="TipoShampoo" maxlength="100">
               </div>
             </div>
 
             <div id="camposCirugia" class="campos-tipo d-none row g-3">
               <div class="col-sm-4">
                 <label class="form-label" for="TipoAnestesia">Anestesia</label>
-                <input class="form-control" type="text" id="TipoAnestesia" name="TipoAnestesia">
+                <input class="form-control" type="text" id="TipoAnestesia" name="TipoAnestesia" maxlength="100">
               </div>
               <div class="col-sm-4">
                 <label class="form-label" for="RiesgoQuirurgico">Riesgo quirúrgico</label>
-                <input class="form-control" type="text" id="RiesgoQuirurgico" name="RiesgoQuirurgico">
+                <input class="form-control" type="text" id="RiesgoQuirurgico" name="RiesgoQuirurgico" maxlength="100">
               </div>
               <div class="col-sm-4">
                 <label class="form-label" for="AutorizacionFirmada">¿Autorización firmada?</label>

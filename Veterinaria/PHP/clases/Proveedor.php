@@ -93,6 +93,7 @@ class Proveedor
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
+            $conexion->beginTransaction();
 
             $sqlLogin = "INSERT INTO PROVEEDOR (Nombre, NombreEmpresa) VALUES (:nombre, :empresa)";
             $stmtLogin = $conexion->prepare($sqlLogin);
@@ -110,8 +111,12 @@ class Proveedor
                 ':telefono' => $telefono
             ]);
 
+            $conexion->commit();
             return true;
         } catch (PDOException $e) {
+            if (isset($conexion) && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
             return false;
         }
     }

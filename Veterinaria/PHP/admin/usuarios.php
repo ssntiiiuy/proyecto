@@ -12,15 +12,38 @@ $datosForm = []; /* se guardan los datos del formulario para repoblarlo en caso 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $datosForm = $_POST;
 
-  $ci = trim($_POST['ci']);
-  $nombre = trim($_POST['nombre']);
-  $apellido = trim($_POST['apellido']);
-  $correo = trim($_POST['correo']);
-  $telefono = trim($_POST['telefono']);
-  $direccion = trim($_POST['direccion']);
-  $contraseña = $_POST['contrasena'];
-  $tipoUsuario = $_POST['tipo_usuario'];
+  $ci = trim($_POST['ci'] ?? '');
+  $nombre = trim($_POST['nombre'] ?? '');
+  $apellido = trim($_POST['apellido'] ?? '');
+  $correo = trim($_POST['correo'] ?? '');
+  $telefono = trim($_POST['telefono'] ?? '');
+  $direccion = trim($_POST['direccion'] ?? '');
+  $contraseña = $_POST['contrasena'] ?? '';
+  $tipoUsuario = $_POST['tipo_usuario'] ?? '';
   $rol = null;
+
+  /* se valida antes de guardar */
+  if ($ci === '') {
+    $error = "Falta la C.I. del usuario.";
+  } elseif (!preg_match('/^[0-9]{7,8}$/', $ci)) {
+    $error = "La C.I. debe tener 7 u 8 números, sin puntos ni guiones.";
+  } elseif ($nombre === '') {
+    $error = "Falta el nombre del usuario.";
+  } elseif ($apellido === '') {
+    $error = "Falta el apellido del usuario.";
+  } elseif ($telefono === '') {
+    $error = "Falta el teléfono del usuario.";
+  } elseif (!preg_match('/^[0-9 ]{8,20}$/', $telefono)) {
+    $error = "El teléfono solo puede tener números y espacios (entre 8 y 20).";
+  } elseif ($correo === '') {
+    $error = "Falta el correo del usuario.";
+  } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+    $error = "El correo no es válido.";
+  } elseif ($contraseña === '') {
+    $error = "Falta la contraseña del usuario.";
+  } elseif (!in_array($tipoUsuario, ['cliente', 'empleado', 'admin'])) {
+    $error = "Elegí el tipo de usuario.";
+  }
 
   /* asigna rol si es empleado, si es admin el rol es admin */
   if ($tipoUsuario === 'empleado') {
@@ -34,8 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   }
 
   if (empty($error)) {
-    $usuario = new Usuario();
-    $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario, $rol);
+    try {
+      $usuario = new Usuario();
+      $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario, $rol);
+    } catch (Throwable $e) {
+      $resultado = false;
+    }
 
     if ($resultado) {
       header("Location: usuarios.php");
@@ -79,6 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
       ?>
 
       <main class="container-fluid px-3 px-lg-4 py-4">
+
+        <?php if ($error) { ?>
+          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
 
         <!-- listado de usuarios -->
         <div class="admin-card">
@@ -198,27 +229,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="row g-3">
             <div class="col-sm-6">
               <label class="form-label" for="ci">C.I.</label>
-              <input class="form-control" type="text" id="ci" name="ci" placeholder="45678901" inputmode="numeric" pattern="[0-9]{7,8}" value="<?= htmlspecialchars($datosForm['ci'] ?? '') ?>" required>
+              <input class="form-control" type="text" id="ci" name="ci" placeholder="45678901" inputmode="numeric" pattern="[0-9]{7,8}" maxlength="8" title="7 u 8 números, sin puntos ni guiones" value="<?= htmlspecialchars($datosForm['ci'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="telefono">Teléfono</label>
-              <input class="form-control" type="tel" id="telefono" name="telefono" placeholder="097 654 321" value="<?= htmlspecialchars($datosForm['telefono'] ?? '') ?>" required>
+              <input class="form-control" type="tel" id="telefono" name="telefono" placeholder="097 654 321" pattern="[0-9 ]{8,20}" maxlength="20" title="Solo números y espacios, entre 8 y 20 caracteres" value="<?= htmlspecialchars($datosForm['telefono'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="nombre">Nombre</label>
-              <input class="form-control" type="text" id="nombre" name="nombre" placeholder="Jorge" value="<?= htmlspecialchars($datosForm['nombre'] ?? '') ?>" required>
+              <input class="form-control" type="text" id="nombre" name="nombre" placeholder="Jorge" maxlength="50" value="<?= htmlspecialchars($datosForm['nombre'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="apellido">Apellido</label>
-              <input class="form-control" type="text" id="apellido" name="apellido" placeholder="Pérez" value="<?= htmlspecialchars($datosForm['apellido'] ?? '') ?>" required>
+              <input class="form-control" type="text" id="apellido" name="apellido" placeholder="Pérez" maxlength="50" value="<?= htmlspecialchars($datosForm['apellido'] ?? '') ?>" required>
             </div>
             <div class="col-12">
               <label class="form-label" for="direccion">Dirección</label>
-              <input class="form-control" type="text" id="direccion" name="direccion" placeholder="18 de Julio 1450" value="<?= htmlspecialchars($datosForm['direccion'] ?? '') ?>">
+              <input class="form-control" type="text" id="direccion" name="direccion" placeholder="18 de Julio 1450" maxlength="150" value="<?= htmlspecialchars($datosForm['direccion'] ?? '') ?>">
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="correo">Correo</label>
-              <input class="form-control" type="email" id="correo" name="correo" placeholder="nombre@correo.com" value="<?= htmlspecialchars($datosForm['correo'] ?? '') ?>" required>
+              <input class="form-control" type="email" id="correo" name="correo" placeholder="nombre@correo.com" maxlength="100" value="<?= htmlspecialchars($datosForm['correo'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="contrasena">Contraseña</label>

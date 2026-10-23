@@ -120,6 +120,7 @@ class Producto
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
+            $conexion->beginTransaction();
 
             $sqlProducto = "INSERT INTO PRODUCTO (Nombre, Categoria, Precio, Stock, StockMinimo, FechaVencimiento)
                 VALUES (:nombre, :categoria, :precio, :stock, :stockMinimo, :fechaVencimiento)";
@@ -147,8 +148,12 @@ class Producto
                 ':idProveedor' => $idProveedor
             ]);
 
+            $conexion->commit();
             return true;
         } catch (PDOException $e) {
+            if (isset($conexion) && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
             return false;
         }
     }

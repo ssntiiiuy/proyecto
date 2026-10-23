@@ -2,6 +2,32 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
 
+/* eliminar: solo se borra por POST, despues de confirmar */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
+  $cita = new Cita();
+  $resultado = $cita->eliminarCita((int) $_POST['IdCita']);
+  header("Location: citas.php?msg=" . ($resultado ? 'eliminado' : 'error'));
+  exit();
+}
+
+/* mensajes fijos que se muestran despues de editar o eliminar */
+$mensajes = [
+  'editado' => ['success', 'Los cambios de la cita se guardaron.'],
+  'eliminado' => ['success', 'La cita se eliminó.'],
+  'noexiste' => ['danger', 'La cita no existe.'],
+  'error' => ['danger', 'No se pudo completar la operación.']
+];
+$mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
+
+/* confirmacion: citas.php?eliminar=Id muestra el aviso arriba del listado */
+$citaEliminar = null;
+if (isset($_GET['eliminar'])) {
+  $citaEliminar = Cita::buscarPorId((int) $_GET['eliminar']);
+  if (!$citaEliminar) {
+    $mensaje = $mensajes['noexiste'];
+  }
+}
+
 $estado = $_GET['estado'] ?? null;
 $filtro = $_GET['filtro'] ?? null; //
 
@@ -37,35 +63,60 @@ if (isset($_GET['ci']) && trim($_GET['ci']) !== '') {
 
 /* formulario como antes */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
-  $ci = trim($_POST['CI']);
-  $idMascota = trim($_POST['IdMascota']);
-  $idServicio = trim($_POST['IdServicio']);
-  $fecha = trim($_POST['Fecha']);
-  $hora = trim($_POST['Hora']);
-  $estado = trim($_POST['Estado']);
+  $ci = trim($_POST['CI'] ?? '');
+  $idMascota = trim($_POST['IdMascota'] ?? '');
+  $idServicio = trim($_POST['IdServicio'] ?? '');
+  $fecha = trim($_POST['Fecha'] ?? '');
+  $hora = trim($_POST['Hora'] ?? '');
+  $estado = trim($_POST['Estado'] ?? '');
 
   $sqlCheck = $conexion->prepare("SELECT 1 FROM CLIENTE WHERE CI = :ci");
   $sqlCheck->execute([':ci' => $ci]);
 
+  /* la mascota tiene que ser del cliente */
+  $sqlCheckMascota = $conexion->prepare("SELECT 1 FROM MASCOTA WHERE IdMascota = :idMascota AND CI = :ci");
+  $sqlCheckMascota->execute([':idMascota' => $idMascota, ':ci' => $ci]);
+  $mascotaDelCliente = $sqlCheckMascota->fetch();
+
+  /* se valida antes de guardar */
   if (!$sqlCheck->fetch()) {
     $error = "La cédula no corresponde a ningún cliente.";
-  } elseif (!empty($fecha) && $fecha < date('Y-m-d')) {
+  } elseif ($idMascota === '') {
+    $error = "Elegí la mascota de la cita.";
+  } elseif (!$mascotaDelCliente) {
+    $error = "La mascota elegida no es de este cliente.";
+  } elseif ($idServicio === '') {
+    $error = "Elegí el servicio de la cita.";
+  } elseif ($fecha === '') {
+    $error = "Falta la fecha de la cita.";
+  } elseif (strtotime($fecha) === false) {
+    $error = "La fecha de la cita no es válida.";
+  } elseif ($fecha < date('Y-m-d')) {
     $error = "La fecha no puede ser anterior a hoy.";
+  } elseif ($hora === '') {
+    $error = "Falta la hora de la cita.";
+  } elseif (!in_array($estado, ['Pendiente', 'Confirmada', 'Cancelada'])) {
+    $error = "Elegí un estado válido para la cita.";
   } else {
-    $cita = new Cita();
-    $resultado = $cita->crearCita((int)$ci, (int)$idServicio, (int)$idMascota, $fecha, $hora, $estado);
+    try {
+      $cita = new Cita();
+      $resultado = $cita->crearCita((int)$ci, (int)$idServicio, (int)$idMascota, $fecha, $hora, $estado);
+    } catch (Throwable $e) {
+      $resultado = false;
+    }
 
     if ($resultado) {
       header("Location: citas.php");
       exit();
     } else {
-      $error = "No se pudo completar el registro.";
+      $error = "No se pudo guardar la cita. Revisá los datos.";
     }
   }
 }
 
 /*  el modal se abre solo si venimos de buscar una cédula (sin importar si encontro o no) */
-$modalAbierto = isset($_GET['ci']) || isset($error);
+/* si al guardar hay un error, se muestra el aviso arriba del listado */
+$modalAbierto = isset($_GET['ci']);
 ?>
 
 <!DOCTYPE html>
@@ -100,6 +151,28 @@ $modalAbierto = isset($_GET['ci']) || isset($error);
       ?>
 
       <main class="container-fluid px-3 px-lg-4 py-4">
+
+        <?php if ($mensaje) { ?>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+        <?php } ?>
+
+        <?php if (!empty($error)) { ?>
+          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
+
+        <?php if ($citaEliminar) { ?>
+          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+            <form class="d-flex flex-wrap align-items-center gap-2" action="citas.php" method="post">
+              <span class="me-auto">
+                ¿Eliminar la cita de <strong><?= htmlspecialchars($citaEliminar['MascotaNombre'] ?? '') ?></strong>
+                del <?= date('d/m/Y', strtotime($citaEliminar['Fecha'])) ?> a las <?= substr($citaEliminar['Hora'], 0, 5) ?>? Esta acción no se puede deshacer.
+              </span>
+              <input type="hidden" name="IdCita" value="<?= $citaEliminar['IdCita'] ?>">
+              <a class="btn btn-sm admin-btn-cancelar" href="citas.php">Cancelar</a>
+              <button type="submit" class="btn btn-sm btn-danger" name="eliminar">Sí, eliminar</button>
+            </form>
+          </div>
+        <?php } ?>
 
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
@@ -161,8 +234,8 @@ $modalAbierto = isset($_GET['ci']) || isset($error);
                         <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($c['Estado']) ?></span>
                       </td>
                       <td class="text-end">
-                        <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                        <a class="btn btn-sm admin-btn-icono" href="editar_cita.php?id=<?= $c['IdCita'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                        <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="citas.php?eliminar=<?= $c['IdCita'] ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                       </td>
                     </tr>
                 <?php endforeach;

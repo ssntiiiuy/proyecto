@@ -81,7 +81,7 @@ class Cita
             $sql = "SELECT c.IdCita, c.CI, u.Nombre AS ClienteNombre, u.Apellido AS ClienteApellido,
                        c.IdMascota, m.Nombre AS MascotaNombre,
                        c.IdServicio, s.Nombre AS ServicioNombre,
-                       c.Fecha, c.Hora, c.Tipo, c.Estado
+                       c.Fecha, c.Hora, c.Estado
                 FROM CITA c
                 INNER JOIN CLIENTE cl ON c.CI = cl.CI
                 INNER JOIN USUARIO u ON cl.CI = u.CI
@@ -146,6 +146,68 @@ class Cita
             return (int)$stmt->fetchColumn();
         } catch (PDOException $e) {
             return 0;
+        }
+    }
+
+    public static function buscarPorId(int $id): ?array
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sql = "SELECT c.IdCita, c.CI, u.Nombre AS ClienteNombre, u.Apellido AS ClienteApellido,
+                       c.IdMascota, m.Nombre AS MascotaNombre, c.IdServicio, c.Fecha, c.Hora, c.Estado
+                FROM CITA c
+                LEFT JOIN USUARIO u ON c.CI = u.CI
+                LEFT JOIN MASCOTA m ON c.IdMascota = m.IdMascota
+                WHERE c.IdCita = :id";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            $cita = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $cita ?: null;
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /* el cliente (CI) no se cambia al editar */
+    public function editarCita(int $id, int $idServicio, int $idMascota, string $fecha, string $hora, string $estado): bool
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sql = "UPDATE CITA
+                    SET IdServicio = :idServicio, IdMascota = :idMascota, Fecha = :fecha, Hora = :hora, Estado = :estado
+                    WHERE IdCita = :id";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([
+                ':idServicio' => $idServicio,
+                ':idMascota' => $idMascota,
+                ':fecha' => $fecha,
+                ':hora' => $hora,
+                ':estado' => $estado,
+                ':id' => $id
+            ]);
+
+            return true;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    /* ninguna tabla usa CITA, asi que no hay borrado bloqueado */
+    public function eliminarCita(int $id): bool
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sql = "DELETE FROM CITA WHERE IdCita = :id";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([':id' => $id]);
+
+            return true;
+        } catch (PDOException $e) {
+            return false;
         }
     }
 }

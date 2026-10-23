@@ -11,19 +11,34 @@ $datosForm = []; /* se guardan los datos del formulario para repoblarlo en caso 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $datosForm = $_POST;
 
-  $nombre = trim($_POST['Nombre']);
-  $empresa = trim($_POST['NombreEmpresa']);
-  $Telefono = trim($_POST['numTelProveedor']);
+  $nombre = trim($_POST['Nombre'] ?? '');
+  $empresa = trim($_POST['NombreEmpresa'] ?? '');
+  $Telefono = trim($_POST['numTelProveedor'] ?? '');
+
+  /* se valida antes de guardar */
+  if ($nombre === '') {
+    $error = "Falta el nombre de contacto del proveedor.";
+  } elseif ($empresa === '') {
+    $error = "Falta la empresa del proveedor.";
+  } elseif ($Telefono === '') {
+    $error = "Falta el teléfono del proveedor.";
+  } elseif (!preg_match('/^[0-9 ]{8,20}$/', $Telefono)) {
+    $error = "El teléfono solo puede tener números y espacios (entre 8 y 20).";
+  }
 
   if (empty($error)) {
-    $usuario = new Proveedor();
-    $resultado = $usuario->crearProveedor($nombre, $empresa, $Telefono);
+    try {
+      $usuario = new Proveedor();
+      $resultado = $usuario->crearProveedor($nombre, $empresa, $Telefono);
+    } catch (Throwable $e) {
+      $resultado = false;
+    }
 
     if ($resultado) {
       header("Location: proveedores.php");
       exit();
     } else {
-      $error = "No se pudo completar el registro.";
+      $error = "No se pudo guardar el proveedor. Revisá los datos.";
     }
   }
 }
@@ -61,6 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
       ?>
 
       <main class="container-fluid px-3 px-lg-4 py-4">
+
+        <?php if ($error) { ?>
+          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
 
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
@@ -124,15 +143,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="row g-3">
             <div class="col-sm-12">
               <label class="form-label" for="Nombre">Nombre de contacto</label>
-              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Carlos Núñez" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
+              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Carlos Núñez" maxlength="100" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="NombreEmpresa">Empresa</label>
-              <input class="form-control" type="text" id="NombreEmpresa" name="NombreEmpresa" placeholder="Nutripet S.A." value="<?= htmlspecialchars($datosForm['NombreEmpresa'] ?? '') ?>" required>
+              <input class="form-control" type="text" id="NombreEmpresa" name="NombreEmpresa" placeholder="Nutripet S.A." maxlength="100" value="<?= htmlspecialchars($datosForm['NombreEmpresa'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="numTelProveedor">Teléfono</label>
-              <input class="form-control" type="tel" id="numTelProveedor" name="numTelProveedor" placeholder="2604 1122" value="<?= htmlspecialchars($datosForm['numTelProveedor'] ?? '') ?>" required>
+              <input class="form-control" type="tel" id="numTelProveedor" name="numTelProveedor" placeholder="2604 1122" pattern="[0-9 ]{8,20}" maxlength="20" title="Solo números y espacios, entre 8 y 20 caracteres" value="<?= htmlspecialchars($datosForm['numTelProveedor'] ?? '') ?>" required>
             </div>
           </div>
         </div>
