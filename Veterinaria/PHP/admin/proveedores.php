@@ -2,6 +2,33 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Proveedor.php';
 
+/* eliminar: solo se borra por POST, despues de confirmar */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
+  $proveedor = new Proveedor();
+  $resultado = $proveedor->eliminarProveedor((int) $_POST['IdProveedor']);
+  header("Location: proveedores.php?msg=" . $resultado);
+  exit();
+}
+
+/* mensajes fijos que se muestran despues de editar o eliminar */
+$mensajes = [
+  'editado' => ['success', 'Los cambios del proveedor se guardaron.'],
+  'eliminado' => ['success', 'El proveedor se eliminó.'],
+  'bloqueado' => ['danger', 'No se puede eliminar el proveedor porque tiene productos asociados. Primero hay que eliminar esos productos o asignarles otro proveedor.'],
+  'noexiste' => ['danger', 'El proveedor no existe.'],
+  'error' => ['danger', 'No se pudo completar la operación.']
+];
+$mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
+
+/* confirmacion: proveedores.php?eliminar=Id muestra el aviso arriba del listado */
+$proveedorEliminar = null;
+if (isset($_GET['eliminar'])) {
+  $proveedorEliminar = Proveedor::buscarPorId((int) $_GET['eliminar']);
+  if (!$proveedorEliminar) {
+    $mensaje = $mensajes['noexiste'];
+  }
+}
+
 $datosProveedores = Proveedor::listadoProveedor();
 $proveedores = $datosProveedores['proveedores'];
 
@@ -77,8 +104,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
+        <?php if ($mensaje) { ?>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+        <?php } ?>
+
         <?php if ($error) { ?>
           <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
+
+        <?php if ($proveedorEliminar) { ?>
+          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+            <form class="d-flex flex-wrap align-items-center gap-2" action="proveedores.php" method="post">
+              <span class="me-auto">
+                ¿Eliminar el proveedor <strong><?= htmlspecialchars($proveedorEliminar['NombreEmpresa']) ?></strong> (Id <?= $proveedorEliminar['IdProveedor'] ?>) y sus teléfonos? Esta acción no se puede deshacer.
+              </span>
+              <input type="hidden" name="IdProveedor" value="<?= $proveedorEliminar['IdProveedor'] ?>">
+              <a class="btn btn-sm admin-btn-cancelar" href="proveedores.php">Cancelar</a>
+              <button type="submit" class="btn btn-sm btn-danger" name="eliminar">Sí, eliminar</button>
+            </form>
+          </div>
         <?php } ?>
 
         <div class="admin-card">
@@ -116,8 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                     </td>
                     <td><?= htmlspecialchars($proveedor['Productos'] ?? '-') ?></td>
                     <td class="text-end">
-                      <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                      <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                      <a class="btn btn-sm admin-btn-icono" href="editar_proveedor.php?id=<?= $proveedor['IdProveedor'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                      <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="proveedores.php?eliminar=<?= $proveedor['IdProveedor'] ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                     </td>
                   </tr>
                 <?php endforeach; ?>

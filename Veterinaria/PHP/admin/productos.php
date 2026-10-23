@@ -2,6 +2,42 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Producto.php';
 
+/* filtros del listado, para volver con los mismos despues de editar o eliminar */
+$filtrosListado = [];
+if (!empty($_GET['categoria'])) {
+  $filtrosListado['categoria'] = $_GET['categoria'];
+}
+if (!empty($_GET['filtro'])) {
+  $filtrosListado['filtro'] = $_GET['filtro'];
+}
+
+/* eliminar: solo se borra por POST, despues de confirmar */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
+  $producto = new Producto();
+  $resultado = $producto->eliminarProducto((int) $_POST['IdProducto']);
+  header("Location: productos.php?" . http_build_query(['msg' => $resultado] + $filtrosListado));
+  exit();
+}
+
+/* mensajes fijos que se muestran despues de editar o eliminar */
+$mensajes = [
+  'editado' => ['success', 'Los cambios del producto se guardaron.'],
+  'eliminado' => ['success', 'El producto se eliminó.'],
+  'bloqueado' => ['danger', 'No se puede eliminar el producto porque aparece en facturas o compras de clientes.'],
+  'noexiste' => ['danger', 'El producto no existe.'],
+  'error' => ['danger', 'No se pudo completar la operación.']
+];
+$mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
+
+/* confirmacion: productos.php?eliminar=Id muestra el aviso arriba del listado */
+$productoEliminar = null;
+if (isset($_GET['eliminar'])) {
+  $productoEliminar = Producto::buscarPorId((int) $_GET['eliminar']);
+  if (!$productoEliminar) {
+    $mensaje = $mensajes['noexiste'];
+  }
+}
+
 $categoria = $_GET['categoria'] ?? null;
 $filtroEspecial = $_GET['filtro'] ?? null;
 
@@ -101,8 +137,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
+        <?php if ($mensaje) { ?>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+        <?php } ?>
+
         <?php if ($error) { ?>
           <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
+
+        <?php if ($productoEliminar) { ?>
+          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+            <form class="d-flex flex-wrap align-items-center gap-2" action="productos.php?<?= htmlspecialchars(http_build_query($filtrosListado)) ?>" method="post">
+              <span class="me-auto">
+                ¿Eliminar el producto <strong><?= htmlspecialchars($productoEliminar['Nombre']) ?></strong> (Id <?= $productoEliminar['IdProducto'] ?>)? Esta acción no se puede deshacer.
+              </span>
+              <input type="hidden" name="IdProducto" value="<?= $productoEliminar['IdProducto'] ?>">
+              <a class="btn btn-sm admin-btn-cancelar" href="productos.php?<?= htmlspecialchars(http_build_query($filtrosListado)) ?>">Cancelar</a>
+              <button type="submit" class="btn btn-sm btn-danger" name="eliminar">Sí, eliminar</button>
+            </form>
+          </div>
         <?php } ?>
 
         <div class="admin-card">
@@ -182,8 +235,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
                     <td><?= htmlspecialchars($prod['NombreEmpresa']) ?></td>
                     <td class="text-end">
-                      <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                      <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                      <a class="btn btn-sm admin-btn-icono" href="editar_producto.php?<?= htmlspecialchars(http_build_query(['id' => $prod['IdProducto']] + $filtrosListado)) ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                      <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="productos.php?<?= htmlspecialchars(http_build_query(['eliminar' => $prod['IdProducto']] + $filtrosListado)) ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                     </td>
                   </tr>
                 <?php endforeach; ?>

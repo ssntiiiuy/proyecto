@@ -120,4 +120,99 @@ class Proveedor
             return false;
         }
     }
+
+    /* devuelve el proveedor con sus telefonos en $proveedor['telefonos'] */
+    public static function buscarPorId(int $id): ?array
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sqlProveedor = "SELECT IdProveedor, Nombre, NombreEmpresa FROM PROVEEDOR WHERE IdProveedor = :id";
+            $stmtProveedor = $conexion->prepare($sqlProveedor);
+            $stmtProveedor->execute([':id' => $id]);
+            $proveedor = $stmtProveedor->fetch(PDO::FETCH_ASSOC);
+
+            if (!$proveedor) {
+                return null;
+            }
+
+            $sqlTel = "SELECT numTelProveedor FROM TELEFONO_PROVEEDOR WHERE IdProveedor = :id ORDER BY numTelProveedor";
+            $stmtTel = $conexion->prepare($sqlTel);
+            $stmtTel->execute([':id' => $id]);
+            $proveedor['telefonos'] = $stmtTel->fetchAll(PDO::FETCH_COLUMN);
+
+            return $proveedor;
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /* se borran los telefonos que tenia y se guardan los que llegan */
+    public function editarProveedor(int $id, string $nombre, string $empresa, array $telefonos): bool
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $conexion->beginTransaction();
+
+            $sqlProveedor = "UPDATE PROVEEDOR SET Nombre = :nombre, NombreEmpresa = :empresa WHERE IdProveedor = :id";
+            $stmtProveedor = $conexion->prepare($sqlProveedor);
+            $stmtProveedor->execute([
+                ':nombre' => $nombre,
+                ':empresa' => $empresa,
+                ':id' => $id
+            ]);
+
+            $sqlBorrarTel = "DELETE FROM TELEFONO_PROVEEDOR WHERE IdProveedor = :id";
+            $stmtBorrarTel = $conexion->prepare($sqlBorrarTel);
+            $stmtBorrarTel->execute([':id' => $id]);
+
+            $sqlTel = "INSERT INTO TELEFONO_PROVEEDOR (IdProveedor, numTelProveedor) VALUES (:idProveedor, :telefono)";
+            $stmtTel = $conexion->prepare($sqlTel);
+            foreach ($telefonos as $telefono) {
+                $stmtTel->execute([
+                    ':idProveedor' => $id,
+                    ':telefono' => $telefono
+                ]);
+            }
+
+            $conexion->commit();
+            return true;
+        } catch (PDOException $e) {
+            if (isset($conexion) && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            return false;
+        }
+    }
+
+    /* devuelve 'eliminado', 'bloqueado' (tiene productos) o 'error' */
+    public function eliminarProveedor(int $id): string
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $conexion->beginTransaction();
+
+            /* primero los telefonos (tabla hija) y despues el proveedor */
+            $sqlTel = "DELETE FROM TELEFONO_PROVEEDOR WHERE IdProveedor = :id";
+            $stmtTel = $conexion->prepare($sqlTel);
+            $stmtTel->execute([':id' => $id]);
+
+            $sqlProveedor = "DELETE FROM PROVEEDOR WHERE IdProveedor = :id";
+            $stmtProveedor = $conexion->prepare($sqlProveedor);
+            $stmtProveedor->execute([':id' => $id]);
+
+            $conexion->commit();
+            return 'eliminado';
+        } catch (PDOException $e) {
+            /* si falla, se deshace todo y los telefonos vuelven */
+            if (isset($conexion) && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            /* 1451: PROVEE usa este proveedor (tiene productos) */
+            if ($e->errorInfo[1] == 1451) {
+                return 'bloqueado';
+            }
+            return 'error';
+        }
+    }
 }
