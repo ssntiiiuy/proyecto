@@ -2,6 +2,39 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Servicio.php';
 
+/* filtro del listado, para volver con el mismo despues de editar o eliminar */
+$filtrosListado = [];
+if (!empty($_GET['estado'])) {
+  $filtrosListado['estado'] = $_GET['estado'];
+}
+
+/* eliminar: solo se borra por POST, despues de confirmar */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
+  $servicio = new Servicio();
+  $resultado = $servicio->eliminarServicio((int) $_POST['IdServicio']);
+  header("Location: servicios.php?" . http_build_query(['msg' => $resultado] + $filtrosListado));
+  exit();
+}
+
+/* mensajes fijos que se muestran despues de editar o eliminar */
+$mensajes = [
+  'editado' => ['success', 'Los cambios del servicio se guardaron.'],
+  'eliminado' => ['success', 'El servicio se eliminó.'],
+  'bloqueado' => ['danger', 'No se puede eliminar el servicio porque tiene citas, empleados que lo brindan o mascotas que lo recibieron.'],
+  'noexiste' => ['danger', 'El servicio no existe.'],
+  'error' => ['danger', 'No se pudo completar la operación.']
+];
+$mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
+
+/* confirmacion: servicios.php?eliminar=Id muestra el aviso arriba del listado */
+$servicioEliminar = null;
+if (isset($_GET['eliminar'])) {
+  $servicioEliminar = Servicio::buscarPorId((int) $_GET['eliminar']);
+  if (!$servicioEliminar) {
+    $mensaje = $mensajes['noexiste'];
+  }
+}
+
 /* funcion para guardar los datos y filtrar por estado */
 $estadoFiltro = $_GET['estado'] ?? '';
 $datosServicios = Servicio::listadoServicios($estadoFiltro !== '' ? $estadoFiltro : null);
@@ -104,8 +137,25 @@ function obtenerClaseBadge($tipo)
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
+        <?php if ($mensaje) { ?>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+        <?php } ?>
+
         <?php if ($error) { ?>
           <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
+
+        <?php if ($servicioEliminar) { ?>
+          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+            <form class="d-flex flex-wrap align-items-center gap-2" action="servicios.php?<?= htmlspecialchars(http_build_query($filtrosListado)) ?>" method="post">
+              <span class="me-auto">
+                ¿Eliminar el servicio <strong><?= htmlspecialchars($servicioEliminar['Nombre']) ?></strong> (<?= htmlspecialchars($servicioEliminar['Tipo']) ?>, Id <?= $servicioEliminar['IdServicio'] ?>)? Esta acción no se puede deshacer.
+              </span>
+              <input type="hidden" name="IdServicio" value="<?= $servicioEliminar['IdServicio'] ?>">
+              <a class="btn btn-sm admin-btn-cancelar" href="servicios.php?<?= htmlspecialchars(http_build_query($filtrosListado)) ?>">Cancelar</a>
+              <button type="submit" class="btn btn-sm btn-danger" name="eliminar">Sí, eliminar</button>
+            </form>
+          </div>
         <?php } ?>
 
         <div class="admin-card">
@@ -164,12 +214,12 @@ function obtenerClaseBadge($tipo)
                       <td>$ <?= number_format($serv['Precio'] ?? 0, 0, ',', '.') ?></td>
 
                       <td class="text-end">
-                        <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar">
+                        <a class="btn btn-sm admin-btn-icono" href="editar_servicio.php?<?= htmlspecialchars(http_build_query(['id' => $serv['IdServicio']] + $filtrosListado)) ?>" aria-label="Editar">
                           <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar">
+                        </a>
+                        <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="servicios.php?<?= htmlspecialchars(http_build_query(['eliminar' => $serv['IdServicio']] + $filtrosListado)) ?>" aria-label="Eliminar">
                           <i class="bi bi-trash"></i>
-                        </button>
+                        </a>
                       </td>
                     </tr>
                   <?php endforeach; ?>

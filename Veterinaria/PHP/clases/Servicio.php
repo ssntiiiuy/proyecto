@@ -185,4 +185,149 @@ class Servicio
             return false;
         }
     }
+
+    /* devuelve el servicio con su Tipo y los campos de su subtipo */
+    public static function buscarPorId(int $id): ?array
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sql = "SELECT s.IdServicio, s.Nombre, s.Precio, s.Descripcion, s.Duracion,
+               CASE
+                 WHEN c.IdServicio IS NOT NULL THEN 'Consulta'
+                 WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
+                 WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
+                 WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
+                 ELSE 'Sin definir'
+               END AS Tipo,
+               c.Motivo, c.EsEmergencia, c.IndicacionesRecetadas,
+               v.LoteVacuna, v.TipoVacuna, v.LaboratorioFabricante,
+               p.TipoCorte, p.TipoShampoo,
+               q.TipoAnestesia, q.RiesgoQuirurgico, q.AutorizacionFirmada
+            FROM SERVICIO s
+            LEFT JOIN CONSULTA c ON s.IdServicio = c.IdServicio
+            LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
+            LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
+            LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
+            WHERE s.IdServicio = :id";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            $servicio = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $servicio ?: null;
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /* el tipo no se cambia: se actualiza SERVICIO y la fila de su subtipo */
+    public function editarServicio(int $id, string $tipo, string $nombre, float $precio, string $descripcion, int $duracion, array $datosEspecificos): bool
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $conexion->beginTransaction();
+
+            $sqlServicio = "UPDATE SERVICIO
+                SET Nombre = :nombre, Precio = :precio, Descripcion = :descripcion, Duracion = :duracion
+                WHERE IdServicio = :id";
+            $stmt = $conexion->prepare($sqlServicio);
+            $stmt->execute([
+                ':nombre' => $nombre,
+                ':precio' => $precio,
+                ':descripcion' => $descripcion,
+                ':duracion' => $duracion,
+                ':id' => $id
+            ]);
+
+            switch ($tipo) {
+                case 'Consulta':
+                    $sql = "UPDATE CONSULTA
+                        SET Motivo = :motivo, EsEmergencia = :emergencia, IndicacionesRecetadas = :indicaciones
+                        WHERE IdServicio = :id";
+                    $stmt = $conexion->prepare($sql);
+                    $stmt->execute([
+                        ':motivo' => $datosEspecificos['Motivo'] ?? '',
+                        ':emergencia' => $datosEspecificos['EsEmergencia'] ?? 0,
+                        ':indicaciones' => $datosEspecificos['IndicacionesRecetadas'] ?? '',
+                        ':id' => $id
+                    ]);
+                    break;
+
+                case 'Vacunacion':
+                    $sql = "UPDATE VACUNACION
+                        SET LoteVacuna = :lote, TipoVacuna = :tipoVacuna, LaboratorioFabricante = :laboratorio
+                        WHERE IdServicio = :id";
+                    $stmt = $conexion->prepare($sql);
+                    $stmt->execute([
+                        ':lote' => $datosEspecificos['LoteVacuna'] ?? '',
+                        ':tipoVacuna' => $datosEspecificos['TipoVacuna'] ?? '',
+                        ':laboratorio' => $datosEspecificos['LaboratorioFabricante'] ?? '',
+                        ':id' => $id
+                    ]);
+                    break;
+
+                case 'Peluqueria':
+                    $sql = "UPDATE PELUQUERIA SET TipoCorte = :corte, TipoShampoo = :shampoo WHERE IdServicio = :id";
+                    $stmt = $conexion->prepare($sql);
+                    $stmt->execute([
+                        ':corte' => $datosEspecificos['TipoCorte'] ?? '',
+                        ':shampoo' => $datosEspecificos['TipoShampoo'] ?? '',
+                        ':id' => $id
+                    ]);
+                    break;
+
+                case 'Cirugia':
+                    $sql = "UPDATE CIRUGIA
+                        SET TipoAnestesia = :anestesia, RiesgoQuirurgico = :riesgo, AutorizacionFirmada = :autorizacion
+                        WHERE IdServicio = :id";
+                    $stmt = $conexion->prepare($sql);
+                    $stmt->execute([
+                        ':anestesia' => $datosEspecificos['TipoAnestesia'] ?? '',
+                        ':riesgo' => $datosEspecificos['RiesgoQuirurgico'] ?? '',
+                        ':autorizacion' => $datosEspecificos['AutorizacionFirmada'] ?? 0,
+                        ':id' => $id
+                    ]);
+                    break;
+            }
+
+            $conexion->commit();
+            return true;
+        } catch (PDOException $e) {
+            if (isset($conexion) && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            return false;
+        }
+    }
+
+    /* devuelve 'eliminado', 'bloqueado' (tiene citas, BRINDA o ACCEDE) o 'error' */
+    public function eliminarServicio(int $id): string
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $conexion->beginTransaction();
+
+            /* primero el subtipo (solo una de estas tablas tiene la fila) y despues SERVICIO */
+            foreach (['CONSULTA', 'VACUNACION', 'PELUQUERIA', 'CIRUGIA'] as $tabla) {
+                $stmt = $conexion->prepare("DELETE FROM $tabla WHERE IdServicio = :id");
+                $stmt->execute([':id' => $id]);
+            }
+
+            $stmt = $conexion->prepare("DELETE FROM SERVICIO WHERE IdServicio = :id");
+            $stmt->execute([':id' => $id]);
+
+            $conexion->commit();
+            return 'eliminado';
+        } catch (PDOException $e) {
+            /* si falla, se deshace todo y el subtipo vuelve */
+            if (isset($conexion) && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            /* 1451: CITA, BRINDA o ACCEDE usan este servicio */
+            if ($e->errorInfo[1] == 1451) {
+                return 'bloqueado';
+            }
+            return 'error';
+        }
+    }
 }

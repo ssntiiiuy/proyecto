@@ -2,6 +2,61 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Usuario.php';
 
+/* se necesita la sesion para saber quien esta logueado (no se puede eliminar a si mismo) */
+if (session_status() === PHP_SESSION_NONE) {
+  session_start();
+}
+
+/* pestaña que queda abierta: clientes o empleados */
+$pestana = ($_GET['pestana'] ?? '') === 'empleados' ? 'empleados' : 'clientes';
+
+/* eliminar: solo se borra por POST, despues de confirmar */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
+  $ciBorrar = (int) $_POST['CI'];
+  $usuarioBorrar = Usuario::buscarPorId($ciBorrar);
+
+  if (!$usuarioBorrar) {
+    $resultado = 'noexiste';
+  } elseif ($usuarioBorrar['Correo'] === ($_SESSION['correo'] ?? '')) {
+    $resultado = 'propio';
+  } else {
+    $usuario = new Usuario();
+    $resultado = $usuario->eliminarUsuario($ciBorrar);
+
+    /* el mensaje de bloqueo depende de si es cliente o empleado */
+    if ($resultado === 'bloqueado') {
+      $resultado = $usuarioBorrar['CiCliente'] ? 'bloqueado_cliente' : 'bloqueado_empleado';
+    }
+  }
+
+  header("Location: usuarios.php?" . http_build_query(['msg' => $resultado, 'pestana' => $pestana]));
+  exit();
+}
+
+/* mensajes fijos que se muestran despues de editar o eliminar */
+$mensajes = [
+  'editado' => ['success', 'Los cambios del usuario se guardaron.'],
+  'eliminado' => ['success', 'El usuario se eliminó.'],
+  'bloqueado_cliente' => ['danger', 'No se puede eliminar el cliente porque tiene mascotas, citas o compras registradas.'],
+  'bloqueado_empleado' => ['danger', 'No se puede eliminar el empleado porque tiene servicios asignados que brinda.'],
+  'propio' => ['danger', 'No podés eliminar tu propio usuario mientras tenés la sesión iniciada.'],
+  'noexiste' => ['danger', 'El usuario no existe.'],
+  'error' => ['danger', 'No se pudo completar la operación.']
+];
+$mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
+
+/* confirmacion: usuarios.php?eliminar=CI muestra el aviso arriba del listado */
+$usuarioEliminar = null;
+if (isset($_GET['eliminar'])) {
+  $usuarioEliminar = Usuario::buscarPorId((int) $_GET['eliminar']);
+  if (!$usuarioEliminar) {
+    $mensaje = $mensajes['noexiste'];
+  } elseif ($usuarioEliminar['Correo'] === ($_SESSION['correo'] ?? '')) {
+    $mensaje = $mensajes['propio'];
+    $usuarioEliminar = null;
+  }
+}
+
 $datosUsuarios = Usuario::listadoUsuarios();
 $clientes = $datosUsuarios['clientes'];
 $empleados = $datosUsuarios['empleados'];
@@ -107,8 +162,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
+        <?php if ($mensaje) { ?>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+        <?php } ?>
+
         <?php if ($error) { ?>
           <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
+
+        <?php if ($usuarioEliminar) { ?>
+          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+            <form class="d-flex flex-wrap align-items-center gap-2" action="usuarios.php?pestana=<?= $pestana ?>" method="post">
+              <span class="me-auto">
+                ¿Eliminar al usuario <strong><?= htmlspecialchars($usuarioEliminar['Nombre'] . ' ' . $usuarioEliminar['Apellido']) ?></strong> (C.I. <?= $usuarioEliminar['CI'] ?>) con su login y sus teléfonos? Esta acción no se puede deshacer.
+              </span>
+              <input type="hidden" name="CI" value="<?= $usuarioEliminar['CI'] ?>">
+              <a class="btn btn-sm admin-btn-cancelar" href="usuarios.php?pestana=<?= $pestana ?>">Cancelar</a>
+              <button type="submit" class="btn btn-sm btn-danger" name="eliminar">Sí, eliminar</button>
+            </form>
+          </div>
         <?php } ?>
 
         <!-- listado de usuarios -->
@@ -116,10 +188,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="admin-card-header flex-wrap">
             <ul class="nav admin-tabs" role="tablist">
               <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="tabClientes" data-bs-toggle="tab" data-bs-target="#panelClientes" type="button" role="tab" aria-controls="panelClientes" aria-selected="true">Clientes</button>
+                <button class="nav-link <?= $pestana === 'clientes' ? 'active' : '' ?>" id="tabClientes" data-bs-toggle="tab" data-bs-target="#panelClientes" type="button" role="tab" aria-controls="panelClientes" aria-selected="<?= $pestana === 'clientes' ? 'true' : 'false' ?>">Clientes</button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tabEmpleados" data-bs-toggle="tab" data-bs-target="#panelEmpleados" type="button" role="tab" aria-controls="panelEmpleados" aria-selected="false">Empleados</button>
+                <button class="nav-link <?= $pestana === 'empleados' ? 'active' : '' ?>" id="tabEmpleados" data-bs-toggle="tab" data-bs-target="#panelEmpleados" type="button" role="tab" aria-controls="panelEmpleados" aria-selected="<?= $pestana === 'empleados' ? 'true' : 'false' ?>">Empleados</button>
               </li>
             </ul>
             <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalUsuario">
@@ -128,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           </div>
 
           <div class="tab-content">
-            <div class="tab-pane fade show active" id="panelClientes" role="tabpanel" aria-labelledby="tabClientes" tabindex="0">
+            <div class="tab-pane fade <?= $pestana === 'clientes' ? 'show active' : '' ?>" id="panelClientes" role="tabpanel" aria-labelledby="tabClientes" tabindex="0">
               <div class="table-responsive">
                 <table class="table admin-tabla mb-0">
                   <thead>
@@ -150,12 +222,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                         <td><?= htmlspecialchars($cli['CI']) ?></td>
                         <td><?= htmlspecialchars($cli['Nombre'] . ' ' . $cli['Apellido']) ?></td>
                         <td class="d-none d-xxl-table-cell"><?= htmlspecialchars($cli['Direccion']) ?></td>
-                        <td><?= $cli['Telefonos'] ?></td>
+                        <td><?= nl2br(htmlspecialchars(str_replace('<br>', "\n", $cli['Telefonos'] ?? ''))) ?></td>
                         <td><?= htmlspecialchars($cli['Correo']) ?></td>
                         <td><?= date('d/m/Y', strtotime($cli['FechaCreado'])) ?></td>
                         <td class="text-end">
-                          <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                          <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                          <a class="btn btn-sm admin-btn-icono" href="editar_usuario.php?ci=<?= $cli['CI'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                          <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="usuarios.php?eliminar=<?= $cli['CI'] ?>&amp;pestana=clientes" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                         </td>
                       </tr>
                     <?php endforeach; ?>
@@ -164,7 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                 </table>
               </div>
             </div>
-            <div class="tab-pane fade" id="panelEmpleados" role="tabpanel" aria-labelledby="tabEmpleados" tabindex="0">
+            <div class="tab-pane fade <?= $pestana === 'empleados' ? 'show active' : '' ?>" id="panelEmpleados" role="tabpanel" aria-labelledby="tabEmpleados" tabindex="0">
               <div class="table-responsive">
                 <table class="table admin-tabla mb-0">
                   <thead>
@@ -188,13 +260,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                         <td><?= htmlspecialchars($emp['CI']) ?></td>
                         <td><?= htmlspecialchars($emp['Nombre'] . ' ' . $emp['Apellido']) ?></td>
                         <td class="d-none d-xxl-table-cell"><?= htmlspecialchars($emp['Direccion']) ?></td>
-                        <td><?= $emp['Telefonos'] ?></td>
+                        <td><?= nl2br(htmlspecialchars(str_replace('<br>', "\n", $emp['Telefonos'] ?? ''))) ?></td>
                         <td><?= htmlspecialchars($emp['Correo']) ?></td>
                         <td><?= htmlspecialchars($emp['Rol'] ?? 'Empleado') ?></td>
                         <td><?= date('d/m/Y', strtotime($emp['FechaCreado'])) ?></td>
                         <td class="text-end">
-                          <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                          <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
+                          <a class="btn btn-sm admin-btn-icono" href="editar_usuario.php?ci=<?= $emp['CI'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                          <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="usuarios.php?eliminar=<?= $emp['CI'] ?>&amp;pestana=empleados" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                         </td>
                       </tr>
                     <?php endforeach; ?>
