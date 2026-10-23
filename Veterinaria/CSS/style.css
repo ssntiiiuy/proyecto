@@ -575,3 +575,180 @@ body {
   border: 0;
   border-radius: 8px;
 }
+
+/* ===== Botón de tema (sol/luna) ===== */
+/* en oscuro se ve el sol (pasar a claro) y en claro la luna (pasar a oscuro) */
+.tema-icono-luna {
+  display: none;
+}
+
+[data-theme="light"] .tema-icono-sol {
+  display: none;
+}
+
+[data-theme="light"] .tema-icono-luna {
+  display: inline-block;
+}
+
+.admin-topbar [data-tema-toggle] {
+  font-size: 1.2rem;
+}
+
+/* ===== Tema oscuro ===== */
+/* data-bs-theme="dark" ahora va en <html>. Estas reglas dejan igual que antes
+   lo que Bootstrap mostraba en modo claro */
+html[data-theme="dark"] {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] .admin-modal,
+html[data-theme="dark"] .admin-card form,
+html[data-theme="dark"] .admin-filtro,
+html[data-theme="dark"] .alert {
+  color-scheme: dark;
+}
+
+.site-header .navbar-toggler-icon {
+  --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2833, 37, 41, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.form-select.catalogo-orden {
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+html[data-theme="dark"] .auth-body .alert-danger {
+  --bs-alert-color: #58151c;
+  --bs-alert-bg: #f8d7da;
+  --bs-alert-border-color: #f1aeb5;
+  --bs-alert-link-color: #58151c;
+}
+
+/* ===== Tema claro ===== */
+[data-theme="light"] {
+  --sienra-bg: #F3F5F7;
+  --sienra-panel: #FFFFFF;
+  --sienra-panel-2: #E9EDF1;
+  --sienra-header: #FFFFFF;
+  --sienra-text: #1F2733;
+  --sienra-text-muted: #5B6675;
+  --sienra-danger: #F8DADA;
+  --sienra-danger-text: #8A2A2A;
+  --sienra-success: #D6F0E0;
+  --sienra-success-text: #1F5E3C;
+  --sienra-warning: #F6EBCB;
+  --sienra-warning-text: #6B5414;
+  --sienra-info: #DCE8F5;
+  /* reemplazan a los blancos fijos que usa el tema oscuro */
+  --sienra-heading: #111827;
+  --sienra-border: #DDE2E8;
+  --sienra-border-strong: #B8C0CA;
+  --sienra-hover: rgba(31, 39, 51, 0.06);
+}
+
+[data-theme="light"] .greeting-card h1,
+[data-theme="light"] .group-label,
+[data-theme="light"] .pet-name,
+[data-theme="light"] .auth-title,
+[data-theme="light"] .auth-link:hover,
+[data-theme="light"] .filtros-titulo,
+[data-theme="light"] .nosotros-titulo,
+[data-theme="light"] .nosotros-card h2,
+[data-theme="light"] .nosotros-link:hover {
+  color: var(--sienra-heading);
+}
+
+[data-theme="light"] .alert-banner {
+  border-color: #E8B4B4;
+}
+
+[data-theme="light"] .alert-banner strong {
+  color: var(--sienra-danger-text);
+}
+
+[data-theme="light"] .alert-banner .btn-outline-light {
+  color: var(--sienra-danger-text);
+  border-color: var(--sienra-danger-text);
+}
+
+[data-theme="light"] .divider,
+[data-theme="light"] .filtros-card,
+[data-theme="light"] .nosotros-card {
+  border-color: var(--sienra-border);
+}
+
+[data-theme="light"] .badge-info {
+  color: #24405C;
+}
+
+[data-theme="light"] .btn-cta {
+  background-color: #2E8B4F;
+  color: #ffffff;
+}
+
+[data-theme="light"] .btn-cta:hover {
+  background-color: #257a42;
+  color: #ffffff;
+}
+
+[data-theme="light"] .auth-body {
+  background-color: var(--sienra-bg);
+}
+
+[data-theme="light"] .auth-input,
+[data-theme="light"] .auth-input:focus {
+  background-color: var(--sienra-panel);
+}
+
+[data-theme="light"] .auth-input {
+  border-color: var(--sienra-border-strong);
+}
+
+[data-theme="light"] .auth-input:-webkit-autofill,
+[data-theme="light"] .auth-input:-webkit-autofill:hover,
+[data-theme="light"] .auth-input:-webkit-autofill:focus,
+[data-theme="light"] .auth-input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--sienra-text) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--sienra-panel) inset !important;
+}
+
+[data-theme="light"] .auth-eye-btn {
+  background-color: var(--sienra-panel);
+  border-color: var(--sienra-border-strong);
+  color: var(--sienra-text-muted);
+}
+
+[data-theme="light"] .auth-eye-btn:hover,
+[data-theme="light"] .auth-eye-btn:focus {
+  background-color: var(--sienra-panel);
+  color: var(--sienra-heading);
+}
+
+[data-theme="light"] .btn-filtros-limpiar {
+  border-color: var(--sienra-border-strong);
+  color: var(--sienra-text);
+}
+
+[data-theme="light"] .btn-filtros-limpiar:hover {
+  background-color: var(--sienra-hover);
+  color: var(--sienra-heading);
+}
+
+[data-theme="light"] .filtros-opcion .form-check-input:not(:checked),
+[data-theme="light"] .catalogo-orden {
+  border-color: var(--sienra-border-strong);
+}
+
+[data-theme="light"] .producto-card {
+  border: 1px solid var(--sienra-border);
+}
+
+[data-theme="light"] .mascotas-tabla thead th {
+  background-color: var(--sienra-panel-2);
+  color: var(--sienra-heading);
+  border-color: var(--sienra-border);
+}
+
+[data-theme="light"] .mascotas-tabla tbody tr:hover td {
+  background-color: var(--sienra-panel-2);
+  color: var(--sienra-heading);
+}

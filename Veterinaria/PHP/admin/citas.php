@@ -134,6 +134,7 @@ $modalAbierto = isset($_GET['ci']);
 
   <link rel="stylesheet" href="../../CSS/style.css">
   <link rel="stylesheet" href="../../CSS/admin.css">
+  <script src="../../JS/tema.js"></script>
 </head>
 
 <body>
@@ -153,15 +154,15 @@ $modalAbierto = isset($_GET['ci']);
       <main class="container-fluid px-3 px-lg-4 py-4">
 
         <?php if ($mensaje) { ?>
-          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert"><?= htmlspecialchars($mensaje[1]) ?></div>
         <?php } ?>
 
         <?php if (!empty($error)) { ?>
-          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+          <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
         <?php } ?>
 
         <?php if ($citaEliminar) { ?>
-          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+          <div class="alert alert-warning" role="alert">
             <form class="d-flex flex-wrap align-items-center gap-2" action="citas.php" method="post">
               <span class="me-auto">
                 ¿Eliminar la cita de <strong><?= htmlspecialchars($citaEliminar['MascotaNombre'] ?? '') ?></strong>
@@ -180,7 +181,7 @@ $modalAbierto = isset($_GET['ci']);
             <div class="d-flex flex-wrap align-items-center gap-2">
               <form method="get" action="citas.php" class="d-flex gap-2">
                 <label class="visually-hidden" for="filtroEstado">Filtrar por estado</label>
-                <select class="form-select form-select-sm admin-filtro" id="filtroEstado" name="estado" data-bs-theme="dark">
+                <select class="form-select form-select-sm admin-filtro" id="filtroEstado" name="estado">
                   <option value="" <?= $estado === '' ? 'selected' : '' ?>>Todos los estados</option>
                   <option value="Pendiente" <?= $estado === 'Pendiente' ? 'selected' : '' ?>>Pendiente</option>
                   <option value="Confirmada" <?= $estado === 'Confirmada' ? 'selected' : '' ?>>Confirmada</option>
@@ -255,7 +256,6 @@ $modalAbierto = isset($_GET['ci']);
     tabindex="-1"
     aria-labelledby="modalCitaTitulo"
     aria-hidden="<?= $modalAbierto ? 'false' : 'true' ?>"
-    data-bs-theme="dark"
     style="<?= $modalAbierto ? 'display:block;' : '' ?>">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">

@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
   <link rel="stylesheet" href="../../CSS/style.css">
   <link rel="stylesheet" href="../../CSS/admin.css">
+  <script src="../../JS/tema.js"></script>
 </head>
 
 <body>
@@ -105,15 +106,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
       <main class="container-fluid px-3 px-lg-4 py-4">
 
         <?php if ($mensaje) { ?>
-          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert"><?= htmlspecialchars($mensaje[1]) ?></div>
         <?php } ?>
 
         <?php if ($error) { ?>
-          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+          <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
         <?php } ?>
 
         <?php if ($proveedorEliminar) { ?>
-          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+          <div class="alert alert-warning" role="alert">
             <form class="d-flex flex-wrap align-items-center gap-2" action="proveedores.php" method="post">
               <span class="me-auto">
                 ¿Eliminar el proveedor <strong><?= htmlspecialchars($proveedorEliminar['NombreEmpresa']) ?></strong> (Id <?= $proveedorEliminar['IdProveedor'] ?>) y sus teléfonos? Esta acción no se puede deshacer.
@@ -176,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   </div>
 
   <!-- agregar proveedor -->
-  <div class="modal fade admin-modal" id="modalProveedor" tabindex="-1" aria-labelledby="modalProveedorTitulo" aria-hidden="true" data-bs-theme="dark">
+  <div class="modal fade admin-modal" id="modalProveedor" tabindex="-1" aria-labelledby="modalProveedorTitulo" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" action="#" method="post">
         <div class="modal-header">

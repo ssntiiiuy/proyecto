@@ -119,6 +119,7 @@ function obtenerClaseBadge($tipo)
 
   <link rel="stylesheet" href="../../CSS/style.css">
   <link rel="stylesheet" href="../../CSS/admin.css">
+  <script src="../../JS/tema.js"></script>
 </head>
 
 <body>
@@ -138,15 +139,15 @@ function obtenerClaseBadge($tipo)
       <main class="container-fluid px-3 px-lg-4 py-4">
 
         <?php if ($mensaje) { ?>
-          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert"><?= htmlspecialchars($mensaje[1]) ?></div>
         <?php } ?>
 
         <?php if ($error) { ?>
-          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+          <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
         <?php } ?>
 
         <?php if ($servicioEliminar) { ?>
-          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+          <div class="alert alert-warning" role="alert">
             <form class="d-flex flex-wrap align-items-center gap-2" action="servicios.php?<?= htmlspecialchars(http_build_query($filtrosListado)) ?>" method="post">
               <span class="me-auto">
                 ¿Eliminar el servicio <strong><?= htmlspecialchars($servicioEliminar['Nombre']) ?></strong> (<?= htmlspecialchars($servicioEliminar['Tipo']) ?>, Id <?= $servicioEliminar['IdServicio'] ?>)? Esta acción no se puede deshacer.
@@ -164,7 +165,7 @@ function obtenerClaseBadge($tipo)
             <div class="d-flex flex-wrap align-items-center gap-2">
               <form method="get" action="servicios.php" class="d-flex gap-2">
                 <label class="visually-hidden" for="filtroEstado">Filtrar por categoría</label>
-                <select class="form-select form-select-sm admin-filtro" id="filtroEstado" name="estado" data-bs-theme="dark">
+                <select class="form-select form-select-sm admin-filtro" id="filtroEstado" name="estado">
                   <option value="" <?= $estadoFiltro === '' ? 'selected' : '' ?>>Todas las categorías</option>
                   <option value="Consulta" <?= $estadoFiltro === 'Consulta' ? 'selected' : '' ?>>Consulta</option>
                   <option value="Vacunacion" <?= $estadoFiltro === 'Vacunacion' ? 'selected' : '' ?>>Vacunación</option>
@@ -236,7 +237,7 @@ function obtenerClaseBadge($tipo)
   </div>
 
   <!-- agregar servicio -->
-  <div class="modal fade admin-modal" id="modalServicio" tabindex="-1" aria-labelledby="modalServicioTitulo" aria-hidden="true" data-bs-theme="dark">
+  <div class="modal fade admin-modal" id="modalServicio" tabindex="-1" aria-labelledby="modalServicioTitulo" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" action="#" method="post">
         <div class="modal-header">

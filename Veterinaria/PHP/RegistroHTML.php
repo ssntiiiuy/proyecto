@@ -72,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             max-width: 560px;
         }
     </style>
+    <script src="../JS/tema.js"></script>
 </head>
 
 <body class="auth-body">

@@ -19,7 +19,7 @@ $gruposMenu = [
   ],
 ];
 ?>
-  <div class="admin-sidebar">
+  <div class="admin-sidebar" data-bs-theme="light">
     <!-- en pantallas chicas el menú se abre como offcanvas desde la topbar -->
     <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarTitulo">
       <div class="offcanvas-header">

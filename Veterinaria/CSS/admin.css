@@ -462,3 +462,77 @@
   font-size: 1.1rem;
   color: #ffffff;
 }
+
+/* ===== Tema claro ===== */
+/* el sidebar queda oscuro en los dos temas */
+[data-theme="light"] .admin-sidebar {
+  --sienra-panel-2: #364356;
+  --sienra-text: #E7EAEE;
+  --sienra-text-muted: #A9B2BF;
+}
+
+[data-theme="light"] .admin-card,
+[data-theme="light"] .admin-stat {
+  box-shadow: 0 1px 3px rgba(31, 39, 51, 0.08);
+}
+
+[data-theme="light"] .admin-card-header,
+[data-theme="light"] .admin-modal .modal-content,
+[data-theme="light"] .admin-modal .modal-header,
+[data-theme="light"] .admin-modal .modal-footer,
+[data-theme="light"] .admin-factura-total {
+  border-color: var(--sienra-border);
+}
+
+[data-theme="light"] .admin-card-header h2,
+[data-theme="light"] .admin-card-link:hover,
+[data-theme="light"] .admin-stat-valor,
+[data-theme="light"] .admin-tabs .nav-link:hover,
+[data-theme="light"] .admin-tabs .nav-link.active,
+[data-theme="light"] .admin-dato-valor,
+[data-theme="light"] .admin-factura-total dt,
+[data-theme="light"] .admin-factura-total dd {
+  color: var(--sienra-heading);
+}
+
+[data-theme="light"] .admin-stat > i {
+  color: rgba(31, 39, 51, 0.2);
+}
+
+[data-theme="light"] .admin-tabla {
+  --bs-table-border-color: var(--sienra-border);
+}
+
+[data-theme="light"] .admin-filtro,
+[data-theme="light"] .admin-btn-cancelar,
+[data-theme="light"] .admin-btn-icono,
+[data-theme="light"] .admin-modal .form-control,
+[data-theme="light"] .admin-modal .form-select {
+  border-color: var(--sienra-border-strong);
+}
+
+[data-theme="light"] .admin-btn-filtrar {
+  color: var(--sienra-text);
+  border-color: var(--sienra-border-strong);
+}
+
+[data-theme="light"] .admin-btn-filtrar:hover,
+[data-theme="light"] .admin-btn-cancelar:hover,
+[data-theme="light"] .admin-btn-icono:hover {
+  background-color: var(--sienra-hover);
+  color: var(--sienra-heading);
+}
+
+[data-theme="light"] .admin-btn-eliminar:hover {
+  color: var(--sienra-danger-text);
+  border-color: var(--sienra-danger-text);
+}
+
+[data-theme="light"] .badge-tipo-consulta {
+  color: #24405C;
+}
+
+[data-theme="light"] .badge-tipo-peluqueria {
+  background-color: #F3E6C4;
+  color: #5A4A1F;
+}

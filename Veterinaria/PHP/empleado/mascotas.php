@@ -47,11 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="../../CSS/style.css">
+  <script src="../../JS/tema.js"></script>
 </head>
 
 <body>
 
-  <div class="admin-wrapper">
+  <div class="admin-wrapper" data-bs-theme="light">
     <?php
     $paginaActiva = 'mascotas';
     include __DIR__ . '/includes/sidebar.php';
@@ -110,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   </div>
 
   <!-- agregar mascota -->
-  <div class="modal fade admin-modal" id="modalMascota" tabindex="-1" aria-labelledby="modalMascotaTitulo" aria-hidden="true" data-bs-theme="dark">
+  <div class="modal fade admin-modal" id="modalMascota" tabindex="-1" aria-labelledby="modalMascotaTitulo" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" action="#" method="post">
         <div class="modal-header">

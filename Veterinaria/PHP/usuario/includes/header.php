@@ -10,7 +10,7 @@ $enlacesNav = [
   'nosotros' => ['nosotros.php', 'Nosotros'],
 ];
 ?>
-  <header class="site-header">
+  <header class="site-header" data-bs-theme="light">
     <nav class="navbar navbar-expand-lg">
       <div class="container-fluid px-3 px-lg-4">
 
@@ -35,6 +35,12 @@ $enlacesNav = [
           </ul>
 
           <ul class="navbar-nav ms-lg-3 align-items-center gap-2">
+            <li class="nav-item">
+              <button class="nav-link icon-badge" type="button" data-tema-toggle aria-label="Cambiar entre tema claro y oscuro">
+                <i class="bi bi-sun-fill tema-icono-sol"></i>
+                <i class="bi bi-moon-fill tema-icono-luna"></i>
+              </button>
+            </li>
 <?php if ($mostrarCarrito) { ?>
             <li class="nav-item">
               <a class="nav-link icon-badge" href="#" aria-label="Carrito">

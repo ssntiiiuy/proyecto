@@ -80,11 +80,12 @@ function obtenerClaseBadge($tipo)
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="../../CSS/style.css">
+  <script src="../../JS/tema.js"></script>
 </head>
 
 <body>
 
-    <div class="admin-wrapper">
+    <div class="admin-wrapper" data-bs-theme="light">
         <?php
         $paginaActiva = 'servicios';
         include __DIR__ . '/includes/sidebar.php';
@@ -165,7 +166,7 @@ function obtenerClaseBadge($tipo)
     </div>
 
     <!-- agregar servicio -->
-    <div class="modal fade admin-modal" id="modalServicio" tabindex="-1" aria-labelledby="modalServicioTitulo" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal fade admin-modal" id="modalServicio" tabindex="-1" aria-labelledby="modalServicioTitulo" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form class="modal-content" action="#" method="post">
                 <div class="modal-header">

@@ -73,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
   <link rel="stylesheet" href="../../CSS/style.css">
   <link rel="stylesheet" href="../../CSS/admin.css">
+  <script src="../../JS/tema.js"></script>
 </head>
 
 <body>
@@ -92,10 +93,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
       <main class="container-fluid px-3 px-lg-4 py-4">
 
         <?php if ($error) { ?>
-          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+          <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
         <?php } ?>
 
-        <div class="admin-card" data-bs-theme="dark">
+        <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <h2>Editar mascota (Id <?= $id ?>)</h2>
             <a class="admin-card-link" href="mascotas.php"><i class="bi bi-arrow-left"></i> Volver al listado</a>

@@ -13,6 +13,7 @@
 
   <link rel="stylesheet" href="../../CSS/style.css">
   <link rel="stylesheet" href="../../CSS/admin.css">
+  <script src="../../JS/tema.js"></script>
 </head>
 
 <body>

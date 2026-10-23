@@ -119,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
   <link rel="stylesheet" href="../../CSS/style.css">
   <link rel="stylesheet" href="../../CSS/admin.css">
+  <script src="../../JS/tema.js"></script>
 </head>
 
 <body>
@@ -138,15 +139,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
       <main class="container-fluid px-3 px-lg-4 py-4">
 
         <?php if ($mensaje) { ?>
-          <div class="alert alert-<?= $mensaje[0] ?>" role="alert" data-bs-theme="dark"><?= htmlspecialchars($mensaje[1]) ?></div>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert"><?= htmlspecialchars($mensaje[1]) ?></div>
         <?php } ?>
 
         <?php if ($error) { ?>
-          <div class="alert alert-danger" role="alert" data-bs-theme="dark"><?= htmlspecialchars($error) ?></div>
+          <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
         <?php } ?>
 
         <?php if ($productoEliminar) { ?>
-          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+          <div class="alert alert-warning" role="alert">
             <form class="d-flex flex-wrap align-items-center gap-2" action="productos.php?<?= htmlspecialchars(http_build_query($filtrosListado)) ?>" method="post">
               <span class="me-auto">
                 ¿Eliminar el producto <strong><?= htmlspecialchars($productoEliminar['Nombre']) ?></strong> (Id <?= $productoEliminar['IdProducto'] ?>)? Esta acción no se puede deshacer.
@@ -164,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             <div class="d-flex flex-wrap align-items-center gap-2">
               <form method="get" action="productos.php" class="d-flex gap-2">
                 <label class="visually-hidden" for="filtroCategoria">Filtrar por categoría</label>
-                <select class="form-select form-select-sm admin-filtro" id="filtroCategoria" name="categoria" data-bs-theme="dark">
+                <select class="form-select form-select-sm admin-filtro" id="filtroCategoria" name="categoria">
                   <option value="" <?= $categoria === '' ? 'selected' : '' ?>>Todas las categorías</option>
                   <option value="Accesorios" <?= $categoria === 'Accesorios' ? 'selected' : '' ?>>Accesorios</option>
                   <option value="Alimentos" <?= $categoria === 'Alimentos' ? 'selected' : '' ?>>Alimentos</option>
@@ -251,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   </div>
 
   <!-- agregar producto -->
-  <div class="modal fade admin-modal" id="modalProducto" tabindex="-1" aria-labelledby="modalProductoTitulo" aria-hidden="true" data-bs-theme="dark">
+  <div class="modal fade admin-modal" id="modalProducto" tabindex="-1" aria-labelledby="modalProductoTitulo" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" action="#" method="post">
         <div class="modal-header">

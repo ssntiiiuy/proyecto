@@ -32,11 +32,12 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="../../../CSS/style.css">
+  <script src="../../../JS/tema.js"></script>
 </head>
 
 <body>
 
-  <div class="admin-wrapper">
+  <div class="admin-wrapper" data-bs-theme="light">
     <?php
     $paginaActiva = 'dashboard';
     include __DIR__ . '/../includes/sidebar.php';

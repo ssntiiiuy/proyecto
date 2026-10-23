@@ -39,11 +39,12 @@ try {
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="../../CSS/style.css">
+  <script src="../../JS/tema.js"></script>
 </head>
 
 <body>
 
-  <header class="site-header">
+  <header class="site-header" data-bs-theme="light">
     <nav class="navbar navbar-expand-lg">
       <div class="container-fluid px-3 px-lg-4">
 
@@ -65,6 +66,12 @@ try {
           </ul>
 
           <ul class="navbar-nav ms-lg-3 align-items-center gap-2">
+            <li class="nav-item">
+              <button class="nav-link icon-badge" type="button" data-tema-toggle aria-label="Cambiar entre tema claro y oscuro">
+                <i class="bi bi-sun-fill tema-icono-sol"></i>
+                <i class="bi bi-moon-fill tema-icono-luna"></i>
+              </button>
+            </li>
             <li class="nav-item">
               <a class="nav-link icon-badge" href="#" aria-label="Carrito">
                 <i class="bi bi-cart3"></i>

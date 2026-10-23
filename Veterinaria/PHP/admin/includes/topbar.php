@@ -29,14 +29,19 @@ try {
   echo "</div>";
 }
 ?>
-<header class="admin-topbar">
+<header class="admin-topbar" data-bs-theme="light">
   <button class="btn admin-topbar-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar" aria-label="Abrir menú">
     <i class="bi bi-list"></i>
   </button>
 
   <h1 class="admin-topbar-titulo"><?= $tituloPagina ?></h1>
 
-  <div class="dropdown ms-auto">
+  <button class="btn admin-topbar-toggle ms-auto" type="button" data-tema-toggle aria-label="Cambiar entre tema claro y oscuro">
+    <i class="bi bi-sun-fill tema-icono-sol"></i>
+    <i class="bi bi-moon-fill tema-icono-luna"></i>
+  </button>
+
+  <div class="dropdown">
     <a class="admin-usuario dropdown-toggle" href="#" id="adminUsuario" role="button" data-bs-toggle="dropdown" aria-expanded="false">
        <span class="d-none d-sm-inline"><?= htmlspecialchars($nombreUsuario) ?></span>
       <span class="icon-badge icon-badge-user"><i class="bi bi-person-fill"></i></span>
