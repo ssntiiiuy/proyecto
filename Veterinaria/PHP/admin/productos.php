@@ -175,8 +175,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                 <button type="submit" class="btn btn-sm admin-btn-filtrar">Filtrar</button>
               </form>
               <button type="button" class="btn btn-sm admin-btn-agregar" data-bs-toggle="modal" data-bs-target="#modalProducto">
-  <i class="bi bi-plus-lg"></i> Agregar producto
-</button>
+                <i class="bi bi-plus-lg"></i> Agregar producto
+              </button>
             </div>
           </div>
 
@@ -198,49 +198,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               <!-- listado de productos -->
               <tbody>
 
-                <?php foreach ($productos as $prod): ?>
-
+                <?php if (empty($productos)): ?>
                   <tr>
-                    <td><?= htmlspecialchars($prod['IdProducto']) ?></td>
-                    <td><?= htmlspecialchars($prod['Nombre']) ?></td>
-                    <td><?= htmlspecialchars($prod['Categoria']) ?></td>
-                    <td><?= htmlspecialchars($prod['Precio']) ?></td>
-
-                    <!-- alerta de stock si es menor al stock minimo -->
-                    <td>
-                      <?= htmlspecialchars($prod['Stock']) ?>
-                      <?php if ((int)$prod['Stock'] <= (int)$prod['StockMinimo']): ?>
-                        <br><span class="badge badge-danger">Stock bajo</span>
-                      <?php endif; ?>
-                    </td>
-
-                    <td><?= htmlspecialchars($prod['StockMinimo']) ?></td>
-
-                    <!-- alerta de vencimiento si esta por vencer o ha vencido -->
-                    <td>
-                      <?php if (empty($prod['FechaVencimiento'])): ?>
-                        —
-                      <?php else:
-                        $fechaVenc = new DateTime($prod['FechaVencimiento']);
-                        $hoy = new DateTime();
-                        $diasRestantes = (int)$hoy->diff($fechaVenc)->format('%r%a');
-                      ?>
-                        <?= htmlspecialchars($fechaVenc->format('d/m/Y')) ?>
-                        <?php if ($diasRestantes < 0): ?>
-                          <br><span class="badge badge-danger">Vencido</span>
-                        <?php elseif ($diasRestantes <= 30): ?>
-                          <br><span class="badge badge-warning">Por vencer</span>
-                        <?php endif; ?>
-                      <?php endif; ?>
-                    </td>
-
-                    <td><?= htmlspecialchars($prod['NombreEmpresa']) ?></td>
-                    <td class="text-end">
-                      <a class="btn btn-sm admin-btn-icono" href="editar_producto.php?<?= htmlspecialchars(http_build_query(['id' => $prod['IdProducto']] + $filtrosListado)) ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
-                      <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="productos.php?<?= htmlspecialchars(http_build_query(['eliminar' => $prod['IdProducto']] + $filtrosListado)) ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
-                    </td>
+                    <td colspan="7" class="text-center">No hay productos registrados.</td>
                   </tr>
-                <?php endforeach; ?>
+                  <?php else: foreach ($productos as $prod): ?>
+
+                    <tr>
+                      <td><?= htmlspecialchars($prod['IdProducto']) ?></td>
+                      <td><?= htmlspecialchars($prod['Nombre']) ?></td>
+                      <td><?= htmlspecialchars($prod['Categoria']) ?></td>
+                      <td><?= htmlspecialchars($prod['Precio']) ?></td>
+
+                      <!-- alerta de stock si es menor al stock minimo -->
+                      <td>
+                        <?= htmlspecialchars($prod['Stock']) ?>
+                        <?php if ((int)$prod['Stock'] <= (int)$prod['StockMinimo']): ?>
+                          <br><span class="badge badge-danger">Stock bajo</span>
+                        <?php endif; ?>
+                      </td>
+
+                      <td><?= htmlspecialchars($prod['StockMinimo']) ?></td>
+
+                      <!-- alerta de vencimiento si esta por vencer o ha vencido -->
+                      <td>
+                        <?php if (empty($prod['FechaVencimiento'])): ?>
+                          —
+                        <?php else:
+                          $fechaVenc = new DateTime($prod['FechaVencimiento']);
+                          $hoy = new DateTime();
+                          $diasRestantes = (int)$hoy->diff($fechaVenc)->format('%r%a');
+                        ?>
+                          <?= htmlspecialchars($fechaVenc->format('d/m/Y')) ?>
+                          <?php if ($diasRestantes < 0): ?>
+                            <br><span class="badge badge-danger">Vencido</span>
+                          <?php elseif ($diasRestantes <= 30): ?>
+                            <br><span class="badge badge-warning">Por vencer</span>
+                          <?php endif; ?>
+                        <?php endif; ?>
+                      </td>
+
+                      <td><?= htmlspecialchars($prod['NombreEmpresa']) ?></td>
+                      <td class="text-end">
+                        <a class="btn btn-sm admin-btn-icono" href="editar_producto.php?<?= htmlspecialchars(http_build_query(['id' => $prod['IdProducto']] + $filtrosListado)) ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                        <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="productos.php?<?= htmlspecialchars(http_build_query(['eliminar' => $prod['IdProducto']] + $filtrosListado)) ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
+                      </td>
+                    </tr>
+                <?php endforeach;
+                endif; ?>
 
               </tbody>
             </table>

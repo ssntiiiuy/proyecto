@@ -157,23 +157,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                 </tr>
               </thead>
               <tbody>
-
-                <?php foreach ($mascotas as $masc): ?>
-
+                <?php if (empty($mascotas)): ?>
                   <tr>
-                    <td><?= htmlspecialchars($masc['IdMascota']) ?></td>
-                    <td><?= htmlspecialchars($masc['Nombre']) ?></td>
-                    <td><?= htmlspecialchars($masc['Especie']) ?></td>
-                    <td><?= htmlspecialchars($masc['Raza']) ?></td>
-                    <td><?= $masc['FechaNacimiento'] ? date('d/m/Y', strtotime($masc['FechaNacimiento'])) : '—' ?></td>
-                    <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
-                    <td class="text-end">
-                      <a class="btn btn-sm admin-btn-icono" href="editar_mascota.php?id=<?= $masc['IdMascota'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
-                      <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="mascotas.php?eliminar=<?= $masc['IdMascota'] ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
-                    </td>
+                    <td colspan="7" class="text-center">No hay mascotas registradas.</td>
                   </tr>
-                <?php endforeach; ?>
+                  <?php else: foreach ($mascotas as $masc): ?>
 
+                    <tr>
+                      <td><?= htmlspecialchars($masc['IdMascota']) ?></td>
+                      <td><?= htmlspecialchars($masc['Nombre']) ?></td>
+                      <td><?= htmlspecialchars($masc['Especie']) ?></td>
+                      <td><?= htmlspecialchars($masc['Raza']) ?></td>
+                      <td><?= $masc['FechaNacimiento'] ? date('d/m/Y', strtotime($masc['FechaNacimiento'])) : '—' ?></td>
+                      <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
+                      <td class="text-end">
+                        <a class="btn btn-sm admin-btn-icono" href="editar_mascota.php?id=<?= $masc['IdMascota'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                        <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="mascotas.php?eliminar=<?= $masc['IdMascota'] ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
+                      </td>
+                    </tr>
+                <?php endforeach;
+                endif; ?>
               </tbody>
             </table>
           </div>

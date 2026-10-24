@@ -196,8 +196,11 @@ function obtenerClaseBadge($tipo)
 
               <!-- listado de servicios -->
               <tbody>
-                <?php if (!empty($servicios)): ?>
-                  <?php foreach ($servicios as $serv): ?>
+                <?php if (empty($servicios)): ?>
+                  <tr>
+                    <td colspan="7" class="text-center">No hay servicios registrados.</td>
+                  </tr>
+                  <?php else: foreach ($servicios as $serv): ?>
                     <tr>
                       <td><?= htmlspecialchars($serv['IdServicio']) ?></td>
                       <td><?= htmlspecialchars($serv['Nombre']) ?></td>
