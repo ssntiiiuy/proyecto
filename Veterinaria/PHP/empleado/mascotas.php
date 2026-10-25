@@ -88,18 +88,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               </thead>
               <tbody>
 
-                <?php foreach ($mascotas as $masc): ?>
-
+                <?php if (empty($mascotas)): ?>
                   <tr>
-                    <td><?= htmlspecialchars($masc['IdMascota']) ?></td>
-                    <td><?= htmlspecialchars($masc['Nombre']) ?></td>
-                    <td><?= htmlspecialchars($masc['Especie']) ?></td>
-                    <td><?= htmlspecialchars($masc['Raza']) ?></td>
-                    <td><?= date('d/m/Y', strtotime($masc['FechaNacimiento'])) ?></td>
-                    <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
-                    </td>
+                    <td colspan="7" class="text-center">No hay mascotas registradas.</td>
                   </tr>
-                <?php endforeach; ?>
+                  <?php else: foreach ($mascotas as $masc): ?>
+
+                    <tr>
+                      <td><?= htmlspecialchars($masc['IdMascota']) ?></td>
+                      <td><?= htmlspecialchars($masc['Nombre']) ?></td>
+                      <td><?= htmlspecialchars($masc['Especie']) ?></td>
+                      <td><?= htmlspecialchars($masc['Raza']) ?></td>
+                      <td><?= date('d/m/Y', strtotime($masc['FechaNacimiento'])) ?></td>
+                      <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
+                      </td>
+                    </tr>
+                  <?php endforeach;
+                endif; ?>
 
               </tbody>
             </table>

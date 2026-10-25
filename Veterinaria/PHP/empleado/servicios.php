@@ -80,7 +80,7 @@ function obtenerClaseBadge($tipo)
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="../../CSS/style.css">
-  <script src="../../JS/tema.js"></script>
+    <script src="../../JS/tema.js"></script>
 </head>
 
 <body>
@@ -125,8 +125,11 @@ function obtenerClaseBadge($tipo)
 
                             <!-- listado de servicios -->
                             <tbody>
-                                <?php if (!empty($servicios)): ?>
-                                    <?php foreach ($servicios as $serv): ?>
+                                <?php if (empty($servicios)): ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center">No hay servicios registrados.</td>
+                                    </tr>
+                                    <?php else: foreach ($servicios as $serv): ?>
                                         <tr>
                                             <td><?= htmlspecialchars($serv['IdServicio']) ?></td>
                                             <td><?= htmlspecialchars($serv['Nombre']) ?></td>
