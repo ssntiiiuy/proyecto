@@ -75,24 +75,33 @@ class Mascota
         $this->ciDueño = $ciDueño;
     }
 
-    public static function listadoMascotas(): array
+    public static function listadoMascotas(string $busqueda = ''): array
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
 
+            $condicionBusqueda = '';
+            $params = [];
+            if ($busqueda !== '') {
+                $condicionBusqueda = " WHERE m.Nombre LIKE :busqueda1 OR c.CI LIKE :busqueda2
+                                    OR u.Nombre LIKE :busqueda3 OR u.Apellido LIKE :busqueda4 ";
+                $like = '%' . $busqueda . '%';
+                $params = [':busqueda1' => $like, ':busqueda2' => $like, ':busqueda3' => $like, ':busqueda4' => $like];
+            }
+
             $sqlMascota = "SELECT m.IdMascota, m.Nombre, m.Raza, m.FechaNacimiento, m.Especie, c.CI, u.Nombre AS NombreDueño, u.Apellido AS ApellidoDueño
-                   FROM MASCOTA m
-                   INNER JOIN CLIENTE c ON m.CI = c.CI
-                   INNER JOIN USUARIO u ON c.CI = u.CI";
-            $stmtMascota = $conexion->query($sqlMascota);
+               FROM MASCOTA m
+               INNER JOIN CLIENTE c ON m.CI = c.CI
+               INNER JOIN USUARIO u ON c.CI = u.CI
+               $condicionBusqueda";
+            $stmtMascota = $conexion->prepare($sqlMascota);
+            $stmtMascota->execute($params);
             $mascotas = $stmtMascota->fetchAll(PDO::FETCH_ASSOC);
 
             return ['mascotas' => $mascotas];
         } catch (PDOException $e) {
             echo "Error al cargar mascotas: " . $e->getMessage();
-            return [
-                'mascotas' => []
-            ];
+            return ['mascotas' => []];
         }
     }
 
@@ -181,7 +190,7 @@ class Mascota
     }
     public static function listadoMascotasPorCliente(int $ci, string $orden = 'Nombre', string $dir = 'ASC'): array
     {
-        
+
         $columnasValidas = ['Nombre', 'Especie', 'Raza', 'FechaNacimiento'];
         if (!in_array($orden, $columnasValidas)) {
             $orden = 'Nombre';

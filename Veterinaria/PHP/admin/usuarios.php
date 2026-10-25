@@ -201,7 +201,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             </button>
           </div>
 
-          <form class="d-flex mb-3" action="usuarios.php" method="get">
+          <!-- listado por parametros -->
+          <form class="d-flex gap-2 mb-3 mt-3 mx-3 mx-lg-4" action="usuarios.php" method="get">
             <input type="hidden" name="pestana" value="<?= $pestana ?>">
             <input class="form-control" type="text" name="busqueda" placeholder="Buscar por C.I., nombre, apellido o correo..."
                    value="<?= htmlspecialchars($busqueda) ?>">
@@ -210,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               <a class="btn admin-btn-cancelar ms-2" href="usuarios.php?pestana=<?= $pestana ?>">Limpiar</a>
             <?php endif; ?>
           </form>
-          
+
           <div class="tab-content">
             <div class="tab-pane fade <?= $pestana === 'clientes' ? 'show active' : '' ?>" id="panelClientes" role="tabpanel" aria-labelledby="tabClientes" tabindex="0">
               <div class="table-responsive">
