@@ -50,16 +50,6 @@ class Mascota
         return $this->ciDueño ?? '';
     }
 
-    public function getTelefono(): string
-    {
-        return $this->telefono ?? '';
-    }
-
-    public function getDireccion(): string
-    {
-        return $this->direccion ?? '';
-    }
-
     public function setNombre(string $nombre): void
     {
         $this->nombre = $nombre;
