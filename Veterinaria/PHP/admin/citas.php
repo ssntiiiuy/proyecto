@@ -220,7 +220,7 @@ $modalAbierto = isset($_GET['ci']);
                     <tr>
                       <td><?= htmlspecialchars(date('d/m/Y', strtotime($c['Fecha']))) ?></td>
                       <td><?= htmlspecialchars(substr($c['Hora'], 0, 5)) ?></td>
-                      <td><?= htmlspecialchars($c['ClienteNombre'] . ' ' . $c['ClienteApellido']) ?></td>
+                      <td><?= htmlspecialchars($c['ClienteNombre'] . ' ' . $c['ClienteApellido']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($c['CI']) ?></span></td>
                       <td><?= htmlspecialchars($c['MascotaNombre']) ?></td>
                       <td><?= htmlspecialchars($c['ServicioNombre']) ?></td>
                       <td>

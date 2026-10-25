@@ -79,15 +79,15 @@ class Cita
             $conexion = (new Conexion())->establecerConexion();
 
             $sql = "SELECT c.IdCita, c.CI, u.Nombre AS ClienteNombre, u.Apellido AS ClienteApellido,
-                       c.IdMascota, m.Nombre AS MascotaNombre,
-                       c.IdServicio, s.Nombre AS ServicioNombre,
-                       c.Fecha, c.Hora, c.Estado
-                FROM CITA c
-                INNER JOIN CLIENTE cl ON c.CI = cl.CI
-                INNER JOIN USUARIO u ON cl.CI = u.CI
-                INNER JOIN MASCOTA m ON c.IdMascota = m.IdMascota
-                INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
-                WHERE 1=1";
+                   c.IdMascota, m.Nombre AS MascotaNombre,
+                   c.IdServicio, s.Nombre AS ServicioNombre,
+                   c.Fecha, c.Hora, c.Estado
+            FROM CITA c
+            INNER JOIN CLIENTE cl ON c.CI = cl.CI
+            INNER JOIN USUARIO u ON cl.CI = u.CI
+            INNER JOIN MASCOTA m ON c.IdMascota = m.IdMascota
+            INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
+            WHERE 1=1";
 
             $params = [];
 
@@ -100,7 +100,7 @@ class Cita
                 $sql .= " AND c.Fecha = CURDATE()";
             }
 
-            $sql .= " ORDER BY c.Fecha, c.Hora";
+            $sql .= " ORDER BY c.Fecha, c.Hora, u.Nombre, u.CI, m.Nombre, s.Nombre, c.Estado";
 
             $stmt = $conexion->prepare($sql);
             $stmt->execute($params);
