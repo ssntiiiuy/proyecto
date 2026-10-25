@@ -13,7 +13,7 @@ $pestana = ($_GET['pestana'] ?? '') === 'empleados' ? 'empleados' : 'clientes';
 /* eliminar: solo se borra por POST, despues de confirmar */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
   $ciBorrar = (int) $_POST['CI'];
-  $usuarioBorrar = Usuario::buscarPorId($ciBorrar);
+  $usuarioBorrar = Usuario::buscarPorCi($ciBorrar);
 
   if (!$usuarioBorrar) {
     $resultado = 'noexiste';
@@ -48,7 +48,7 @@ $mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 /* confirmacion: usuarios.php?eliminar=CI muestra el aviso arriba del listado */
 $usuarioEliminar = null;
 if (isset($_GET['eliminar'])) {
-  $usuarioEliminar = Usuario::buscarPorId((int) $_GET['eliminar']);
+  $usuarioEliminar = Usuario::buscarPorCi((int) $_GET['eliminar']);
   if (!$usuarioEliminar) {
     $mensaje = $mensajes['noexiste'];
   } elseif ($usuarioEliminar['Correo'] === ($_SESSION['correo'] ?? '')) {

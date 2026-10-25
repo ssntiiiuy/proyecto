@@ -197,7 +197,7 @@ class Usuario
     }
 
     /* devuelve el usuario con su correo, tipo, rol y telefonos en $usuario['telefonos'] */
-    public static function buscarPorId(int $ci): ?array
+    public static function buscarPorCi(int $ci): ?array
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
