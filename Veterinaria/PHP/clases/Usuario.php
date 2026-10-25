@@ -71,43 +71,55 @@ class Usuario
         $this->direccion = $direccion;
     }
 
-    public static function listadoUsuarios(): array
+    public static function listadoUsuarios(string $busqueda = ''): array
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
 
+            $condicionBusqueda = '';
+            $params = [];
+            if ($busqueda !== '') {
+                $condicionBusqueda = " HAVING u.CI LIKE :busqueda1 OR u.Nombre LIKE :busqueda2
+                                    OR u.Apellido LIKE :busqueda3 OR h.Correo LIKE :busqueda4 ";
+                $like = '%' . $busqueda . '%';
+                $params = [
+                    ':busqueda1' => $like,
+                    ':busqueda2' => $like,
+                    ':busqueda3' => $like,
+                    ':busqueda4' => $like,
+                ];
+            }
+
             $sqlClientes = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion, h.Correo, l.FechaCreado,
-                          GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
-                   FROM CLIENTE c
-                   INNER JOIN USUARIO u ON c.CI = u.CI
-                   INNER JOIN HACE h ON u.CI = h.CI
-                   INNER JOIN LOGIN l ON h.Correo = l.Correo
-                   LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
-                   GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, h.Correo, l.FechaCreado";
-            $stmtClientes = $conexion->query($sqlClientes);
+                      GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
+               FROM CLIENTE c
+               INNER JOIN USUARIO u ON c.CI = u.CI
+               INNER JOIN HACE h ON u.CI = h.CI
+               INNER JOIN LOGIN l ON h.Correo = l.Correo
+               LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
+               GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, h.Correo, l.FechaCreado
+               $condicionBusqueda";
+            $stmtClientes = $conexion->prepare($sqlClientes);
+            $stmtClientes->execute($params);
             $clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
 
             $sqlEmpleados = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado,
-                           GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
-                    FROM EMPLEADO e
-                    INNER JOIN USUARIO u ON e.CI = u.CI
-                    INNER JOIN HACE h ON u.CI = h.CI
-                    INNER JOIN LOGIN l ON h.Correo = l.Correo
-                    LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
-                    GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado";
-            $stmtEmpleados = $conexion->query($sqlEmpleados);
+                       GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
+                FROM EMPLEADO e
+                INNER JOIN USUARIO u ON e.CI = u.CI
+                INNER JOIN HACE h ON u.CI = h.CI
+                INNER JOIN LOGIN l ON h.Correo = l.Correo
+                LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
+                GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado
+                $condicionBusqueda";
+            $stmtEmpleados = $conexion->prepare($sqlEmpleados);
+            $stmtEmpleados->execute($params);
             $empleados = $stmtEmpleados->fetchAll(PDO::FETCH_ASSOC);
 
-            return [
-                'clientes' => $clientes,
-                'empleados' => $empleados
-            ];
+            return ['clientes' => $clientes, 'empleados' => $empleados];
         } catch (PDOException $e) {
             echo "Error al cargar usuarios: " . $e->getMessage();
-            return [
-                'clientes' => [],
-                'empleados' => []
-            ];
+            return ['clientes' => [], 'empleados' => []];
         }
     }
 

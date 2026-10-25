@@ -57,7 +57,8 @@ if (isset($_GET['eliminar'])) {
   }
 }
 
-$datosUsuarios = Usuario::listadoUsuarios();
+$busqueda = trim($_GET['busqueda'] ?? '');
+$datosUsuarios = Usuario::listadoUsuarios($busqueda);
 $clientes = $datosUsuarios['clientes'];
 $empleados = $datosUsuarios['empleados'];
 
@@ -200,6 +201,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             </button>
           </div>
 
+          <form class="d-flex mb-3" action="usuarios.php" method="get">
+            <input type="hidden" name="pestana" value="<?= $pestana ?>">
+            <input class="form-control" type="text" name="busqueda" placeholder="Buscar por C.I., nombre, apellido o correo..."
+                   value="<?= htmlspecialchars($busqueda) ?>">
+            <button class="btn admin-btn-agregar ms-2" type="submit"><i class="bi bi-search"></i></button>
+            <?php if ($busqueda !== ''): ?>
+              <a class="btn admin-btn-cancelar ms-2" href="usuarios.php?pestana=<?= $pestana ?>">Limpiar</a>
+            <?php endif; ?>
+          </form>
+          
           <div class="tab-content">
             <div class="tab-pane fade <?= $pestana === 'clientes' ? 'show active' : '' ?>" id="panelClientes" role="tabpanel" aria-labelledby="tabClientes" tabindex="0">
               <div class="table-responsive">
