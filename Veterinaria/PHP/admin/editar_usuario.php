@@ -4,7 +4,7 @@ require_once __DIR__ . '/../clases/Usuario.php';
 
 /* se busca el usuario que llega en la URL: editar_usuario.php?ci=45678901 */
 $ci = (int) ($_GET['ci'] ?? 0);
-$usuario = Usuario::buscarPorId($ci);
+$usuario = Usuario::buscarPorCi($ci);
 
 if (!$usuario) {
   header("Location: usuarios.php?msg=noexiste");
@@ -18,7 +18,8 @@ $pestana = $usuario['CiCliente'] ? 'clientes' : 'empleados'; /* pestaña a la qu
 $roles = ['Veterinario', 'Cirujano', 'Peluquero', 'Cajero'];
 
 $error = null;
-$datosForm = $usuario; /* el formulario arranca con los datos de la base */
+$ciUsuario = $usuario['CI'];
+$correoUsuario = $usuario['Correo'] ?? '—';
 $telefonosForm = $usuario['telefonos'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
@@ -128,11 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             <div class="row g-3 mb-3">
               <div class="col-sm-4">
                 <p class="admin-dato-label">C.I.</p>
-                <p class="admin-dato-valor"><?= htmlspecialchars($usuario['CI']) ?></p>
+                <p class="admin-dato-valor"><?= htmlspecialchars($ciUsuario) ?></p>
               </div>
               <div class="col-sm-4">
                 <p class="admin-dato-label">Correo</p>
-                <p class="admin-dato-valor"><?= htmlspecialchars($usuario['Correo'] ?? '—') ?></p>
+                <p class="admin-dato-valor"><?= htmlspecialchars($correoUsuario) ?></p>
               </div>
               <div class="col-sm-4">
                 <p class="admin-dato-label">Tipo de usuario</p>

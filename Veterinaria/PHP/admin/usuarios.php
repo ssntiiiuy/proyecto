@@ -302,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="row g-3">
             <div class="col-sm-6">
               <label class="form-label" for="ci">C.I.</label>
-              <input class="form-control" type="text" id="ci" name="ci" placeholder="45678901" inputmode="numeric" pattern="[0-9]{7,8}" maxlength="8" title="7 u 8 números, sin puntos ni guiones" value="<?= htmlspecialchars($datosForm['ci'] ?? '') ?>" required>
+              <input class="form-control" type="text" id="ci" name="ci" placeholder="45678901" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" title="8 números, sin puntos ni guiones" value="<?= htmlspecialchars($datosForm['ci'] ?? '') ?>" required>
             </div>
             <div class="col-sm-6">
               <label class="form-label" for="telefono">Teléfono</label>
