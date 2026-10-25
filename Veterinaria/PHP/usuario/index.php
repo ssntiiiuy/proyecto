@@ -2,22 +2,57 @@
 session_start();
 
 require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Mascota.php';
 
 $nombreUsuario = "Usuario";
 
 try {
   $conexion = (new Conexion())->establecerConexion();
 
-  $sql = "SELECT usuario.Nombre FROM USUARIO INNER JOIN HACE ON usuario.CI = hace.CI WHERE hace.Correo = :correo";
+  $sql = "SELECT usuario.CI, usuario.Nombre FROM USUARIO INNER JOIN HACE ON usuario.CI = hace.CI WHERE hace.Correo = :correo";
 
   $stmt = $conexion->prepare($sql);
   $stmt->execute([':correo' => $_SESSION['correo']]);
 
   $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-  if ($usuario) {
-        $nombreUsuario = $usuario['Nombre'];
+  if (!$usuario) {
+    header('Location: ../../PHP/LoginHTML.php');
+    exit();
+  }
+  $ci = (int) $usuario['CI'];
+
+  // mascotas del cliente
+  $mascotas = Mascota::listadoMascotasPorCliente($ci); // requiere el require_once de Mascota.php arriba
+
+  // próximo turno
+  $sqlTurno = "SELECT c.Fecha, c.Hora, c.Estado, s.Nombre AS NombreServicio, m.Nombre AS NombreMascota
+             FROM CITA c
+             INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
+             INNER JOIN MASCOTA m ON c.IdMascota = m.IdMascota
+             WHERE c.CI = :ci AND c.Fecha >= CURDATE()
+             ORDER BY c.Fecha ASC, c.Hora ASC LIMIT 1";
+  $stmtTurno = $conexion->prepare($sqlTurno);
+  $stmtTurno->execute([':ci' => $ci]);
+  $proximoTurno = $stmtTurno->fetch(PDO::FETCH_ASSOC);
+
+  // carnet de vacunas de todas sus mascotas
+  $sqlCarnet = "SELECT cv.TipoVacunacion, cv.FechaProximaVacunacion, m.Nombre AS NombreMascota
+              FROM CARNET_VACUNACION cv
+              INNER JOIN MASCOTA m ON cv.IdMascota = m.IdMascota
+              WHERE m.CI = :ci
+              ORDER BY m.Nombre, cv.FechaProximaVacunacion";
+  $stmtCarnet = $conexion->prepare($sqlCarnet);
+  $stmtCarnet->execute([':ci' => $ci]);
+  $carnet = $stmtCarnet->fetchAll(PDO::FETCH_ASSOC);
+
+  // próxima vacuna por vencer, para el banner de alerta
+  $proximaVacuna = null;
+  foreach ($carnet as $v) {
+    if ($v['FechaProximaVacunacion'] && (!$proximaVacuna || $v['FechaProximaVacunacion'] < $proximaVacuna['FechaProximaVacunacion'])) {
+      $proximaVacuna = $v;
     }
+  }
 } catch (PDOException $e) {
   echo "<div style='color:red; background:#fee; padding:10px; border:1px solid red; margin:10px;'>";
   echo "<b>Error SQL en index.php:</b> " . $e->getMessage();
@@ -103,13 +138,16 @@ try {
         <h1>Hola, <?= htmlspecialchars($nombreUsuario) ?>!</h1>
       </div>
 
-      <div class="alert-banner d-flex align-items-center justify-content-between flex-wrap gap-3">
-        <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-exclamation-circle"></i>
-          <span><strong>Vacuna rabia de Rex</strong> vence 20/07/2026</span>
+      <?php if ($proximaVacuna): ?>
+        <div class="alert-banner d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-circle"></i>
+            <span><strong>Vacuna <?= htmlspecialchars($proximaVacuna['TipoVacunacion']) ?> de <?= htmlspecialchars($proximaVacuna['NombreMascota']) ?></strong>
+              vence <?= date('d/m/Y', strtotime($proximaVacuna['FechaProximaVacunacion'])) ?></span>
+          </div>
+          <button class="btn btn-outline-light btn-sm px-3" type="button">Pedir cita</button>
         </div>
-        <button class="btn btn-outline-light btn-sm px-3" type="button">Pedir cita</button>
-      </div>
+      <?php endif; ?>
 
       <div class="row g-3 mt-1">
 
@@ -118,37 +156,36 @@ try {
           <div class="panel-card">
             <div class="panel-header">
               <h2>Mis mascotas</h2>
-              <span class="badge badge-info">2 total</span>
+              <span class="badge badge-info"><?= count($mascotas) ?> total</span>
             </div>
-
-            <div class="pet-row">
-              <div>
-                <p class="pet-name">Rex</p>
-                <p class="pet-meta">Labrador - Macho - 9 años</p>
+            <?php foreach ($mascotas as $i => $m): ?>
+              <?php if ($i > 0): ?>
+                <hr class="divider"><?php endif; ?>
+              <div class="pet-row">
+                <div>
+                  <p class="pet-name"><?= htmlspecialchars($m['Nombre']) ?></p>
+                  <p class="pet-meta"><?= htmlspecialchars($m['Raza']) ?> - <?= htmlspecialchars($m['Especie']) ?></p>
+                </div>
               </div>
-              <span class="badge badge-danger"><i class="bi bi-exclamation-circle-fill"></i> Vacuna</span>
-            </div>
-            <hr class="divider">
-            <div class="pet-row">
-              <div>
-                <p class="pet-name">Luna</p>
-                <p class="pet-meta">Siamés - Hembra - 5 años</p>
-              </div>
-              <span class="badge badge-success">Al día</span>
-            </div>
+            <?php endforeach; ?>
           </div>
 
           <div class="panel-card">
             <div class="panel-header">
               <h2>Mis turnos</h2>
             </div>
-            <div class="pet-row">
-              <div>
-                <p class="pet-name">Luna</p>
-                <p class="pet-meta">Peluquería - 02/07/2026 - 10:00</p>
+            <?php if ($proximoTurno): ?>
+              <div class="pet-row">
+                <div>
+                  <p class="pet-name"><?= htmlspecialchars($proximoTurno['NombreMascota']) ?></p>
+                  <p class="pet-meta"><?= htmlspecialchars($proximoTurno['NombreServicio']) ?> -
+                    <?= date('d/m/Y', strtotime($proximoTurno['Fecha'])) ?> - <?= substr($proximoTurno['Hora'], 0, 5) ?></p>
+                </div>
+                <span class="badge badge-success"><?= htmlspecialchars($proximoTurno['Estado']) ?></span>
               </div>
-              <span class="badge badge-success">Confirmado</span>
-            </div>
+            <?php else: ?>
+              <p class="pet-meta">No tenés turnos próximos.</p>
+            <?php endif; ?>
           </div>
 
         </div>

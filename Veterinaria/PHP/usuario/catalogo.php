@@ -56,7 +56,7 @@ $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <div class="row g-4">
         <aside class="col-md-4 col-lg-3">
           <form class="filtros-card" action="catalogo.php" method="get">
-            <button class="btn btn-filtros-limpiar w-100" type="submit">Limpiar filtros</button>
+            <a href="catalogo.php" class="btn btn-filtros-limpiar w-100">Limpiar filtros</a>
             <h2 class="filtros-titulo">Categoría</h2>
             <?php foreach ($categoriasValidas as $cat): ?>
               <div class="form-check filtros-opcion">
