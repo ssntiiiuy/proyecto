@@ -88,7 +88,6 @@ class Mascota
             $mascotas = $stmtMascota->fetchAll(PDO::FETCH_ASSOC);
 
             return ['mascotas' => $mascotas];
-
         } catch (PDOException $e) {
             echo "Error al cargar mascotas: " . $e->getMessage();
             return [
@@ -178,6 +177,28 @@ class Mascota
                 return 'bloqueado';
             }
             return 'error';
+        }
+    }
+    public static function listadoMascotasPorCliente(int $ci, string $orden = 'Nombre', string $dir = 'ASC'): array
+    {
+        
+        $columnasValidas = ['Nombre', 'Especie', 'Raza', 'FechaNacimiento'];
+        if (!in_array($orden, $columnasValidas)) {
+            $orden = 'Nombre';
+        }
+        $dir = strtoupper($dir) === 'DESC' ? 'DESC' : 'ASC';
+
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $sql = "SELECT IdMascota, Nombre, Raza, FechaNacimiento, Especie
+                FROM MASCOTA
+                WHERE CI = :ci
+                ORDER BY $orden $dir";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([':ci' => $ci]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
         }
     }
 }

@@ -1,3 +1,29 @@
+<?php
+session_start();
+require_once __DIR__ . '/../clases/Conexion.php';
+require_once __DIR__ . '/../clases/Mascota.php';
+
+$conexion = (new Conexion())->establecerConexion();
+
+$sqlUsuario = "SELECT u.CI, u.Nombre FROM USUARIO u INNER JOIN HACE h ON u.CI = h.CI WHERE h.Correo = :correo";
+$stmt = $conexion->prepare($sqlUsuario);
+$stmt->execute([':correo' => $_SESSION['correo']]);
+$usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$usuario) {
+  header('Location: ../../PHP/LoginHTML.php');
+  exit();
+}
+$ci = (int) $usuario['CI'];
+
+// orden por columna
+$orden = $_GET['orden'] ?? 'Nombre';
+$dir = $_GET['dir'] ?? 'asc';
+$dirSiguiente = ($dir === 'asc') ? 'desc' : 'asc'; // para que el link invierta al clickear de nuevo
+
+$mascotas = Mascota::listadoMascotasPorCliente($ci, $orden, $dir);
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -16,7 +42,6 @@
 </head>
 
 <body>
-
   <?php
   $paginaActiva = 'mascotas';
   $mostrarCarrito = false;
@@ -25,7 +50,6 @@
 
   <main class="mascotas">
     <div class="container-lg py-5">
-
       <div class="table-responsive mascotas-tabla-wrap">
         <table class="table mascotas-tabla mb-0">
           <thead>
@@ -33,40 +57,36 @@
               <th class="mascotas-titulo" colspan="5" scope="colgroup">Mis mascotas</th>
             </tr>
             <tr>
-              <th scope="col">Nombre</th>
-              <th scope="col">Tipo de animal</th>
-              <th scope="col">Raza</th>
-              <th scope="col">Fecha de nacimiento</th>
-              <th scope="col">Sexo</th>
+              <?php
+              $columnas = ['Nombre' => 'Nombre', 'Especie' => 'Tipo de animal', 'Raza' => 'Raza', 'FechaNacimiento' => 'Fecha de nacimiento', 'Sexo' => 'Sexo'];
+              foreach ($columnas as $col => $etiqueta):
+                $flecha = ($orden === $col) ? ($dir === 'asc' ? ' ▲' : ' ▼') : '';
+              ?>
+                <th scope="col">
+                  <a href="?orden=<?= $col ?>&dir=<?= ($orden === $col) ? $dirSiguiente : 'asc' ?>" class="text-decoration-none text-reset">
+                    <?= $etiqueta . $flecha ?>
+                  </a>
+                </th>
+              <?php endforeach; ?>
             </tr>
           </thead>
-          <!-- TODO BD: mascotas del usuario -->
           <tbody>
-            <tr>
-              <td>Rex</td>
-              <td>Perro</td>
-              <td>Labrador</td>
-              <td>05/08/2015</td>
-              <td>Macho</td>
-            </tr>
-            <tr>
-              <td>Luna</td>
-              <td>Gato</td>
-              <td>Siamés</td>
-              <td>12/03/2021</td>
-              <td>Hembra</td>
-            </tr>
-            <tr>
-              <td>Toby</td>
-              <td>Perro</td>
-              <td>Caniche</td>
-              <td>20/11/2019</td>
-              <td>Macho</td>
-            </tr>
+            <?php if (empty($mascotas)): ?>
+              <tr>
+                <td colspan="5" class="text-center">No tenés mascotas registradas.</td>
+              </tr>
+              <?php else: foreach ($mascotas as $m): ?>
+                <tr>
+                  <td><?= htmlspecialchars($m['Nombre']) ?></td>
+                  <td><?= htmlspecialchars($m['Especie']) ?></td>
+                  <td><?= htmlspecialchars($m['Raza']) ?></td>
+                  <td><?= $m['FechaNacimiento'] ? date('d/m/Y', strtotime($m['FechaNacimiento'])) : '—' ?></td>
+                </tr>
+            <?php endforeach;
+            endif; ?>
           </tbody>
         </table>
       </div>
-
     </div>
   </main>
 
