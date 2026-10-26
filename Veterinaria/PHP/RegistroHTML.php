@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: LoginHTML.php");
             exit();
         } else {
-            $error = "No se pudo completar el registro. Verifica si el correo o la C.I. ya existen.";
+            $error = "No se pudo completar el registro. El correo o la C.I. ya existen.";
             /* para que no se borren los datos */
             $_POST['ci'] = $ci;
             $_POST['nombre'] = $nombre;
