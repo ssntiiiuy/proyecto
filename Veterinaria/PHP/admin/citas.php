@@ -29,11 +29,16 @@ if (isset($_GET['eliminar'])) {
 }
 
 $estado = $_GET['estado'] ?? null;
-$filtro = $_GET['filtro'] ?? null; //
+$filtro = $_GET['filtro'] ?? null;
+$fechaFiltro = trim($_GET['fecha'] ?? '');
 
-$datosCitas = Cita::listadoCita($estado, $filtro);
-$citas = $datosCitas['citas'];
-
+// Si el usuario buscó por fecha, filtramos por fecha. Si no, usamos el filtro de estado general.
+if ($fechaFiltro !== '') {
+    $citas = Cita::listadoCitasPorFecha($fechaFiltro);
+} else {
+    $datosCitas = Cita::listadoCita($estado, $filtro);
+    $citas = $datosCitas['citas'];
+}
 
 $conexion = (new Conexion())->establecerConexion();
 
@@ -194,6 +199,14 @@ $modalAbierto = isset($_GET['ci']);
               </a>
             </div>
           </div>
+
+          <form class="d-flex gap-2 mb-3 mt-3 mx-3 mx-lg-4" action="citas.php" method="get">
+            <input class="form-control" type="date" name="fecha" value="<?= htmlspecialchars($fechaFiltro) ?>">
+            <button class="btn admin-btn-agregar ms-2" type="submit" title="Filtrar por fecha"><i class="bi bi-search"></i></button>
+            <?php if ($fechaFiltro !== ''): ?>
+              <a class="btn admin-btn-cancelar ms-2" href="citas.php">Limpiar</a>
+            <?php endif; ?>
+          </form>
 
           <div class="table-responsive">
             <table class="table admin-tabla mb-0">

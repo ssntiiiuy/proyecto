@@ -210,4 +210,39 @@ class Cita
             return false;
         }
     }
+
+    public static function listadoCitasPorFecha(string $fecha = ''): array
+{
+    try {
+        $conexion = (new Conexion())->establecerConexion();
+
+        $condicion = '';
+        $params = [];
+        if ($fecha !== '') {
+            // Filtramos por la fecha exacta usando la columna 'Fecha'
+            $condicion = " WHERE c.Fecha = :fecha ";
+            $params = [':fecha' => $fecha];
+        }
+
+        // Realizamos los JOINs necesarios para obtener los nombres de cliente, mascota y servicio
+        $sql = "SELECT c.*,
+                       u.Nombre AS ClienteNombre, u.Apellido AS ClienteApellido,
+                       m.Nombre AS MascotaNombre,
+                       s.Nombre AS ServicioNombre
+                FROM CITA c
+                INNER JOIN CLIENTE cl ON c.CI = cl.CI
+                INNER JOIN USUARIO u ON cl.CI = u.CI
+                INNER JOIN MASCOTA m ON c.IdMascota = m.IdMascota
+                INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
+                $condicion
+                ORDER BY c.Fecha ASC, c.Hora ASC";
+
+        $stmt = $conexion->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    } catch (PDOException $e) {
+        return [];
+    }
+}
 }
