@@ -10,6 +10,10 @@ if (!empty($_GET['categoria'])) {
 if (!empty($_GET['filtro'])) {
   $filtrosListado['filtro'] = $_GET['filtro'];
 }
+// NUEVO: Capturamos la búsqueda si existe
+if (!empty($_GET['busqueda'])) {
+  $filtrosListado['busqueda'] = $_GET['busqueda'];
+}
 
 /* eliminar: solo se borra por POST, despues de confirmar */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
@@ -40,8 +44,10 @@ if (isset($_GET['eliminar'])) {
 
 $categoria = $_GET['categoria'] ?? null;
 $filtroEspecial = $_GET['filtro'] ?? null;
+$busqueda = $_GET['busqueda'] ?? null; // NUEVO
 
-$datosProductos = Producto::listadoProductos($categoria, $filtroEspecial);
+// Llamamos al método pasando los tres filtros
+$datosProductos = Producto::listadoProductos($categoria, $filtroEspecial, $busqueda);
 $productos = $datosProductos['productos'];
 
 $conexion = (new Conexion())->establecerConexion();
@@ -179,6 +185,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               </button>
             </div>
           </div>
+
+          <form class="d-flex gap-2 mb-3 mt-3 mx-3 mx-lg-4" action="productos.php" method="get">
+            <?php if (!empty($categoria)): ?>
+              <input type="hidden" name="categoria" value="<?= htmlspecialchars($categoria) ?>">
+            <?php endif; ?>
+            <?php if (!empty($filtroEspecial)): ?>
+              <input type="hidden" name="filtro" value="<?= htmlspecialchars($filtroEspecial) ?>">
+            <?php endif; ?>
+
+            <input class="form-control" type="text" name="busqueda" placeholder="Buscar por nombre de producto..."
+              value="<?= htmlspecialchars($busqueda ?? '') ?>">
+            <button class="btn admin-btn-agregar ms-2" type="submit" title="Buscar"><i class="bi bi-search"></i></button>
+
+            <?php if (!empty($busqueda)): ?>
+              <a class="btn admin-btn-cancelar ms-2" href="productos.php<?= (!empty($categoria) || !empty($filtroEspecial)) ? '?' . http_build_query(array_filter(['categoria' => $categoria, 'filtro' => $filtroEspecial])) : '' ?>">Limpiar</a>
+            <?php endif; ?>
+          </form>
 
           <div class="table-responsive">
             <table class="table admin-tabla mb-0">

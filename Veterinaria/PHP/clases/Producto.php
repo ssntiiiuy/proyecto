@@ -79,42 +79,48 @@ class Producto
     }
 
 
-    public static function listadoProductos(?string $categoria = null, ?string $filtroEspecial = null): array
-    {
-        try {
-            $conexion = (new Conexion())->establecerConexion();
+    public static function listadoProductos(?string $categoria = null, ?string $filtroEspecial = null, ?string $busqueda = null): array
+{
+    try {
+        $conexion = (new Conexion())->establecerConexion();
 
-            $sqlProducto = "SELECT p.IdProducto, p.Nombre, p.Categoria, p.Precio, p.Stock, p.StockMinimo, p.FechaVencimiento, prov.NombreEmpresa
+        $sqlProducto = "SELECT p.IdProducto, p.Nombre, p.Categoria, p.Precio, p.Stock, p.StockMinimo, p.FechaVencimiento, prov.NombreEmpresa
                         FROM PRODUCTO p
                         INNER JOIN PROVEE pr ON p.IdProducto = pr.IdProducto
                         INNER JOIN PROVEEDOR prov ON pr.IdProveedor = prov.IdProveedor
                         WHERE 1=1";
 
-            $params = [];
+        $params = [];
 
-            if (!empty($categoria)) {
-                $sqlProducto .= " AND p.Categoria = :Categoria";
-                $params[':Categoria'] = $categoria;
-            }
-
-            if ($filtroEspecial === 'stock_bajo') {
-                $sqlProducto .= " AND p.Stock <= p.StockMinimo";
-            } elseif ($filtroEspecial === 'por_vencer') {
-                $sqlProducto .= " AND p.FechaVencimiento IS NOT NULL
-                     AND p.FechaVencimiento >= :hoy
-                     AND p.FechaVencimiento <= DATE_ADD(:hoy, INTERVAL 30 DAY)";
-                $params[':hoy'] = date('Y-m-d');
-            }
-
-            $stmt = $conexion->prepare($sqlProducto);
-            $stmt->execute($params);
-            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            return ['productos' => $productos];
-        } catch (PDOException $e) {
-            return ['productos' => [], 'error' => $e->getMessage()];
+        if (!empty($categoria)) {
+            $sqlProducto .= " AND p.Categoria = :Categoria";
+            $params[':Categoria'] = $categoria;
         }
+
+        if ($filtroEspecial === 'stock_bajo') {
+            $sqlProducto .= " AND p.Stock <= p.StockMinimo";
+        } elseif ($filtroEspecial === 'por_vencer') {
+            $sqlProducto .= " AND p.FechaVencimiento IS NOT NULL
+                             AND p.FechaVencimiento >= :hoy
+                             AND p.FechaVencimiento <= DATE_ADD(:hoy, INTERVAL 30 DAY)";
+            $params[':hoy'] = date('Y-m-d');
+        }
+
+        // NUEVO: Filtro por texto (Nombre del producto)
+        if (!empty($busqueda)) {
+            $sqlProducto .= " AND p.Nombre LIKE :busqueda";
+            $params[':busqueda'] = '%' . $busqueda . '%';
+        }
+
+        $stmt = $conexion->prepare($sqlProducto);
+        $stmt->execute($params);
+        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return ['productos' => $productos];
+    } catch (PDOException $e) {
+        return ['productos' => [], 'error' => $e->getMessage()];
     }
+}
 
     public function crearProducto(string $nombre, string $categoria, string $precio, string $stock, string $stockMinimo, ?string $fechaVencimiento, string $NombreEmpresa): bool
     {
