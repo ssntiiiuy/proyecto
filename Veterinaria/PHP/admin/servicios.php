@@ -7,6 +7,10 @@ $filtrosListado = [];
 if (!empty($_GET['estado'])) {
   $filtrosListado['estado'] = $_GET['estado'];
 }
+/*  búsqueda al arreglo de redirección */
+if (!empty($_GET['busqueda'])) {
+  $filtrosListado['busqueda'] = $_GET['busqueda'];
+}
 
 /* eliminar: solo se borra por POST, despues de confirmar */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
@@ -35,9 +39,12 @@ if (isset($_GET['eliminar'])) {
   }
 }
 
-/* funcion para guardar los datos y filtrar por estado */
+/* funcion para guardar los datos y filtrar por categoria y texto */
 $estadoFiltro = $_GET['estado'] ?? '';
-$datosServicios = Servicio::listadoServicios($estadoFiltro !== '' ? $estadoFiltro : null);
+$busqueda = trim($_GET['busqueda'] ?? '');
+
+// Llamamos al método pasando ambos filtros
+$datosServicios = Servicio::listadoServicios($estadoFiltro !== '' ? $estadoFiltro : null, $busqueda);
 $servicios = $datosServicios['servicios'];
 
 $conexion = (new Conexion())->establecerConexion();
@@ -180,6 +187,34 @@ function obtenerClaseBadge($tipo)
             </div>
           </div>
 
+          <form class="d-flex gap-2 mb-3 mt-3 mx-3 mx-lg-4" action="servicios.php" method="get">
+            <?php if (!empty($estadoFiltro)): ?>
+              <input type="hidden" name="estado" value="<?= htmlspecialchars($estadoFiltro) ?>">
+            <?php endif; ?>
+
+            <?php
+            // Definimos el placeholder dinámico según la categoría filtrada
+            $placeholderBusqueda = "Buscar por nombre del servicio...";
+            if ($estadoFiltro === 'Vacunacion') {
+              $placeholderBusqueda = "Buscar por tipo de vacuna...";
+            } elseif ($estadoFiltro === 'Consulta') {
+              $placeholderBusqueda = "Buscar por motivo de consulta...";
+            } elseif ($estadoFiltro === 'Peluqueria') {
+              $placeholderBusqueda = "Buscar por tipo de corte o shampoo...";
+            } elseif ($estadoFiltro === 'Cirugia') {
+              $placeholderBusqueda = "Buscar por anestesia o riesgo...";
+            }
+            ?>
+
+            <input class="form-control" type="text" name="busqueda" placeholder="<?= htmlspecialchars($placeholderBusqueda) ?>"
+              value="<?= htmlspecialchars($busqueda) ?>">
+            <button class="btn admin-btn-agregar ms-2" type="submit" title="Buscar"><i class="bi bi-search"></i></button>
+
+            <?php if ($busqueda !== '' || $estadoFiltro !== ''): ?>
+              <a class="btn admin-btn-cancelar ms-2" href="servicios.php">Limpiar</a>
+            <?php endif; ?>
+          </form>
+
           <div class="table-responsive">
             <table class="table admin-tabla mb-0">
               <thead>
@@ -190,6 +225,25 @@ function obtenerClaseBadge($tipo)
                   <th scope="col">Descripción</th>
                   <th scope="col">Duración</th>
                   <th scope="col">Precio</th>
+
+                  <!-- Columnas dinámicas según el filtro activo -->
+                  <?php if ($estadoFiltro === 'Vacunacion'): ?>
+                    <th scope="col">Lote</th>
+                    <th scope="col">Tipo Vacuna</th>
+                    <th scope="col">Laboratorio</th>
+                  <?php elseif ($estadoFiltro === 'Consulta'): ?>
+                    <th scope="col">Motivo</th>
+                    <th scope="col">Emergencia</th>
+                  <?php elseif ($estadoFiltro === 'Peluqueria'): ?>
+                    <th scope="col">Corte</th>
+                    <th scope="col">Shampoo</th>
+                  <?php elseif ($estadoFiltro === 'Cirugia'): ?>
+                    <th scope="col">Anestesia</th>
+                    <th scope="col">Riesgo</th>
+                  <?php else: ?>
+                    <th scope="col">Detalles Específicos</th>
+                  <?php endif; ?>
+
                   <th scope="col" class="text-end">Acciones</th>
                 </tr>
               </thead>
@@ -204,7 +258,6 @@ function obtenerClaseBadge($tipo)
                     <tr>
                       <td><?= htmlspecialchars($serv['IdServicio']) ?></td>
                       <td><?= htmlspecialchars($serv['Nombre']) ?></td>
-
                       <td>
                         <?php
                         $tipoServicio = $serv['Tipo'];
@@ -212,22 +265,48 @@ function obtenerClaseBadge($tipo)
                         ?>
                         <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($tipoServicio) ?></span>
                       </td>
-
-                      <td class="admin-celda-texto"><?= htmlspecialchars($serv['Descripcion'] ?? '') ?></td>
-                      <td><?= htmlspecialchars($serv['Duracion'] ?? '') ?> min</td>
+                      <td><?= htmlspecialchars($serv['Descripcion']) ?></td>
+                      <td><?= htmlspecialchars($serv['Duracion']) ?> min</td>
                       <td>$ <?= number_format($serv['Precio'] ?? 0, 0, ',', '.') ?></td>
 
+                      <!-- Celdas dinámicas según el tipo de servicio -->
+                      <?php if ($estadoFiltro === 'Vacunacion'): ?>
+                        <td><?= htmlspecialchars($serv['LoteVacuna'] ?? '—') ?></td>
+                        <td><?= htmlspecialchars($serv['TipoVacuna'] ?? '—') ?></td>
+                        <td><?= htmlspecialchars($serv['LaboratorioFabricante'] ?? '—') ?></td>
+                      <?php elseif ($estadoFiltro === 'Consulta'): ?>
+                        <td><?= htmlspecialchars($serv['Motivo'] ?? '—') ?></td>
+                        <td><?= ($serv['EsEmergencia'] ?? 0) ? 'Sí' : 'No' ?></td>
+                      <?php elseif ($estadoFiltro === 'Peluqueria'): ?>
+                        <td><?= htmlspecialchars($serv['TipoCorte'] ?? '—') ?></td>
+                        <td><?= htmlspecialchars($serv['TipoShampoo'] ?? '—') ?></td>
+                      <?php elseif ($estadoFiltro === 'Cirugia'): ?>
+                        <td><?= htmlspecialchars($serv['TipoAnestesia'] ?? '—') ?></td>
+                        <td><?= htmlspecialchars($serv['RiesgoQuirurgico'] ?? '—') ?></td>
+                      <?php else: ?>
+                        <td>
+                          <?php
+                          if ($serv['Tipo'] === 'Vacunacion') {
+                            echo 'Vacuna: ' . htmlspecialchars($serv['TipoVacuna'] ?? '');
+                          } elseif ($serv['Tipo'] === 'Consulta') {
+                            echo 'Motivo: ' . htmlspecialchars($serv['Motivo'] ?? '');
+                          } elseif ($serv['Tipo'] === 'Peluqueria') {
+                            echo 'Corte: ' . htmlspecialchars($serv['TipoCorte'] ?? '');
+                          } elseif ($serv['Tipo'] === 'Cirugia') {
+                            echo 'Anestesia: ' . htmlspecialchars($serv['TipoAnestesia'] ?? '');
+                          } else {
+                            echo '—';
+                          }
+                          ?>
+                        </td>
+                      <?php endif; ?>
                       <td class="text-end">
-                        <a class="btn btn-sm admin-btn-icono" href="editar_servicio.php?<?= htmlspecialchars(http_build_query(['id' => $serv['IdServicio']] + $filtrosListado)) ?>" aria-label="Editar">
-                          <i class="bi bi-pencil"></i>
-                        </a>
-                        <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="servicios.php?<?= htmlspecialchars(http_build_query(['eliminar' => $serv['IdServicio']] + $filtrosListado)) ?>" aria-label="Eliminar">
-                          <i class="bi bi-trash"></i>
-                        </a>
+                        <a class="btn btn-sm admin-btn-icono" href="editar_servicio.php?<?= htmlspecialchars(http_build_query(['id' => $serv['IdServicio']] + $filtrosListado)) ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+                        <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="servicios.php?<?= htmlspecialchars(http_build_query(['eliminar' => $serv['IdServicio']] + $filtrosListado)) ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                       </td>
                     </tr>
-                  <?php endforeach; ?>
-                <?php endif; ?>
+                <?php endforeach;
+                endif; ?>
               </tbody>
 
 

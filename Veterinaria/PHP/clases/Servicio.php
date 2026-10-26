@@ -64,48 +64,59 @@ class Servicio
         $this->duracion = $duracion;
     }
 
-    public static function listadoServicios($estado = null): array
-{
-    try {
-        $conexion = (new Conexion())->establecerConexion();
+    public static function listadoServicios($estado = null, string $busqueda = ''): array
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
 
-        $sql = "SELECT s.IdServicio, s.Nombre, s.Precio, s.Descripcion, s.Duracion,
-           CASE
-             WHEN c.IdServicio IS NOT NULL THEN 'Consulta'
-             WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
-             WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
-             WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
-             ELSE 'Sin definir'
-           END AS Tipo
-        FROM SERVICIO s
-        LEFT JOIN CONSULTA c ON s.IdServicio = c.IdServicio
-        LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
-        LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
-        LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
-        GROUP BY s.IdServicio, s.Nombre, Tipo, s.Descripcion, s.Duracion, s.Precio";
+            $sql = "SELECT s.IdServicio, s.Nombre, s.Precio, s.Descripcion, s.Duracion,
+                CASE
+                    WHEN c.IdServicio IS NOT NULL THEN 'Consulta'
+                    WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
+                    WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
+                    WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
+                    ELSE 'Sin definir'
+                END AS Tipo,
+                c.Anamnesis, c.Motivo, c.EsEmergencia, c.IndicacionesRecetadas,
+                v.LoteVacuna, v.TipoVacuna, v.LaboratorioFabricante,
+                p.TipoCorte, p.TipoShampoo,
+                q.TipoAnestesia, q.RiesgoQuirurgico, q.AutorizacionFirmada
+                FROM SERVICIO s
+                LEFT JOIN CONSULTA c ON s.IdServicio = c.IdServicio
+                LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
+                LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
+                LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
+                WHERE 1=1";
 
-        $params = [];
+            $params = [];
 
-        if (!empty($estado)) {
-            $tipos = is_array($estado) ? $estado : [$estado];
-            $marcadores = [];
-            foreach ($tipos as $i => $tipoValor) {
-                $clave = ":estado{$i}";
-                $marcadores[] = $clave;
-                $params[$clave] = $tipoValor;
+            // Filtro por categoría (select)
+            if (!empty($estado)) {
+                $tipos = is_array($estado) ? $estado : [$estado];
+                $marcadores = [];
+                foreach ($tipos as $i => $tipoValor) {
+                    $clave = ":estado{$i}";
+                    $marcadores[] = $clave;
+                    $params[$clave] = $tipoValor;
+                }
+                $sql .= " HAVING Tipo IN (" . implode(', ', $marcadores) . ") ";
             }
-            $sql .= " HAVING Tipo IN (" . implode(', ', $marcadores) . ")";
+
+            // Filtro por texto (Nombre del servicio o Tipo de vacuna si aplica)
+            if ($busqueda !== '') {
+                $sql .= (!empty($estado) ? " AND" : " HAVING") . " (s.Nombre LIKE :busqueda OR v.TipoVacuna LIKE :busqueda)";
+                $params[':busqueda'] = '%' . $busqueda . '%';
+            }
+
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute($params);
+            $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return ['servicios' => $servicios];
+        } catch (PDOException $e) {
+            return ['servicios' => [], 'error' => $e->getMessage()];
         }
-
-        $stmt = $conexion->prepare($sql);
-        $stmt->execute($params);
-        $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        return ['servicios' => $servicios];
-    } catch (PDOException $e) {
-        return ['servicios' => [], 'error' => $e->getMessage()];
     }
-}
 
     public function crearServicio(string $tipo, string $nombre, float $precio, string $descripcion, int $duracion, array $datosEspecificos): bool
     {
