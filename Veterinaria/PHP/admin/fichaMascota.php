@@ -12,12 +12,25 @@ if (!$mascota) {
     exit();
 }
 
-$mensaje = null;
+$mensajes = [
+    'HCeditado' => ['success', 'Los cambios del historial clínico se guardaron.'],
+    'HCeliminado' => ['success', 'El historial clínico se eliminó.'],
+    'HCbloqueado' => ['danger', 'No se puede eliminar el historial clínico.'],
+    'HCnoexiste' => ['danger', 'El historial clínico no existe.'],
+    'CVeditado' => ['success', 'Los cambios del carnet de vacunación se guardaron.'],
+    'CVeliminado' => ['success', 'El carnet de vacunación se eliminó.'],
+    'CVbloqueado' => ['danger', 'No se puede eliminar el carnet de vacunación.'],
+    'CVnoexiste' => ['danger', 'El carnet de vacunación no existe.'],
+    'error' => ['danger', 'No se pudo completar la operación.']
+];
 
-// ---------- GESTIÓN DE PETICIONES POST (Controlador embebido o redirección) ----------
+$mensaje = null;
+if (isset($_GET['msg']) && isset($mensajes[$_GET['msg']])) {
+    $mensaje = $mensajes[$_GET['msg']];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // Guardar Historial (Alta o Edición)
     if (isset($_POST['guardarHistorial'])) {
         $idHistorial  = (int) ($_POST['IdHistorialClinico'] ?? 0);
         $anamnesis    = trim($_POST['Anamnesis'] ?? '');
@@ -34,7 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ok = $historial->crearHistorialClinico($id, $anamnesis, $antecedentes, $tratamiento, $diagnostico, $fecha, $peso);
         }
 
-        header("Location: fichaMascota.php?id=$id&msg=" . ($ok ? 'historial_guardado' : 'error'));
+        // Determinamos qué mensaje mostrar según el resultado de $ok
+        $msgKey = $ok ? 'HCeditado' : 'error';
+
+        header("Location: fichaMascota.php?id=$id&msg=$msgKey");
         exit();
     }
 
@@ -42,18 +58,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['eliminarHistorial'])) {
         $idHistorialEliminar = (int) ($_POST['IdHistorialClinico'] ?? 0);
         $h = new HistorialClinico();
-        $resultado = $h->eliminarHistorialClinico($id, $idHistorialEliminar); // Pasamos $id (mascota) e $idHistorial
-        header("Location: fichaMascota.php?id=$id&msg=" . ($resultado ? 'historial_eliminado' : 'error'));
+        $resultado = $h->eliminarHistorialClinico($id, $idHistorialEliminar); // Pasamos $idmascota e $idHistorial
+        header("Location: fichaMascota.php?id=$id&msg=" . ($resultado ? 'HCeliminado' : 'error'));
+        exit();
+    }
+
+    if (isset($_POST['guardarCarnet'])) {
+        $idCarnet = (int) ($_POST['IdCarnetVacunacion'] ?? 0);
+        $tVac     = trim($_POST['TipoVacunacion'] ?? '');
+        $fUlt     = trim($_POST['FechaUltimaVacunacion'] ?? '');
+        $fProx    = trim($_POST['FechaProximaVacunacion'] ?? '');
+        $desp     = trim($_POST['Desparasitacion'] ?? '');
+        $tDesp    = trim($_POST['TipoDesparasitacion'] ?? '');
+
+        $c = new CarnetVacunacion();
+        if ($idCarnet > 0) {
+            $ok = $c->editarCarnet($idCarnet, $fProx, $fUlt, $tVac, $desp, $tDesp);
+        } else {
+            $ok = $c->crearCarnet($id, $fProx, $fUlt, $tVac, $desp, $tDesp);
+        }
+
+        $msgKey = $ok ? 'CVeditado' : 'error';
+        header("Location: fichaMascota.php?id=$id&msg=$msgKey");
+        exit();
+    }
+
+    // 4. Eliminar Carnet 
+    if (isset($_POST['eliminarCarnet'])) {
+        $idCarnetEliminar = (int) ($_POST['IdCarnetVacunacion'] ?? 0);
+        $c = new CarnetVacunacion();
+        $resultado = $c->eliminarCarnet($idCarnetEliminar);
+
+        $msgKey = $resultado ? 'CVeliminado' : 'error';
+        header("Location: fichaMascota.php?id=$id&msg=$msgKey");
         exit();
     }
 }
-
-// Mensajes de feedback visual
-$mensajes = [
-    'historial_guardado'  => ['success', 'El historial clínico se guardó correctamente.'],
-    'historial_eliminado' => ['success', 'El registro de historial se eliminó.'],
-    'error'               => ['danger', 'No se pudo completar la operación en la base de datos.']
-];
 
 if (isset($_GET['msg']) && isset($mensajes[$_GET['msg']])) {
     $mensaje = $mensajes[$_GET['msg']];
@@ -62,7 +102,6 @@ if (isset($_GET['msg']) && isset($mensajes[$_GET['msg']])) {
 $historiales = HistorialClinico::listadoPorIdMascota($id);
 $carnet = CarnetVacunacion::listadoPorIdMascota($id);
 ?>
-<!-- Resto de tu estructura HTML habitual de la vista... -->
 
 
 <!DOCTYPE html>
@@ -113,7 +152,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                     </div>
                 </div>
 
-                <!-- ===================== HISTORIAL CLINICO ===================== -->
+                <!--  HISTORIAL CLINICO  -->
                 <div class="admin-card mb-3">
                     <div class="admin-card-header flex-wrap">
                         <h2>Historial clínico</h2>
@@ -138,7 +177,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                             <tbody>
                                 <?php if (empty($historiales)): ?>
                                     <tr>
-                                        <td colspan="5" class="text-center">Sin registros.</td>
+                                        <td colspan="7" class="text-center">Sin registros.</td>
                                     </tr>
                                     <?php else: foreach ($historiales as $h): ?>
                                         <tr>
@@ -166,7 +205,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                     </div>
                 </div>
 
-                <!-- ===================== CARNET DE VACUNACION ===================== -->
+                <!-- CARNET DE VACUNACION-->
                 <div class="admin-card">
                     <div class="admin-card-header flex-wrap">
                         <h2>Carnet de vacunación</h2>
@@ -219,7 +258,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
         </div>
     </div>
 
-    <!-- ===================== MODAL: agregar/editar historial ===================== -->
+    <!-- MODAL: agregar/editar historial  -->
     <div class="modal fade admin-modal" id="modalHistorial" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form class="modal-content" action="fichaMascota.php?id=<?= $id ?>" method="post">
@@ -264,7 +303,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
         </div>
     </div>
 
-    <!-- ===================== MODAL: confirmar eliminar historial ===================== -->
+    <!--  MODAL: confirmar eliminar historial  -->
     <div class="modal fade admin-modal" id="modalEliminarHistorial" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form class="modal-content" action="fichaMascota.php?id=<?= $id ?>" method="post">
@@ -284,7 +323,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
         </div>
     </div>
 
-    <!-- ===================== MODAL: agregar/editar carnet ===================== -->
+    <!--  MODAL: agregar/editar carnet  -->
     <div class="modal fade admin-modal" id="modalCarnet" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form class="modal-content" action="fichaMascota.php?id=<?= $id ?>" method="post">
@@ -325,7 +364,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
         </div>
     </div>
 
-    <!-- ===================== MODAL: confirmar eliminar carnet ===================== -->
+    <!--  MODAL: confirmar eliminar carnet  -->
     <div class="modal fade admin-modal" id="modalEliminarCarnet" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form class="modal-content" action="fichaMascota.php?id=<?= $id ?>" method="post">

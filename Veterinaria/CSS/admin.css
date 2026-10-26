@@ -536,3 +536,24 @@
   background-color: #F3E6C4;
   color: #5A4A1F;
 }
+
+.alert {
+    border-radius: 8px;
+    font-size: 0.925rem;
+    padding: 12px 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Alerta de Éxito (Verde elegante y suave) */
+.alert-success {
+    background-color: rgba(25, 135, 84, 0.15);
+    border: 1px solid rgba(25, 135, 84, 0.4);
+    color: #75b798;
+}
+
+/* Alerta de Error/Peligro (Rojo elegante y suave) */
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.15);
+    border: 1px solid rgba(220, 53, 69, 0.4);
+    color: #ea868f;
+}
