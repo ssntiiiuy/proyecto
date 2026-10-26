@@ -29,7 +29,8 @@ if (isset($_GET['eliminar'])) {
   }
 }
 
-$datosProveedores = Proveedor::listadoProveedor();
+$busqueda = trim($_GET['busqueda'] ?? '');
+$datosProveedores = Proveedor::listadoProveedor($busqueda);
 $proveedores = $datosProveedores['proveedores'];
 
 $error = null;
@@ -133,6 +134,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               <i class="bi bi-plus-lg"></i> Agregar proveedor
             </button>
           </div>
+
+          <form class="d-flex gap-2 mb-3 mt-3 mx-3 mx-lg-4" action="proveedores.php" method="get">
+            <input class="form-control" type="text" name="busqueda" placeholder="Buscar por nombre, empresa o producto..."
+              value="<?= htmlspecialchars($busqueda) ?>">
+            <button class="btn admin-btn-agregar ms-2" type="submit" title="Buscar"><i class="bi bi-search"></i></button>
+            <?php if ($busqueda !== ''): ?>
+              <a class="btn admin-btn-cancelar ms-2" href="proveedores.php">Limpiar</a>
+            <?php endif; ?>
+          </form>
 
           <div class="table-responsive">
             <table class="table admin-tabla mb-0">

@@ -64,30 +64,43 @@ class Proveedor
         $this->producto = $producto;
     }
 
-    public static function listadoProveedor(): array
-{
-    try {
-        $conexion = (new Conexion())->establecerConexion();
+    public static function listadoProveedor(string $busqueda = ''): array
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
 
-        $sqlProveedor = "SELECT p.IdProveedor, p.Nombre, p.NombreEmpresa,
-               GROUP_CONCAT(DISTINCT tp.numTelProveedor ORDER BY tp.numTelProveedor SEPARATOR '|') AS Telefonos,
-               GROUP_CONCAT(DISTINCT pro.Nombre ORDER BY pro.Nombre SEPARATOR ', ') AS Productos
-               FROM PROVEEDOR p
-               LEFT JOIN TELEFONO_PROVEEDOR tp ON p.IdProveedor = tp.IdProveedor
-               LEFT JOIN PROVEE pr ON p.IdProveedor = pr.IdProveedor
-               LEFT JOIN producto pro ON pr.IdProducto = pro.IdProducto
-               GROUP BY p.IdProveedor, p.Nombre, p.NombreEmpresa";
-        $stmtProveedor = $conexion->query($sqlProveedor);
-        $proveedores = $stmtProveedor->fetchAll(PDO::FETCH_ASSOC);
+            $sqlProveedor = "SELECT p.IdProveedor, p.Nombre, p.NombreEmpresa,
+                        GROUP_CONCAT(DISTINCT tp.numTelProveedor ORDER BY tp.numTelProveedor SEPARATOR ' | ') AS Telefonos,
+                        GROUP_CONCAT(DISTINCT pro.Nombre ORDER BY pro.Nombre SEPARATOR ', ') AS Productos
+                        FROM PROVEEDOR p
+                        LEFT JOIN TELEFONO_PROVEEDOR tp ON p.IdProveedor = tp.IdProveedor
+                        LEFT JOIN PROVEE pr ON p.IdProveedor = pr.IdProveedor
+                        LEFT JOIN producto pro ON pr.IdProducto = pro.IdProducto
+                        GROUP BY p.IdProveedor, p.Nombre, p.NombreEmpresa";
 
-        return ['proveedores' => $proveedores];
-    } catch (PDOException $e) {
-        echo "Error al cargar proveedores: " . $e->getMessage();
-        return [
-            'proveedores' => []
-        ];
+            $params = [];
+
+            // Como usamos GROUP_CONCAT, filtramos con HAVING
+            if ($busqueda !== '') {
+                $sqlProveedor .= " HAVING p.Nombre LIKE :busqueda1 OR p.NombreEmpresa LIKE :busqueda2 OR Productos LIKE :busqueda3";
+                $like = '%' . $busqueda . '%';
+                $params = [
+                    ':busqueda1' => $like,
+                    ':busqueda2' => $like,
+                    ':busqueda3' => $like
+                ];
+            }
+
+            $stmt = $conexion->prepare($sqlProveedor);
+            $stmt->execute($params);
+            $proveedores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return ['proveedores' => $proveedores];
+        } catch (PDOException $e) {
+            echo "Error al cargar proveedores: " . $e->getMessage();
+            return ['proveedores' => []];
+        }
     }
-}
 
     public function crearProveedor(string $nombre, string $empresa, string $telefono): bool
     {
