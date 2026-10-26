@@ -623,6 +623,13 @@ html[data-theme="dark"] .auth-body .alert-danger {
   --bs-alert-link-color: #58151c;
 }
 
+html[data-theme="dark"] .auth-body .alert-success {
+  --bs-alert-color: #0a3622;
+  --bs-alert-bg: #d1e7dd;
+  --bs-alert-border-color: #a3cfbb;
+  --bs-alert-link-color: #0a3622;
+}
+
 /* ===== Tema claro ===== */
 [data-theme="light"] {
   --sienra-bg: #F3F5F7;

@@ -94,6 +94,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form class="auth-form" action="LoginHTML.php" method="post">
             <h1 class="auth-title">Iniciar sesión</h1>
 
+            <?php if (!empty($_SESSION['aviso'])) { ?>
+                <div class="alert alert-success py-2 text-center" role="alert">
+                    <?= htmlspecialchars($_SESSION['aviso']) ?>
+                </div>
+            <?php unset($_SESSION['aviso']); } ?>
+
             <?php if (!empty($error)): ?>
                 <div class="alert alert-danger py-2 text-center" role="alert">
                     <?= htmlspecialchars($error) ?>
@@ -118,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="mb-4">
-                <a href="#" class="auth-link">Olvidé mi contraseña</a>
+                <a href="RecuperarHTML.php" class="auth-link">¿Olvidaste tu contraseña?</a>
             </div>
 
             <button type="submit" class="btn btn-cta auth-submit">Ingresar</button>
