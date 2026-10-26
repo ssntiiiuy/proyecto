@@ -182,6 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                       <td><?= $masc['FechaNacimiento'] ? date('d/m/Y', strtotime($masc['FechaNacimiento'])) : '—' ?></td>
                       <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
                       <td class="text-end">
+                        <a class="btn btn-sm admin-btn-icono" href="fichaMascota.php?id=<?= $masc['IdMascota'] ?>" aria-label="Ver ficha"><i class="bi bi-file-earmark-text"></i></a>
                         <a class="btn btn-sm admin-btn-icono" href="editar_mascota.php?id=<?= $masc['IdMascota'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
                         <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="mascotas.php?eliminar=<?= $masc['IdMascota'] ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                       </td>

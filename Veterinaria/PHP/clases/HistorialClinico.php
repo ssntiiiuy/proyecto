@@ -12,7 +12,8 @@ class HistorialClinico
     private ?DateTime $fecha;
     private ?int $peso;
 
-    public function __construct( ?int $id = null, ?int $idMascota = null, ?string $anamnesis = null, ?string $antecedentes = null, ?string $tratamiento = null, ?string $diagnostico = null, ?DateTime $fecha = null, ?int $peso = null) {
+    public function __construct(?int $id = null, ?int $idMascota = null, ?string $anamnesis = null, ?string $antecedentes = null, ?string $tratamiento = null, ?string $diagnostico = null, ?DateTime $fecha = null, ?int $peso = null)
+    {
         $this->id = $id;
         $this->idMascota = $idMascota;
         $this->anamnesis = $anamnesis;
@@ -94,29 +95,36 @@ class HistorialClinico
     }
 
 
-    public function crearHistorialClinico(int $idMascota, string $anamnesis, string $antecedentes, string $tratamiento, string $diagnostico, ?string $fecha, int $peso): bool
-    {
-        try {
-            $conexion = (new Conexion())->establecerConexion();
+    public function crearHistorialClinico(int $idMascota, ?string $anamnesis, ?string $antecedentes, ?string $tratamiento, ?string $diagnostico, ?string $fecha, ?float $peso) {
+    try {
+        $conexion = (new Conexion())->establecerConexion();
 
-            $sql = "INSERT INTO HISTORIAL_CLINICO (IdMascota, Anamnesis, Antecedentes, Tratamiento, Diagnóstico, Fecha, Peso)
-                    VALUES (:idMascota, :anamnesis, :antecedentes, :tratamiento, :diagnostico, :fecha, :peso)";
-            $stmt = $conexion->prepare($sql);
-            $stmt->execute([
-                ':idMascota'    => $idMascota,
-                ':anamnesis'    => $anamnesis,
-                ':antecedentes' => $antecedentes,
-                ':tratamiento'  => $tratamiento,
-                ':diagnostico'  => $diagnostico,
-                ':fecha'        => $fecha,
-                ':peso'         => $peso
-            ]);
+        // 1. Obtener el siguiente ID para esta mascota (clave compuesta)
+        $sqlMax = "SELECT MAX(IdHistorialClinico) AS max_id FROM historial_clinico WHERE IdMascota = :idMascota";
+        $stmtMax = $conexion->prepare($sqlMax);
+        $stmtMax->execute([':idMascota' => $idMascota]);
+        $row = $stmtMax->fetch(PDO::FETCH_ASSOC);
+        $siguienteId = ($row && $row['max_id'] !== null) ? (int)$row['max_id'] + 1 : 1;
 
-            return true;
-        } catch (PDOException $e) {
-            return false;
-        }
+        // 2. Insertar usando el formato de array asociativo con parámetros nombrados
+        $sql = "INSERT INTO historial_clinico (IdMascota, IdHistorialClinico, Anamnesis, Antecedentes, Tratamiento, Diagnostico, Fecha, Peso)
+                VALUES (:idMascota, :idHistorial, :anamnesis, :antecedentes, :tratamiento, :diagnostico, :fecha, :peso)";
+
+        $stmt = $conexion->prepare($sql);
+        return $stmt->execute([
+            ':idMascota'    => $idMascota,
+            ':idHistorial'  => $siguienteId,
+            ':anamnesis'    => $anamnesis,
+            ':antecedentes' => $antecedentes,
+            ':tratamiento'  => $tratamiento,
+            ':diagnostico'  => $diagnostico,
+            ':fecha'        => $fecha,
+            ':peso'         => ($peso !== '' ? $peso : null)
+        ]);
+    } catch (PDOException $e) {
+        return false;
     }
+}
 
     public static function buscarPorId(int $idHistorial): ?array
     {
@@ -134,48 +142,49 @@ class HistorialClinico
         }
     }
 
-    public function editarHistorialClinico(int $idHistorial, string $anamnesis, string $antecedentes, string $tratamiento, string $diagnostico, ?string $fecha, int $peso): bool
-    {
-        try {
-            $conexion = (new Conexion())->establecerConexion();
+    public function editarHistorialClinico(?int $idMascota, ?int $idHistorial, ?string $anamnesis, ?string $antecedentes, ?string $tratamiento, ?string $diagnostico, ?string $fecha, ?float $peso) {
+    try {
+        $conexion = (new Conexion())->establecerConexion();
 
-            $sql = "UPDATE HISTORIAL_CLINICO
-                    SET Anamnesis = :anamnesis, Antecedentes = :antecedentes, Tratamiento = :tratamiento, Diagnóstico = :diagnostico, Fecha = :fecha, Peso = :peso
-                    WHERE IdHistorialClinico = :id";
-            $stmt = $conexion->prepare($sql);
-            $stmt->execute([
-                ':anamnesis'    => $anamnesis,
-                ':antecedentes' => $antecedentes,
-                ':tratamiento'  => $tratamiento,
-                ':diagnostico'  => $diagnostico,
-                ':fecha'        => $fecha,
-                ':peso'         => $peso,
-                ':id'           => $idHistorial
-            ]);
+        // Al ser clave compuesta, filtramos tanto por IdMascota como por IdHistorialClinico
+        $sql = "UPDATE historial_clinico
+                SET Anamnesis = :anamnesis,
+                    Antecedentes = :antecedentes,
+                    Tratamiento = :tratamiento,
+                    Diagnostico = :diagnostico,
+                    Fecha = :fecha,
+                    Peso = :peso
+                WHERE IdMascota = :idMascota AND IdHistorialClinico = :idHistorial";
 
-            return true;
-        } catch (PDOException $e) {
-            return false;
-        }
+        $stmt = $conexion->prepare($sql);
+        return $stmt->execute([
+            ':anamnesis'    => $anamnesis,
+            ':antecedentes' => $antecedentes,
+            ':tratamiento'  => $tratamiento,
+            ':diagnostico'  => $diagnostico,
+            ':fecha'        => $fecha,
+            ':peso'         => ($peso !== '' ? $peso : null),
+            ':idMascota'    => $idMascota,
+            ':idHistorial'  => $idHistorial
+        ]);
+    } catch (PDOException $e) {
+        return false;
     }
+}
 
-    public function eliminarHistorialClinico(int $idHistorial): string
-    {
-        try {
-            $conexion = (new Conexion())->establecerConexion();
-
-            $sql = "DELETE FROM HISTORIAL_CLINICO WHERE IdHistorialClinico = :id";
-            $stmt = $conexion->prepare($sql);
-            $stmt->execute([':id' => $idHistorial]);
-
-            return 'eliminado';
-        } catch (PDOException $e) {
-            if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1451) {
-                return 'bloqueado';
-            }
-            return 'error';
-        }
+    public function eliminarHistorialClinico(?int $idMascota, ?int $idHistorial) {
+    try {
+        $conexion = (new Conexion())->establecerConexion();
+        $sql = "DELETE FROM historial_clinico WHERE IdMascota = :idMascota AND IdHistorialClinico = :idHistorial";
+        $stmt = $conexion->prepare($sql);
+        return $stmt->execute([
+            ':idMascota'   => $idMascota,
+            ':idHistorial' => $idHistorial
+        ]);
+    } catch (PDOException $e) {
+        return false;
     }
+}
 
     public static function listadoPorMascota(string $nombreMascota = ''): array
     {
@@ -187,6 +196,15 @@ class HistorialClinico
                 ORDER BY hc.Fecha DESC";
         $stmt = $conexion->prepare($sql);
         $stmt->execute([':busqueda' => '%' . $nombreMascota . '%']);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function listadoPorIdMascota(int $idMascota): array
+    {
+        $conexion = (new Conexion())->establecerConexion();
+        $sql = "SELECT * FROM HISTORIAL_CLINICO WHERE IdMascota = :id ORDER BY Fecha DESC";
+        $stmt = $conexion->prepare($sql);
+        $stmt->execute([':id' => $idMascota]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

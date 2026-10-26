@@ -174,4 +174,13 @@ class CarnetVacunacion
         $stmt->execute([':busqueda' => '%' . $nombreMascota . '%']);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public static function listadoPorIdMascota(int $idMascota): array
+{
+    $conexion = (new Conexion())->establecerConexion();
+    $sql = "SELECT * FROM CARNET_VACUNACION WHERE IdMascota = :id ORDER BY FechaProximaVacunacion ASC";
+    $stmt = $conexion->prepare($sql);
+    $stmt->execute([':id' => $idMascota]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 }
