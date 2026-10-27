@@ -20,6 +20,8 @@ try {
     header('Location: ../../PHP/LoginHTML.php');
     exit();
   }
+
+  $nombreUsuario = $usuario['Nombre'];
   $ci = (int) $usuario['CI'];
 
   // mascotas del cliente
@@ -48,9 +50,20 @@ try {
 
   // próxima vacuna por vencer, para el banner de alerta
   $proximaVacuna = null;
+  $hoy = new DateTime();
+  $limiteAlerta = (new DateTime())->modify('+1 month'); // De hoy a 30 días
+
   foreach ($carnet as $v) {
-    if ($v['FechaProximaVacunacion'] && (!$proximaVacuna || $v['FechaProximaVacunacion'] < $proximaVacuna['FechaProximaVacunacion'])) {
-      $proximaVacuna = $v;
+    if (!empty($v['FechaProximaVacunacion'])) {
+      $fechaVenc = new DateTime($v['FechaProximaVacunacion']);
+
+      
+      if ($fechaVenc <= $limiteAlerta) {
+        // Si es la primera que cumple la regla, o encontramos una que vence antes que la actual
+        if (!$proximaVacuna || $fechaVenc < new DateTime($proximaVacuna['FechaProximaVacunacion'])) {
+          $proximaVacuna = $v;
+        }
+      }
     }
   }
 } catch (PDOException $e) {
@@ -192,43 +205,51 @@ try {
 
         <div class="col-lg-6 d-flex flex-column gap-3">
 
-          <div class="panel-card flex-grow-1">
+          <div class="panel-card flex-grow-1 d-flex flex-column">
             <div class="panel-header">
               <h2>Carnet de vacunas</h2>
             </div>
 
-            <p class="group-label">Rex</p>
-            <div class="pet-row">
-              <span class="pet-meta">Parvovirus</span>
-              <span class="badge badge-success">Vence: Nov. 2026</span>
-            </div>
-            <hr class="divider">
-            <div class="pet-row">
-              <span class="pet-meta">Rabia</span>
-              <span class="badge badge-danger">Vence: 15/07</span>
-            </div>
+            <?php
+            $mascotaActual = null;
+            if (empty($carnet)) {
+              echo '<p class="pet-meta text-muted p-3">No hay registros de vacunación.</p>';
+            } else {
+              foreach ($carnet as $vacuna) {
+                if ($mascotaActual !== $vacuna['NombreMascota']) {
+                  $mascotaActual = $vacuna['NombreMascota'];
+                  echo '<p class="group-label mt-3">' . htmlspecialchars($mascotaActual) . '</p>';
+                } else {
+                  echo '<hr class="divider">';
+                }
 
-            <p class="group-label mt-3">Luna</p>
-            <div class="pet-row">
-              <span class="pet-meta">Parvovirus</span>
-              <span class="badge badge-success">Vence: Dic. 2026</span>
-            </div>
-            <hr class="divider">
-            <div class="pet-row">
-              <span class="pet-meta">FeLV</span>
-              <span class="badge badge-success">Vence: Feb. 2027</span>
-            </div>
+                $fechaVenc = $vacuna['FechaProximaVacunacion'];
+                $fechaFormateada = $fechaVenc ? date('d/m/Y', strtotime($fechaVenc)) : 'Sin fecha';
+
+                $vencida = $fechaVenc && $fechaVenc < date('Y-m-d');
+                $claseBadge = $vencida ? 'badge badge-danger' : 'badge badge-success';
+            ?>
+                <div class="pet-row">
+                  <span class="pet-meta"><?= htmlspecialchars($vacuna['TipoVacunacion']) ?></span>
+                  <span class="<?= $claseBadge ?>">Vence: <?= $fechaFormateada ?></span>
+                </div>
+            <?php
+              }
+            }
+            ?>
+
+            <!-- mt-auto empuja el botón al fondo de la tarjeta -->
+            <button class="btn btn-cta mt-auto" type="button">Solicitar nuevo turno</button>
           </div>
 
-          <button class="btn btn-cta" type="button">Solicitar nuevo turno</button>
-
         </div>
-
       </div>
-    </div>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>ç
+  <!-- chatbot -->
+  <script src="https://cdn.botpress.cloud/webchat/v5.0/inject.js"></script>
+  <script src="https://files.bpcontent.cloud/2026/10/27/11/20261027111945-MM3FDTVD.js" defer></script>
 </body>
 
 </html>
