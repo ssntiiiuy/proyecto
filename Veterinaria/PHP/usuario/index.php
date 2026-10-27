@@ -57,7 +57,7 @@ try {
     if (!empty($v['FechaProximaVacunacion'])) {
       $fechaVenc = new DateTime($v['FechaProximaVacunacion']);
 
-      
+
       if ($fechaVenc <= $limiteAlerta) {
         // Si es la primera que cumple la regla, o encontramos una que vence antes que la actual
         if (!$proximaVacuna || $fechaVenc < new DateTime($proximaVacuna['FechaProximaVacunacion'])) {
@@ -238,7 +238,6 @@ try {
             }
             ?>
 
-            <!-- mt-auto empuja el botón al fondo de la tarjeta -->
             <button class="btn btn-cta mt-auto" type="button">Solicitar nuevo turno</button>
           </div>
 
@@ -250,6 +249,7 @@ try {
   <!-- chatbot -->
   <script src="https://cdn.botpress.cloud/webchat/v5.0/inject.js"></script>
   <script src="https://files.bpcontent.cloud/2026/10/27/11/20261027111945-MM3FDTVD.js" defer></script>
+
 </body>
 
 </html>
