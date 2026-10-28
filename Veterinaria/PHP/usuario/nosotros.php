@@ -51,6 +51,7 @@
             <div class="col-sm-6">
               <section class="nosotros-card h-100">
                 <h2>Contacto</h2>
+                <p class="mb-0"><a class="nosotros-link" href="tel:42231258">4223 1258</a></p>
                 <p class="mb-0"><a class="nosotros-link" href="tel:092662279">092 662 279</a></p>
               </section>
             </div>
