@@ -25,11 +25,11 @@ $error = null;
 $idFacturaCreada = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
-  $ci = (int)($_POST['ci'] ?? 0);
-  $fechaVencimiento = trim($_POST['fechaVencimiento'] ?? '');
+  /* el cliente es opcional: '' = venta sin cliente registrado */
+  $ciTexto = trim($_POST['ci'] ?? '');
+  $ci = $ciTexto === '' ? null : (int)$ciTexto;
   $idsProducto = $_POST['idProducto'] ?? [];
   $cantidades = $_POST['cantidad'] ?? [];
-  $ivas = $_POST['iva'] ?? [];
 
   /* se arma la lista de lineas descartando las filas que quedaron vacias */
   $lineas = [];
@@ -42,20 +42,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     $lineas[] = [
       'idProducto' => (int)$idProducto,
       'cantidad' => $cantidad,
-      'iva' => (float)($ivas[$i] ?? 22),
     ];
   }
 
-  if ($ci <= 0) {
-    $error = 'Elegí el cliente de la venta.';
-  } elseif ($fechaVencimiento === '') {
-    $error = 'Falta la fecha de vencimiento de la factura.';
-  } elseif (empty($lineas)) {
+  if (empty($lineas)) {
     $error = 'Agregá al menos un producto con cantidad mayor a 0.';
   } else {
     try {
       $factura = new Factura();
-      $idFacturaCreada = $factura->crearFactura($ci, RUT_CLINICA, $fechaVencimiento, $lineas, NOMBRE_CLINICA);
+      $idFacturaCreada = $factura->crearFactura($ci, RUT_CLINICA, $lineas, NOMBRE_CLINICA);
       header("Location: factura.php?IdFactura={$idFacturaCreada}&msg=creada");
       exit();
     } catch (Exception $e) {
@@ -111,10 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               <h2>Datos de la factura</h2>
             </div>
             <div class="row g-3 p-3 p-lg-4 pt-0">
-              <div class="col-sm-6 col-lg-5">
-                <label class="form-label" for="ci">Cliente</label>
-                <select class="form-select" id="ci" name="ci" required>
-                  <option value="" selected disabled>Elegir cliente</option>
+              <div class="col-sm-6 col-lg-6">
+                <label class="form-label" for="ci">Cliente <span class="admin-sin-dato">(opcional)</span></label>
+                <select class="form-select" id="ci" name="ci">
+                  <option value="" selected>Sin cliente registrado</option>
                   <?php foreach ($clientes as $cl) { ?>
                     <option value="<?= (int)$cl['CI'] ?>"><?= htmlspecialchars($cl['Nombre'] . ' ' . $cl['Apellido']) ?> (CI <?= htmlspecialchars($cl['CI']) ?>)</option>
                   <?php } ?>
@@ -124,11 +119,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                 <?php } ?>
               </div>
               <div class="col-sm-6 col-lg-3">
-                <label class="form-label" for="fechaVencimiento">Vencimiento</label>
-                <input class="form-control" type="date" id="fechaVencimiento" name="fechaVencimiento"
-                  value="<?= htmlspecialchars(date('Y-m-d', strtotime('+30 days'))) ?>" min="<?= date('Y-m-d') ?>" required>
+                <label class="form-label">Vencimiento</label>
+                <input class="form-control" type="text" value="<?= htmlspecialchars(date('d/m/Y', strtotime('+' . Factura::DIAS_VENCIMIENTO . ' days'))) ?> (<?= Factura::DIAS_VENCIMIENTO ?> días)" disabled>
               </div>
-              <div class="col-sm-6 col-lg-4">
+              <div class="col-sm-6 col-lg-3">
                 <label class="form-label">Emitida por</label>
                 <input class="form-control" type="text" value="<?= htmlspecialchars(NOMBRE_CLINICA) ?> · RUT <?= RUT_CLINICA ?>" disabled>
               </div>
@@ -146,8 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                   <tr>
                     <th scope="col">Producto</th>
                     <th scope="col" style="width:110px">Cantidad</th>
-                    <th scope="col" style="width:110px">IVA %</th>
-                    <th scope="col" class="text-end" style="width:140px">Subtotal</th>
+                    <th scope="col" class="text-end" style="width:140px">Subtotal (IVA incl.)</th>
                     <th scope="col" style="width:48px"></th>
                   </tr>
                 </thead>
@@ -197,7 +190,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
         </select>
       </td>
       <td><input type="number" class="form-control form-control-sm input-cantidad" min="1" value="1" required></td>
-      <td><input type="number" class="form-control form-control-sm input-iva" min="0" max="100" step="0.01" value="22"></td>
       <td class="text-end subtotal-linea">$ 0,00</td>
       <td class="text-end">
         <button type="button" class="btn btn-sm admin-btn-icono admin-btn-eliminar btn-quitar-linea" aria-label="Quitar"><i class="bi bi-trash"></i></button>
@@ -209,6 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   <script>
     const cuerpoLineas = document.getElementById('cuerpoLineas');
     const plantilla = document.getElementById('plantillaLinea');
+    const IVA_GENERAL = <?= Factura::IVA_GENERAL ?>; // fijo: no se puede editar desde el formulario
 
     function formatearMoneda(valor) {
       return '$ ' + valor.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -219,10 +212,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
       const opcion = select.selectedOptions[0];
       const precio = opcion ? parseFloat(opcion.dataset.precio || '0') : 0;
       const cantidad = parseFloat(fila.querySelector('.input-cantidad').value || '0');
-      const iva = parseFloat(fila.querySelector('.input-iva').value || '0');
 
       const subtotal = precio * cantidad;
-      const conIva = subtotal * (1 + iva / 100);
+      const conIva = subtotal * (1 + IVA_GENERAL / 100);
 
       fila.querySelector('.subtotal-linea').textContent = formatearMoneda(conIva);
       fila.dataset.subtotal = subtotal;
@@ -249,9 +241,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
       /* recien aca se le ponen los name, asi las filas vacias nunca llegan al servidor */
       fila.querySelector('.select-producto').setAttribute('name', 'idProducto[]');
       fila.querySelector('.input-cantidad').setAttribute('name', 'cantidad[]');
-      fila.querySelector('.input-iva').setAttribute('name', 'iva[]');
 
-      fila.querySelectorAll('.select-producto, .input-cantidad, .input-iva').forEach((campo) => {
+      fila.querySelectorAll('.select-producto, .input-cantidad').forEach((campo) => {
         campo.addEventListener('input', () => recalcularFila(fila));
         campo.addEventListener('change', () => recalcularFila(fila));
       });

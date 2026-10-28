@@ -4,6 +4,10 @@ require_once __DIR__ . '/Producto.php';
 
 class Factura
 {
+    /* reglas de negocio fijas: no se dejan tocar desde el formulario */
+    public const IVA_GENERAL = 22.0;
+    public const DIAS_VENCIMIENTO = 30;
+
     private ?int $id;
     private ?string $nombreVeterinaria;
     private ?DateTime $fecha;
@@ -130,11 +134,13 @@ class Factura
 
     /**
      * Crea una factura con sus lineas en una sola transaccion.
-     * $lineas = [['idProducto' => int, 'cantidad' => int, 'iva' => float], ...]
-     * Descuenta stock y deja registrado quien compro (COMPRA) via CI.
+     * $ci puede ser null (venta sin cliente registrado / venta anonima).
+     * $lineas = [['idProducto' => int, 'cantidad' => int], ...] - el IVA es siempre IVA_GENERAL, no se recibe por parametro.
+     * El vencimiento se calcula solo (Fecha + DIAS_VENCIMIENTO), no se recibe por parametro.
+     * Descuenta stock y, si hay cliente, deja registrado quien compro (COMPRA) via CI.
      * Devuelve el IdFactura creado, o lanza Exception con el motivo si algo falla (stock insuficiente, etc).
      */
-    public function crearFactura(int $ci, string $rut, string $fechaVencimiento, array $lineas, string $nombreVeterinaria = 'Clínica Veterinaria Sienra'): int
+    public function crearFactura(?int $ci, string $rut, array $lineas, string $nombreVeterinaria = 'Clínica Veterinaria Sienra'): int
     {
         if (empty($lineas)) {
             throw new Exception('La factura necesita al menos una línea.');
@@ -144,6 +150,8 @@ class Factura
 
         try {
             $conexion->beginTransaction();
+
+            $fechaVencimiento = date('Y-m-d', strtotime('+' . self::DIAS_VENCIMIENTO . ' days'));
 
             $sqlFactura = "INSERT INTO FACTURA (NombreVeterinaria, Fecha, Rut, FechaVencimiento)
                 VALUES (:nombreVeterinaria, :fecha, :rut, :fechaVencimiento)";
@@ -159,7 +167,6 @@ class Factura
             foreach ($lineas as $linea) {
                 $idProducto = (int)$linea['idProducto'];
                 $cantidad = (int)$linea['cantidad'];
-                $iva = (float)($linea['iva'] ?? 22);
 
                 if ($cantidad <= 0) {
                     throw new Exception('La cantidad de cada línea debe ser mayor a 0.');
@@ -186,7 +193,7 @@ class Factura
                 $stmtLinea->execute([
                     ':idFactura' => $idFactura,
                     ':cantidad' => $cantidad,
-                    ':iva' => $iva,
+                    ':iva' => self::IVA_GENERAL,
                     ':subtotal' => $subtotal,
                 ]);
                 $idLineaFactura = (int)$conexion->lastInsertId();
@@ -200,15 +207,18 @@ class Factura
                     ':idProducto' => $idProducto,
                 ]);
 
-                $sqlCompra = "INSERT INTO COMPRA (CI, IdProducto, IdFactura, IdLineaFactura)
-                    VALUES (:ci, :idProducto, :idFactura, :idLineaFactura)";
-                $stmtCompra = $conexion->prepare($sqlCompra);
-                $stmtCompra->execute([
-                    ':ci' => $ci,
-                    ':idProducto' => $idProducto,
-                    ':idFactura' => $idFactura,
-                    ':idLineaFactura' => $idLineaFactura,
-                ]);
+                /* COMPRA tiene a CI como parte de la clave primaria, no acepta NULL: si es venta sin cliente, directamente no se inserta nada ahi */
+                if ($ci !== null) {
+                    $sqlCompra = "INSERT INTO COMPRA (CI, IdProducto, IdFactura, IdLineaFactura)
+                        VALUES (:ci, :idProducto, :idFactura, :idLineaFactura)";
+                    $stmtCompra = $conexion->prepare($sqlCompra);
+                    $stmtCompra->execute([
+                        ':ci' => $ci,
+                        ':idProducto' => $idProducto,
+                        ':idFactura' => $idFactura,
+                        ':idLineaFactura' => $idLineaFactura,
+                    ]);
+                }
 
                 $sqlStock = "UPDATE PRODUCTO SET Stock = Stock - :cantidad WHERE IdProducto = :id";
                 $stmtStock = $conexion->prepare($sqlStock);
@@ -225,12 +235,25 @@ class Factura
         }
     }
 
-    /* no hay columna de baja logica en FACTURA, asi que se borra en cascada igual que Producto/Servicio/Cita */
+    /* no hay columna de baja logica en FACTURA, asi que se borra en cascada igual que Producto/Servicio/Cita.
+       antes de borrar, se devuelve el stock que esa factura habia descontado. */
     public function eliminarFactura(int $id): bool
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
             $conexion->beginTransaction();
+
+            $sqlProductosFactura = "SELECT af.IdProducto, lf.Cantidad
+                FROM LINEA_FACTURA lf
+                INNER JOIN ARTICULO_FACTURA af ON af.IdLineaFactura = lf.IdLineaFactura AND af.IdFactura = lf.IdFactura
+                WHERE lf.IdFactura = :id";
+            $stmtProductosFactura = $conexion->prepare($sqlProductosFactura);
+            $stmtProductosFactura->execute([':id' => $id]);
+
+            $sqlDevolverStock = $conexion->prepare("UPDATE PRODUCTO SET Stock = Stock + :cantidad WHERE IdProducto = :idProducto");
+            foreach ($stmtProductosFactura->fetchAll(PDO::FETCH_ASSOC) as $linea) {
+                $sqlDevolverStock->execute([':cantidad' => $linea['Cantidad'], ':idProducto' => $linea['IdProducto']]);
+            }
 
             foreach (['COMPRA', 'ARTICULO_FACTURA', 'LINEA_FACTURA'] as $tabla) {
                 $stmt = $conexion->prepare("DELETE FROM $tabla WHERE IdFactura = :id");
