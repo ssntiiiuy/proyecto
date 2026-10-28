@@ -136,6 +136,114 @@ class Cita
         }
     }
 
+    /**
+     * Agenda filtrada por tipo(s) de servicio (Consulta, Vacunacion, Peluqueria, Cirugia).
+     * Se usa para que cada rol de empleado vea solo las citas que le corresponden.
+     */
+    public static function listadoCitaPorTipo(array $tipos, ?string $estado = null, ?string $filtro = null): array
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $sql = "SELECT c.IdCita, c.CI, u.Nombre AS ClienteNombre, u.Apellido AS ClienteApellido,
+                   c.IdMascota, m.Nombre AS MascotaNombre,
+                   c.IdServicio, s.Nombre AS ServicioNombre,
+                   c.Fecha, c.Hora, c.Estado,
+                   CASE
+                       WHEN con.IdServicio IS NOT NULL THEN 'Consulta'
+                       WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
+                       WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
+                       WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
+                       ELSE 'Sin definir'
+                   END AS Tipo
+            FROM CITA c
+            INNER JOIN CLIENTE cl ON c.CI = cl.CI
+            INNER JOIN USUARIO u ON cl.CI = u.CI
+            INNER JOIN MASCOTA m ON c.IdMascota = m.IdMascota
+            INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
+            LEFT JOIN CONSULTA con ON s.IdServicio = con.IdServicio
+            LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
+            LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
+            LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
+            WHERE 1=1";
+
+            $params = [];
+
+            if (!empty($tipos)) {
+                $marcadores = [];
+                foreach (array_values($tipos) as $i => $tipo) {
+                    $clave = ":tipo{$i}";
+                    $marcadores[] = $clave;
+                    $params[$clave] = $tipo;
+                }
+                $sql .= " HAVING Tipo IN (" . implode(', ', $marcadores) . ")";
+            }
+
+            if (!empty($estado)) {
+                $sql .= (!empty($tipos) ? " AND" : " HAVING") . " c.Estado = :estado";
+                $params[':estado'] = $estado;
+            }
+
+            if ($filtro === 'hoy') {
+                $sql .= (!empty($tipos) || !empty($estado) ? " AND" : " HAVING") . " c.Fecha = CURDATE()";
+            }
+
+            $sql .= " ORDER BY c.Fecha, c.Hora";
+
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute($params);
+
+            return ['citas' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+        } catch (PDOException $e) {
+            return ['citas' => [], 'error' => $e->getMessage()];
+        }
+    }
+
+    /* cuenta las citas de hoy restringidas a un conjunto de tipos de servicio */
+    public static function contarCitasHoyPorTipo(array $tipos): int
+    {
+        if (empty($tipos)) {
+            return 0;
+        }
+
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+
+            $marcadores = [];
+            $params = [':hoy' => date('Y-m-d')];
+            foreach (array_values($tipos) as $i => $tipo) {
+                $clave = ":tipo{$i}";
+                $marcadores[] = $clave;
+                $params[$clave] = $tipo;
+            }
+
+            $sql = "SELECT COUNT(*) FROM (
+                SELECT c.IdCita,
+                    CASE
+                        WHEN con.IdServicio IS NOT NULL THEN 'Consulta'
+                        WHEN v.IdServicio IS NOT NULL THEN 'Vacunacion'
+                        WHEN p.IdServicio IS NOT NULL THEN 'Peluqueria'
+                        WHEN q.IdServicio IS NOT NULL THEN 'Cirugia'
+                        ELSE 'Sin definir'
+                    END AS Tipo
+                FROM CITA c
+                INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
+                LEFT JOIN CONSULTA con ON s.IdServicio = con.IdServicio
+                LEFT JOIN VACUNACION v ON s.IdServicio = v.IdServicio
+                LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
+                LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
+                WHERE c.Fecha = :hoy
+            ) AS citasTipo
+            WHERE Tipo IN (" . implode(', ', $marcadores) . ")";
+
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute($params);
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+
     public static function contarCitasHoy(): int
     {
         try {

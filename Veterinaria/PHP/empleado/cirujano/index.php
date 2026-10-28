@@ -1,21 +1,15 @@
 <?php
 require_once __DIR__ . '/../../clases/Conexion.php';
 require_once __DIR__ . '/../../clases/Cita.php';
-require_once __DIR__ . '/../../clases/Producto.php';
 
-$estadoFiltro = $_GET['estado'] ?? '';
-$datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);
-$citas = $datosCitas['citas'];
+$tipos = ['Cirugia'];
 
-/* limitar a las próximas 5 citas en el dashboard */
-$citasProximas = array_slice($citas, 0, 5);
+$datosCitas = Cita::listadoCitaPorTipo($tipos);
+$citasProximas = array_slice($datosCitas['citas'], 0, 5);
 
-$citasHoy = Cita::contarCitasHoy();
-$stockBajo = Producto::contarStockBajo();
-$porVencer = Producto::contarPorVencer();
-
-$conexion = (new Conexion())->establecerConexion();
-$clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fetchColumn();
+$citasHoy = Cita::contarCitasHoyPorTipo($tipos);
+$pendientes = count(Cita::listadoCitaPorTipo($tipos, 'Pendiente')['citas']);
+$confirmadas = count(Cita::listadoCitaPorTipo($tipos, 'Confirmada')['citas']);
 ?>
 
 <!DOCTYPE html>
@@ -52,54 +46,42 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
-        <!-- lleva a citas filtrado por "hoy" -->
         <div class="row g-3 mb-4">
-          <div class="col-sm-6 col-xl-3">
+          <div class="col-sm-6 col-xl-4">
             <a href="../citas.php?filtro=hoy" class="admin-stat admin-stat-info text-decoration-none">
               <div>
-                <p class="admin-stat-label">Citas de hoy</p>
+                <p class="admin-stat-label">Cirugías de hoy</p>
                 <p class="admin-stat-valor"><?= $citasHoy ?></p>
               </div>
               <i class="bi bi-calendar-check"></i>
             </a>
           </div>
 
-          <!-- modulo con href para stock bajo y productos por vencer -->
-          <div class="col-sm-6 col-xl-3">
-            <a href="../productos.php?filtro=stock_bajo" class="admin-stat admin-stat-danger text-decoration-none">
+          <div class="col-sm-6 col-xl-4">
+            <a href="../citas.php?estado=Pendiente" class="admin-stat admin-stat-warning text-decoration-none">
               <div>
-                <p class="admin-stat-label">PRODUCTOS CON STOCK BAJO</p>
-                <p class="admin-stat-valor"><?= Producto::contarStockBajo() ?></p>
-              </div>
-              <i class="bi bi-box-seam"></i>
-            </a>
-          </div>
-
-          <div class="col-sm-6 col-xl-3">
-            <a href="../productos.php?filtro=por_vencer" class="admin-stat admin-stat-warning text-decoration-none">
-              <div>
-                <p class="admin-stat-label">PRODUCTOS POR VENCER</p>
-                <p class="admin-stat-valor"><?= Producto::contarPorVencer() ?></p>
+                <p class="admin-stat-label">Pendientes</p>
+                <p class="admin-stat-valor"><?= $pendientes ?></p>
               </div>
               <i class="bi bi-hourglass-split"></i>
             </a>
           </div>
 
-          <div class="col-sm-6 col-xl-3">
-            <a href="../usuarios.php" class="admin-stat admin-stat-success text-decoration-none">
+          <div class="col-sm-6 col-xl-4">
+            <a href="../citas.php?estado=Confirmada" class="admin-stat admin-stat-success text-decoration-none">
               <div>
-                <p class="admin-stat-label">Clientes registrados</p>
-                <p class="admin-stat-valor"><?= $clientesRegistrados ?></p>
+                <p class="admin-stat-label">Confirmadas</p>
+                <p class="admin-stat-valor"><?= $confirmadas ?></p>
               </div>
-              <i class="bi bi-people"></i>
+              <i class="bi bi-check-circle"></i>
             </a>
           </div>
         </div>
 
         <div class="admin-card">
           <div class="admin-card-header">
-            <h2>Próximas citas</h2>
-            <a class="admin-card-link" href="citas.php">Ver todas</a>
+            <h2>Mi próxima agenda</h2>
+            <a class="admin-card-link" href="../citas.php">Ver toda mi agenda</a>
           </div>
           <div class="table-responsive">
             <table class="table admin-tabla mb-0">
@@ -113,13 +95,12 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
                   <th scope="col">Estado</th>
                 </tr>
               </thead>
-              <!-- TODO BD: próximas citas con cliente, mascota y servicio -->
               <tbody>
-                <?php if (empty($citas)): ?>
+                <?php if (empty($citasProximas)): ?>
                   <tr>
-                    <td colspan="7" class="text-center">No hay citas registradas.</td>
+                    <td colspan="6" class="text-center">No tenés citas registradas.</td>
                   </tr>
-                  <?php else: foreach ($citas as $c): ?>
+                  <?php else: foreach ($citasProximas as $c): ?>
                     <tr>
                       <td><?= htmlspecialchars(date('d/m/Y', strtotime($c['Fecha']))) ?></td>
                       <td><?= htmlspecialchars(substr($c['Hora'], 0, 5)) ?></td>
@@ -136,10 +117,6 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
                         };
                         ?>
                         <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($c['Estado']) ?></span>
-                      </td>
-                      <td class="text-end">
-                        <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar"><i class="bi bi-trash"></i></button>
                       </td>
                     </tr>
                 <?php endforeach;

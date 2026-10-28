@@ -19,23 +19,46 @@ $mapaRolCarpeta = [
 ];
 
 $carpetaRol = $mapaRolCarpeta[$rol] ?? '';
+$baseRol = $carpetaRol ? "/PHP/empleado/{$carpetaRol}" : '';
 
-$gruposMenu = [
-  '' => [
-    'dashboard' => [$carpetaRol ? "/PHP/empleado/{$carpetaRol}/index.php" : '/PHP/login/LoginHTML.php', 'bi-speedometer2', 'Dashboard'],
-  ],
-  'Gestión' => [
-    'citas'     => ["/PHP/empleado/{$carpetaRol}/citas.php", 'bi-calendar-check', 'Citas'],
-    'usuarios'  => ['/PHP/empleado/usuarios.php', 'bi-people', 'Usuarios'],
-    'mascotas'  => ['/PHP/empleado/mascotas.php', 'bi-heart-pulse', 'Mascotas'],
-    'servicios' => ['/PHP/empleado/servicios.php', 'bi-clipboard2-pulse', 'Servicios'],
-  ],
-  'Inventario y ventas' => [
-    'productos'   => ['/PHP/empleado/productos.php', 'bi-box-seam', 'Productos'],
-    'proveedores' => ['/PHP/empleado/proveedores.php', 'bi-truck', 'Proveedores'],
-    'facturas'    => ['/PHP/empleado/facturas.php', 'bi-receipt', 'Facturas'],
-  ],
-];
+/* cada rol ve solo lo que le corresponde (RNF4: niveles de acceso segun el rol) */
+if ($rol === 'Cajero') {
+  $gruposMenu = [
+    '' => [
+      'dashboard' => ["{$baseRol}/index.php", 'bi-speedometer2', 'Dashboard'],
+    ],
+    'Caja' => [
+      'caja'      => ['/PHP/empleado/caja.php', 'bi-cash-coin', 'Nueva venta'],
+      'facturas'  => ['/PHP/empleado/facturas.php', 'bi-receipt', 'Facturas'],
+    ],
+    'Clientes' => [
+      'usuarios'  => ['/PHP/empleado/usuarios.php', 'bi-people', 'Clientes'],
+      'mascotas'  => ['/PHP/empleado/mascotas.php', 'bi-heart-pulse', 'Mascotas'],
+    ],
+  ];
+} elseif (in_array($rol, ['Veterinario', 'Cirujano', 'Peluquero'], true)) {
+  /* personal clinico: segun el documento de RF "los veterinarios acceden a la clinica" (agenda, mascotas, clientes) */
+  $gruposMenu = [
+    '' => [
+      'dashboard' => ["{$baseRol}/index.php", 'bi-speedometer2', 'Dashboard'],
+    ],
+    'Mi trabajo' => [
+      'agenda'    => ['/PHP/empleado/citas.php', 'bi-calendar-check', 'Mi agenda'],
+      'mascotas'  => ['/PHP/empleado/mascotas.php', 'bi-heart-pulse', 'Mascotas'],
+      'servicios' => ['/PHP/empleado/servicios.php', 'bi-clipboard2-pulse', 'Servicios'],
+    ],
+    'Clientes' => [
+      'usuarios'  => ['/PHP/empleado/usuarios.php', 'bi-people', 'Clientes'],
+    ],
+  ];
+} else {
+  /* rol desconocido o sesion sin iniciar: solo el dashboard (que redirige al login) */
+  $gruposMenu = [
+    '' => [
+      'dashboard' => [$carpetaRol ? "{$baseRol}/index.php" : '/PHP/LoginHTML.php', 'bi-speedometer2', 'Dashboard'],
+    ],
+  ];
+}
 ?>
 <div class="admin-sidebar">
   <!-- en pantallas chicas el menú se abre como offcanvas desde la topbar -->
@@ -46,11 +69,15 @@ $gruposMenu = [
     </div>
 
     <div class="offcanvas-body flex-column">
-      <?php $hrefDashboard = $carpetaRol ? "/PHP/empleado/{$carpetaRol}/index.php" : '/PHP/login/LoginHTML.php'; ?>
+      <?php $hrefDashboard = $carpetaRol ? "{$baseRol}/index.php" : '/PHP/LoginHTML.php'; ?>
       <a class="admin-brand d-none d-lg-flex" href="<?= $hrefDashboard ?>">
         <img src="/PHP/img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
         <span class="admin-brand-text">Panel Sienra</span>
       </a>
+
+      <?php if ($rol) { ?>
+        <p class="admin-sidebar-rol"><i class="bi bi-person-badge"></i> <?= htmlspecialchars($rol) ?></p>
+      <?php } ?>
 
       <?php foreach ($gruposMenu as $grupo => $items) { ?>
         <hr class="admin-sidebar-divider">
