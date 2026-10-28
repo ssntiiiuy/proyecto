@@ -55,6 +55,21 @@
   color: #ffffff;
 }
 
+.admin-sidebar-rol {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: -0.25rem 0.5rem 0.5rem;
+  padding: 0.2rem 0.6rem;
+  width: fit-content;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.08);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--sienra-text-muted);
+}
+
 .admin-sidebar-divider {
   border-color: rgba(255, 255, 255, 0.15);
   margin: 0.5rem 0;
