@@ -1,4 +1,6 @@
 <?php
+$rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
+require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

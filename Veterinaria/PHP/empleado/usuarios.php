@@ -1,4 +1,7 @@
 <?php
+$rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
+require_once __DIR__ . '/../includes/verificar_sesion.php';
+
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Usuario.php';
 
@@ -22,15 +25,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $tipoUsuario = $_POST['tipo_usuario'];
   $rol = null;
 
-  /* asigna rol si es empleado, si es admin el rol es admin */
+  /* asigna rol si es empleado; desde este panel no se pueden crear admins */
   if ($tipoUsuario === 'empleado') {
     if (empty($_POST['rol'])) {
       $error = "Debe seleccionar un rol para el empleado.";
     } else {
       $rol = trim($_POST['rol']);
     }
-  } elseif ($tipoUsuario === 'admin') {
-    $rol = 'admin';
+  } elseif ($tipoUsuario !== 'cliente') {
+    $error = "Tipo de usuario no válido.";
   }
 
   if (empty($error)) {
@@ -117,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                         <td><?= htmlspecialchars($cli['CI']) ?></td>
                         <td><?= htmlspecialchars($cli['Nombre'] . ' ' . $cli['Apellido']) ?></td>
                         <td class="d-none d-xxl-table-cell"><?= htmlspecialchars($cli['Direccion']) ?></td>
-                        <td><?= $cli['Telefonos'] ?></td>
+                        <td><?= nl2br(htmlspecialchars(str_replace('<br>', "\n", $cli['Telefonos'] ?? ''))) ?></td>
                         <td><?= htmlspecialchars($cli['Correo']) ?></td>
                         <td><?= date('d/m/Y', strtotime($cli['FechaCreado'])) ?></td>
                       </tr>
@@ -186,9 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               <select class="form-select" id="tipo_usuario" name="tipo_usuario" required>
                 <option value="" <?= empty($datosForm['tipo_usuario']) ? 'selected' : '' ?> disabled>Elegir tipo</option>
                 <option value="cliente" <?= (($datosForm['tipo_usuario'] ?? '') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
-                <option value="empleado" <?= (($datosForm['tipo_usuario'] ?? '') === 'empleado') ? 'selected' : '' ?>>Empleado</option>
-                <option value="admin" <?= (($datosForm['tipo_usuario'] ?? '') === 'admin') ? 'selected' : '' ?>>Admin</option>
-              </select>
+                <option value="empleado" <?= (($datosForm['tipo_usuario'] ?? '') === 'empleado') ? 'selected' : '' ?>>Empleado</option>              </select>
             </div>
 
             <div class="col-sm-6">

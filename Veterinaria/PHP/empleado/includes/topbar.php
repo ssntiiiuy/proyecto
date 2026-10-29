@@ -63,7 +63,7 @@ try {
       <li>
         <hr class="dropdown-divider">
       </li>
-      <li><a class="dropdown-item" href="/../../PHP/LoginHTML.php">Cerrar sesión</a></li>
+      <li><a class="dropdown-item" href="<?= $rutaEmpleado ?>../cerrar_sesion.php">Cerrar sesión</a></li>
     </ul>
   </div>
 </header>

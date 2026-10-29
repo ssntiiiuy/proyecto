@@ -4,15 +4,9 @@ require_once __DIR__ . '/../clases/Usuario.php';
 require_once __DIR__ . '/../clases/Producto.php';
 require_once __DIR__ . '/../clases/Factura.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-  session_start();
-}
-
 /* solo el cajero factura (RNF4: "los auxiliares de caja se limitan a la facturacion") */
-if (($_SESSION['rol'] ?? null) !== 'Cajero') {
-  header('Location: /PHP/LoginHTML.php');
-  exit();
-}
+$rolesPermitidos = ['Cajero'];
+require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 /* RUT y nombre fijos de la clinica: FACTURA no guarda estos datos del cliente, son los datos de quien emite */
 const RUT_CLINICA = '217654320018';

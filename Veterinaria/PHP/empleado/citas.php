@@ -1,4 +1,7 @@
 <?php
+$rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
+require_once __DIR__ . '/../includes/verificar_sesion.php';
+
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
 
@@ -16,7 +19,7 @@ $tiposPorRol = [
 ];
 
 if (!isset($tiposPorRol[$rol])) {
-  header('Location: /PHP/LoginHTML.php');
+  header('Location: ../LoginHTML.php');
   exit();
 }
 
