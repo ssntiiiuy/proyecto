@@ -356,6 +356,13 @@ function obtenerClaseBadge($tipo)
                 'Cirugia': 'camposCirugia'
             };
 
+            const idDiv = mapa[tipo];
+            if (idDiv) {
+                const div = document.getElementById(idDiv);
+                if (div) {
+                    div.classList.remove('d-none');
+                }
+            }
         }
     </script>
 </body>
