@@ -394,12 +394,12 @@
   color: #BFD8F2;
 }
 
-.badge-tipo-vacunacion {
+.badge-tipo-peluqueria {
   background-color: var(--sienra-success);
   color: var(--sienra-success-text);
 }
 
-.badge-tipo-peluqueria {
+.badge-tipo-vacunacion {
   background-color: #5A4A1F;
   color: #F2D9A0;
 }
@@ -547,7 +547,7 @@
   color: #24405C;
 }
 
-[data-theme="light"] .badge-tipo-peluqueria {
+[data-theme="light"] .badge-tipo-vacunacion {
   background-color: #F3E6C4;
   color: #5A4A1F;
 }
