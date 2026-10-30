@@ -1,4 +1,7 @@
 <?php
+$rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
+require_once __DIR__ . '/../includes/verificar_sesion.php';
+
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Mascota.php';
 require_once __DIR__ . '/../clases/HistorialClinico.php';
