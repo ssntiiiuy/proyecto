@@ -5,7 +5,9 @@ require_once __DIR__ . '/../includes/verificar_sesion.php';
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Usuario.php';
 
-$datosUsuarios = Usuario::listadoUsuarios();
+$busqueda = trim($_GET['busqueda'] ?? '');
+
+$datosUsuarios = Usuario::listadoUsuarios($busqueda);
 $clientes = $datosUsuarios['clientes'];
 $empleados = $datosUsuarios['empleados'];
 
@@ -88,16 +90,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <ul class="nav admin-tabs" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="tabClientes" data-bs-toggle="tab" data-bs-target="#panelClientes" type="button" role="tab" aria-controls="panelClientes" aria-selected="true">Clientes</button>
-              </li>
-
+              <h2>Listado de servicios</h2>
             </ul>
             <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalUsuario">
               <i class="bi bi-plus-lg"></i> Agregar usuario
             </button>
-          </div>
 
+          </div>
+          <!-- Buscador de usuarios -->
+              <form class="d-flex gap-2 mb-3 mt-3 mx-3 mx-lg-4"
+                action="empleados.php" method="get">
+
+                <input class="form-control"
+                  type="text"
+                  name="busqueda"
+                  placeholder="Buscar por C.I., nombre, apellido o correo..."
+                  value="<?= htmlspecialchars($busqueda) ?>">
+
+                <button class="btn admin-btn-agregar ms-2" type="submit">
+                  <i class="bi bi-search"></i>
+                </button>
+
+                <?php if ($busqueda !== ''): ?>
+                  <a class="btn admin-btn-cancelar ms-2"
+                    href="empleados.php">
+                    Limpiar
+                  </a>
+                <?php endif; ?>
+
+              </form>
           <div class="tab-content">
             <div class="tab-pane fade show active" id="panelClientes" role="tabpanel" aria-labelledby="tabClientes" tabindex="0">
               <div class="table-responsive">
@@ -189,7 +210,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               <select class="form-select" id="tipo_usuario" name="tipo_usuario" required>
                 <option value="" <?= empty($datosForm['tipo_usuario']) ? 'selected' : '' ?> disabled>Elegir tipo</option>
                 <option value="cliente" <?= (($datosForm['tipo_usuario'] ?? '') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
-                <option value="empleado" <?= (($datosForm['tipo_usuario'] ?? '') === 'empleado') ? 'selected' : '' ?>>Empleado</option>              </select>
+                <option value="empleado" <?= (($datosForm['tipo_usuario'] ?? '') === 'empleado') ? 'selected' : '' ?>>Empleado</option>
+              </select>
             </div>
 
             <div class="col-sm-6">
@@ -212,13 +234,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     </div>
   </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<?php if ($error): ?>
-<script>
-  new bootstrap.Modal(document.getElementById('modalUsuario')).show();
-</script>
-<?php endif; ?>
+  <?php if ($error): ?>
+    <script>
+      new bootstrap.Modal(document.getElementById('modalUsuario')).show();
+    </script>
+  <?php endif; ?>
 
 </body>
 
