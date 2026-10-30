@@ -156,33 +156,26 @@ class Factura
             $idFactura = (int)$conexion->lastInsertId();
 
             foreach ($lineas as $linea) {
-                $idProducto = (int)$linea['idProducto'];
-                $cantidad = (int)$linea['cantidad'];
+            $tipo = $linea['tipo'] ?? 'p';
+            $idItem = (int)$linea['id'];
+            $cantidad = (int)$linea['cantidad'];
 
-                if ($cantidad <= 0) {
-                    throw new Exception('La cantidad de cada línea debe ser mayor a 0.');
+            if ($cantidad <= 0) {
+                throw new Exception('La cantidad de cada línea debe ser mayor a 0.');
+            }
+
+            if ($tipo === 's') {
+                $sqlServicio = "SELECT Precio, Nombre FROM SERVICIO WHERE IdServicio = :id";
+                $stmtServicio = $conexion->prepare($sqlServicio);
+                $stmtServicio->execute([':id' => $idItem]);
+                $servicio = $stmtServicio->fetch(PDO::FETCH_ASSOC);
+
+                if (!$servicio) {
+                    throw new Exception("El servicio #$idItem no existe.");
                 }
 
-                /* se traba la fila del producto para que dos cajas no vendan el mismo stock a la vez */
-                $sqlProducto = "SELECT Precio, Stock, Nombre FROM PRODUCTO WHERE IdProducto = :id FOR UPDATE";
-                $stmtProducto = $conexion->prepare($sqlProducto);
-                $stmtProducto->execute([':id' => $idProducto]);
-                $producto = $stmtProducto->fetch(PDO::FETCH_ASSOC);
-
-                if (!$producto) {
-                    throw new Exception("El producto #$idProducto no existe.");
-                }
-                if ($producto['Stock'] < $cantidad) {
-                    throw new Exception("Stock insuficiente de \"{$producto['Nombre']}\" (quedan {$producto['Stock']}).");
-                }
-
-                $subtotal = round($producto['Precio'] * $cantidad, 2);
-
-                // 1. El precio del producto ya incluye IVA (ej. $399)
-                $precioConIva = (float)$producto['Precio'];
+                $precioConIva = (float)$servicio['Precio'];
                 $totalLinea = $precioConIva * $cantidad;
-
-                // 2. Extraemos la base neta (sin IVA) para guardar en la base de datos
                 $subtotalNeto = round($totalLinea / (1 + (self::IVA_GENERAL / 100)), 2);
 
                 $sqlLinea = "INSERT INTO LINEA_FACTURA (IdFactura, Cantidad, IVA, Subtotal) VALUES (:idFactura, :cantidad, :iva, :subtotal)";
@@ -193,26 +186,47 @@ class Factura
                     ':iva' => self::IVA_GENERAL,
                     ':subtotal' => $subtotalNeto,
                 ]);
+            } else {
+                $sqlProducto = "SELECT Precio, Stock, Nombre FROM PRODUCTO WHERE IdProducto = :id FOR UPDATE";
+                $stmtProducto = $conexion->prepare($sqlProducto);
+                $stmtProducto->execute([':id' => $idItem]);
+                $producto = $stmtProducto->fetch(PDO::FETCH_ASSOC);
 
+                if (!$producto) {
+                    throw new Exception("El producto #$idItem no existe.");
+                }
+                if ($producto['Stock'] < $cantidad) {
+                    throw new Exception("Stock insuficiente de \"{$producto['Nombre']}\" (quedan {$producto['Stock']}).");
+                }
+
+                $precioConIva = (float)$producto['Precio'];
+                $totalLinea = $precioConIva * $cantidad;
+                $subtotalNeto = round($totalLinea / (1 + (self::IVA_GENERAL / 100)), 2);
+
+                $sqlLinea = "INSERT INTO LINEA_FACTURA (IdFactura, Cantidad, IVA, Subtotal) VALUES (:idFactura, :cantidad, :iva, :subtotal)";
+                $stmtLinea = $conexion->prepare($sqlLinea);
+                $stmtLinea->execute([
+                    ':idFactura' => $idFactura,
+                    ':cantidad' => $cantidad,
+                    ':iva' => self::IVA_GENERAL,
+                    ':subtotal' => $subtotalNeto,
+                ]);
                 $idLineaFactura = (int)$conexion->lastInsertId();
 
-                $sqlArticulo = "INSERT INTO ARTICULO_FACTURA (IdFactura, IdLineaFactura, IdProducto)
-                    VALUES (:idFactura, :idLineaFactura, :idProducto)";
+                $sqlArticulo = "INSERT INTO ARTICULO_FACTURA (IdFactura, IdLineaFactura, IdProducto) VALUES (:idFactura, :idLineaFactura, :idProducto)";
                 $stmtArticulo = $conexion->prepare($sqlArticulo);
                 $stmtArticulo->execute([
                     ':idFactura' => $idFactura,
                     ':idLineaFactura' => $idLineaFactura,
-                    ':idProducto' => $idProducto,
+                    ':idProducto' => $idItem,
                 ]);
 
-                /* COMPRA tiene a CI como parte de la clave primaria, no acepta NULL: si es venta sin cliente, directamente no se inserta nada ahi */
                 if ($ci !== null) {
-                    $sqlCompra = "INSERT INTO COMPRA (CI, IdProducto, IdFactura, IdLineaFactura)
-                        VALUES (:ci, :idProducto, :idFactura, :idLineaFactura)";
+                    $sqlCompra = "INSERT INTO COMPRA (CI, IdProducto, IdFactura, IdLineaFactura) VALUES (:ci, :idProducto, :idFactura, :idLineaFactura)";
                     $stmtCompra = $conexion->prepare($sqlCompra);
                     $stmtCompra->execute([
                         ':ci' => $ci,
-                        ':idProducto' => $idProducto,
+                        ':idProducto' => $idItem,
                         ':idFactura' => $idFactura,
                         ':idLineaFactura' => $idLineaFactura,
                     ]);
@@ -220,8 +234,9 @@ class Factura
 
                 $sqlStock = "UPDATE PRODUCTO SET Stock = Stock - :cantidad WHERE IdProducto = :id";
                 $stmtStock = $conexion->prepare($sqlStock);
-                $stmtStock->execute([':cantidad' => $cantidad, ':id' => $idProducto]);
+                $stmtStock->execute([':cantidad' => $cantidad, ':id' => $idItem]);
             }
+        }
 
             $conexion->commit();
             return $idFactura;

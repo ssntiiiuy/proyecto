@@ -25,18 +25,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $cantidades = $_POST['cantidad'] ?? [];
 
   $lineas = [];
-  foreach ($idsProducto as $i => $idProducto) {
-    $idProducto = trim($idProducto);
+  foreach ($idsProducto as $i => $itemValor) {
+    $itemValor = trim($itemValor);
     $cantidad = (int)($cantidades[$i] ?? 0);
-    if ($idProducto === '' || $cantidad <= 0) {
+
+    if ($itemValor === '' || $cantidad <= 0) {
       continue;
     }
+
+    // Separamos el prefijo (p o s) y el ID real
+    [$tipo, $id] = explode('_', $itemValor);
+
     $lineas[] = [
-      'idProducto' => (int)$idProducto,
+      'tipo' => $tipo, // 'p' para producto, 's' para servicio
+      'id' => (int)$id,
       'cantidad' => $cantidad,
     ];
   }
-
   if (empty($lineas)) {
     $error = 'Agregá al menos un producto con cantidad mayor a 0.';
   } else {
