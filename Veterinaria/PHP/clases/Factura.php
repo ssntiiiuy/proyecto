@@ -178,15 +178,22 @@ class Factura
 
                 $subtotal = round($producto['Precio'] * $cantidad, 2);
 
-                $sqlLinea = "INSERT INTO LINEA_FACTURA (IdFactura, Cantidad, IVA, Subtotal)
-                    VALUES (:idFactura, :cantidad, :iva, :subtotal)";
+                // 1. El precio del producto ya incluye IVA (ej. $399)
+                $precioConIva = (float)$producto['Precio'];
+                $totalLinea = $precioConIva * $cantidad;
+
+                // 2. Extraemos la base neta (sin IVA) para guardar en la base de datos
+                $subtotalNeto = round($totalLinea / (1 + (self::IVA_GENERAL / 100)), 2);
+
+                $sqlLinea = "INSERT INTO LINEA_FACTURA (IdFactura, Cantidad, IVA, Subtotal) VALUES (:idFactura, :cantidad, :iva, :subtotal)";
                 $stmtLinea = $conexion->prepare($sqlLinea);
                 $stmtLinea->execute([
                     ':idFactura' => $idFactura,
                     ':cantidad' => $cantidad,
                     ':iva' => self::IVA_GENERAL,
-                    ':subtotal' => $subtotal,
+                    ':subtotal' => $subtotalNeto,
                 ]);
+
                 $idLineaFactura = (int)$conexion->lastInsertId();
 
                 $sqlArticulo = "INSERT INTO ARTICULO_FACTURA (IdFactura, IdLineaFactura, IdProducto)

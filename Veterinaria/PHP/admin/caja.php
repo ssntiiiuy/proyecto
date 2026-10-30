@@ -169,17 +169,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     <tr class="fila-linea">
       <td>
         <select class="form-select form-select-sm select-producto" required>
-          <option value="" selected disabled>Elegir producto</option>
-          <?php foreach ($productos as $p) { ?>
-            <option value="<?= (int)$p['IdProducto'] ?>" data-precio="<?= htmlspecialchars($p['Precio']) ?>" data-stock="<?= (int)$p['Stock'] ?>">
-              <?= htmlspecialchars($p['Nombre']) ?> ($ <?= number_format((float)$p['Precio'], 2, ',', '.') ?> · stock <?= (int)$p['Stock'] ?>)
-            </option>
-          <?php } ?>
-          <?php foreach ($servicios as $s) { ?>
-            <option value="<?= (int)$s['IdServicio'] ?>" data-precio="<?= htmlspecialchars($s['Precio']) ?>">
-              <?= htmlspecialchars($s['Nombre']) ?> ($ <?= number_format((float)$s['Precio'], 2, ',', '.') ?>)
-            </option>
-          <?php } ?>
+          <option value="" selected disabled>Elegir ítem</option>
+
+          <optgroup label="Productos">
+            <?php foreach ($productos as $p) { ?>
+              <option value="p_<?= (int)$p['IdProducto'] ?>" data-precio="<?= htmlspecialchars($p['Precio']) ?>" data-stock="<?= (int)$p['Stock'] ?>">
+                <?= htmlspecialchars($p['Nombre']) ?> ($ <?= number_format((float)$p['Precio'], 2, ',', '.') ?> · stock <?= (int)$p['Stock'] ?>)
+              </option>
+            <?php } ?>
+          </optgroup>
+
+          <optgroup label="Servicios">
+            <?php foreach ($servicios as $s) { ?>
+              <option value="s_<?= (int)$s['IdServicio'] ?>" data-precio="<?= htmlspecialchars($s['Precio']) ?>">
+                <?= htmlspecialchars($s['Nombre']) ?> ($ <?= number_format((float)$s['Precio'], 2, ',', '.') ?>)
+              </option>
+            <?php } ?>
+          </optgroup>
         </select>
       </td>
       <td><input type="number" class="form-control form-control-sm input-cantidad" min="1" value="1" required></td>
@@ -197,7 +203,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     const IVA_GENERAL = <?= Factura::IVA_GENERAL ?>;
 
     function formatearMoneda(valor) {
-      return '$ ' + valor.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return '$ ' + valor.toLocaleString('es-UY', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
     }
 
     function recalcularFila(fila) {
