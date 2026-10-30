@@ -16,6 +16,7 @@ $gruposMenu = [
     'productos'   => ['productos.php', 'bi-box-seam', 'Productos'],
     'proveedores' => ['proveedores.php', 'bi-truck', 'Proveedores'],
     'facturas'    => ['facturas.php', 'bi-receipt', 'Facturas'],
+    'reportes'    => ['reportes.php', 'bi-cash', 'Reportes'],
   ],
 ];
 ?>
