@@ -92,7 +92,7 @@ $facturas = Factura::listadoFactura($busqueda)['facturas'];
               <form class="d-flex gap-2" action="facturas.php" method="get">
                 <label class="visually-hidden" for="buscar">Buscar</label>
                 <input class="form-control form-control-sm admin-filtro" type="text" id="buscar" name="buscar"
-                  placeholder="N.º, cliente o RUT" value="<?= htmlspecialchars($busqueda) ?>">
+                  placeholder="N.º o cliente" value="<?= htmlspecialchars($busqueda) ?>">
                 <button type="submit" class="btn btn-sm admin-btn-filtrar">Buscar</button>
               </form>
               <a href="caja.php" class="btn btn-sm admin-btn-agregar"><i class="bi bi-plus-lg"></i> Nueva factura</a>

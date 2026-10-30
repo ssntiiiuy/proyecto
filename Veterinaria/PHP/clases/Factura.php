@@ -65,13 +65,12 @@ class Factura
             $params = [];
 
             if ($busqueda !== '') {
-                $sql .= " HAVING f.IdFactura LIKE :busqueda1 OR ClienteNombre LIKE :busqueda2 OR ClienteApellido LIKE :busqueda3 OR f.Rut LIKE :busqueda4";
+                $sql .= " HAVING f.IdFactura LIKE :busqueda1 OR ClienteNombre LIKE :busqueda2 OR ClienteApellido LIKE :busqueda3";
                 $like = '%' . $busqueda . '%';
                 $params = [
                     ':busqueda1' => $like,
                     ':busqueda2' => $like,
                     ':busqueda3' => $like,
-                    ':busqueda4' => $like,
                 ];
             }
 
