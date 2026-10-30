@@ -39,15 +39,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $anamnesis    = trim($_POST['Anamnesis'] ?? '');
         $antecedentes = trim($_POST['Antecedentes'] ?? '');
         $tratamiento  = trim($_POST['Tratamiento'] ?? '');
-        $diagnostico  = trim($_POST['Diagnóstico'] ?? '');
+        $diagnóstico  = trim($_POST['Diagnóstico'] ?? '');
         $fecha        = trim($_POST['Fecha'] ?? '');
         $peso         = !empty($_POST['Peso']) ? (float)$_POST['Peso'] : null;
 
         $historial = new HistorialClinico();
         if ($idHistorial > 0) {
-            $ok = $historial->editarHistorialClinico($id, $idHistorial, $anamnesis, $antecedentes, $tratamiento, $diagnostico, $fecha, $peso);
+            $ok = $historial->editarHistorialClinico($id, $idHistorial, $anamnesis, $antecedentes, $tratamiento, $diagnóstico, $fecha, $peso);
         } else {
-            $ok = $historial->crearHistorialClinico($id, $anamnesis, $antecedentes, $tratamiento, $diagnostico, $fecha, $peso);
+            $ok = $historial->crearHistorialClinico($id, $anamnesis, $antecedentes, $tratamiento, $diagnóstico, $fecha, $peso);
         }
 
         // Determinamos qué mensaje mostrar según el resultado de $ok
@@ -116,6 +116,9 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
     <title>Ficha de <?= htmlspecialchars($mascota['Nombre']) ?> - Panel Sienra</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../CSS/style.css">
     <link rel="stylesheet" href="../../CSS/admin.css">
     <script src="../../JS/tema.js"></script>
@@ -281,8 +284,8 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                             <input class="form-control" type="number" step="0.1" id="hPeso" name="Peso">
                         </div>
                         <div class="col-12">
-                            <label class="form-label" for="hDiagnostico">Diagnóstico</label>
-                            <input class="form-control" type="text" id="hDiagnostico" name="Diagnostico" maxlength="255" required>
+                            <label class="form-label" for="hDiagnóstico">Diagnóstico</label>
+                            <input class="form-control" type="text" id="hDiagnóstico" name="Diagnóstico" maxlength="255" required>
                         </div>
                         <div class="col-12">
                             <label class="form-label" for="hAnamnesis">Anamnesis</label>
@@ -394,7 +397,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
             document.getElementById('hIdHistorial').value = '';
             document.getElementById('hFecha').value = '';
             document.getElementById('hPeso').value = '';
-            document.getElementById('hDiagnostico').value = '';
+            document.getElementById('hDiagnóstico').value = '';
             document.getElementById('hAnamnesis').value = '';
             document.getElementById('hAntecedentes').value = '';
             document.getElementById('hTratamiento').value = '';
@@ -405,7 +408,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
             document.getElementById('hIdHistorial').value = h.IdHistorialClinico;
             document.getElementById('hFecha').value = h.Fecha ? h.Fecha.substring(0, 10) : '';
             document.getElementById('hPeso').value = h.Peso ?? '';
-            document.getElementById('hDiagnostico').value = h['Diagnostico'] ?? '';
+            document.getElementById('hDiagnóstico').value = h['Diagnóstico'] ?? '';
             document.getElementById('hAnamnesis').value = h.Anamnesis ?? '';
             document.getElementById('hAntecedentes').value = h.Antecedentes ?? '';
             document.getElementById('hTratamiento').value = h.Tratamiento ?? '';
