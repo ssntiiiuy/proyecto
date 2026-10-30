@@ -27,6 +27,17 @@ $mapaRolTipos = [
 
 $tiposPermitidos = $mapaRolTipos[$rol] ?? [];
 
+// Capturar filtro de tipo si viene por la URL y está permitido para el rol
+$filtroTipo = trim($_GET['filtro'] ?? '');
+$tiposConsultaBD = $tiposPermitidos;
+
+if ($filtroTipo !== '') {
+    // Si es cajero (permisos vacíos) o el tipo está dentro de los permitidos del rol
+    if (empty($tiposPermitidos) || in_array($filtroTipo, $tiposPermitidos)) {
+        $tiposConsultaBD = [$filtroTipo];
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     $nombre = trim($_POST['Nombre']);
     $tipo = trim($_POST['TipoServicio']);
@@ -45,13 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     }
 }
 
-$datosServicios = Servicio::listadoServicios($tiposPermitidos);
+$datosServicios = Servicio::listadoServicios($tiposConsultaBD);
 $servicios = $datosServicios['servicios'];
 
 function obtenerClaseBadge($tipo)
 {
     $tipoLimpio = strtolower(trim($tipo));
-
     switch ($tipoLimpio) {
         case 'consulta':
             return 'badge-tipo-consulta';
@@ -65,7 +75,6 @@ function obtenerClaseBadge($tipo)
             return 'bg-secondary';
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -112,7 +121,24 @@ function obtenerClaseBadge($tipo)
                         </div>
                     </div>
 
-                    <div class="table-responsive">
+                    <!-- Botones de filtro rápido para roles con múltiples tipos (ej. Veterinario) -->
+                    <?php if (count($tiposPermitidos) > 1 || empty($tiposPermitidos)): ?>
+                        <div class="px-3 pt-3 pb-0 d-flex flex-wrap gap-2 align-items-center">
+                            <span class="text-muted small fw-semibold">Filtrar por:</span>
+                            <a href="servicios.php" class="btn btn-sm <?= $filtroTipo === '' ? 'btn-dark' : 'btn-outline-secondary' ?>">Todos</a>
+
+                            <?php
+                            $opcionesFiltro = empty($tiposPermitidos) ? ['Consulta', 'Vacunacion', 'Peluqueria', 'Cirugia'] : $tiposPermitidos;
+                            foreach ($opcionesFiltro as $tp):
+                            ?>
+                                <a href="servicios.php?filtro=<?= $tp ?>" class="btn btn-sm <?= $filtroTipo === $tp ? 'btn-dark' : 'btn-outline-secondary' ?>">
+                                    <?= $tp === 'Vacunacion' ? 'Vacunación' : $tp ?>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="table-responsive p-3">
                         <table class="table admin-tabla mb-0">
                             <thead>
                                 <tr>
@@ -120,49 +146,67 @@ function obtenerClaseBadge($tipo)
                                     <th scope="col">Nombre</th>
                                     <th scope="col">Tipo</th>
                                     <th scope="col">Descripción</th>
+                                    <th scope="col">Detalles específicos</th>
                                     <th scope="col">Duración</th>
-                                    <th scope="col">Precio</th>
-                                    <th scope="col" class="text-end">Acciones</th>
+                                    <th scope="col" class="text-end">Precio</th>
                                 </tr>
                             </thead>
-
-                            <!-- listado de servicios -->
                             <tbody>
                                 <?php if (empty($servicios)): ?>
                                     <tr>
-                                        <td colspan="7" class="text-center">No hay servicios registrados.</td>
+                                        <td colspan="7" class="text-center py-4">No hay servicios registrados.</td>
                                     </tr>
-                                    <?php else: foreach ($servicios as $serv): ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars($serv['IdServicio']) ?></td>
-                                            <td><?= htmlspecialchars($serv['Nombre']) ?></td>
+                                <?php else: foreach ($servicios as $serv): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($serv['IdServicio']) ?></td>
+                                        <td class="fw-semibold"><?= htmlspecialchars($serv['Nombre']) ?></td>
+                                        <td>
+                                            <?php
+                                            $tipoServicio = $serv['Tipo'];
+                                            $claseBadge = obtenerClaseBadge($tipoServicio);
+                                            ?>
+                                            <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($tipoServicio) ?></span>
+                                        </td>
+                                        <td class="admin-celda-texto"><?= htmlspecialchars($serv['Descripcion'] ?? '—') ?></td>
 
-                                            <td>
-                                                <?php
-                                                $tipoServicio = $serv['Tipo'];
-                                                $claseBadge = obtenerClaseBadge($tipoServicio);
-                                                ?>
-                                                <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($tipoServicio) ?></span>
-                                            </td>
+                                        <!-- Columna dinámica para mostrar atributos específicos según el tipo -->
+                                        <td class="small text-muted">
+                                            <?php
+                                            switch (strtolower($tipoServicio)) {
+                                                case 'consulta':
+                                                    echo !empty($serv['Motivo']) ? 'Motivo: ' . htmlspecialchars($serv['Motivo']) : '';
+                                                    break;
+                                                case 'vacunacion':
+                                                    $partesVac = [];
+                                                    if (!empty($serv['TipoVacuna'])) $partesVac[] = 'Tipo: ' . htmlspecialchars($serv['TipoVacuna']);
+                                                    if (!empty($serv['LoteVacuna'])) $partesVac[] = 'Lote: ' . htmlspecialchars($serv['LoteVacuna']);
+                                                    if (!empty($serv['LaboratorioFabricante'])) $partesVac[] = 'Lab: ' . htmlspecialchars($serv['LaboratorioFabricante']);
+                                                    echo implode(' · ', $partesVac);
+                                                    break;
+                                                case 'peluqueria':
+                                                    $partesPel = [];
+                                                    if (!empty($serv['TipoCorte'])) $partesPel[] = 'Corte: ' . htmlspecialchars($serv['TipoCorte']);
+                                                    if (!empty($serv['TipoShampoo'])) $partesPel[] = 'Shampoo: ' . htmlspecialchars($serv['TipoShampoo']);
+                                                    echo implode(' · ', $partesPel);
+                                                    break;
+                                                case 'cirugia':
+                                                    $partesCir = [];
+                                                    if (!empty($serv['TipoAnestesia'])) $partesCir[] = 'Anestesia: ' . htmlspecialchars($serv['TipoAnestesia']);
+                                                    if (!empty($serv['RiesgoQuirurgico'])) $partesCir[] = 'Riesgo: ' . htmlspecialchars($serv['RiesgoQuirurgico']);
+                                                    echo implode(' · ', $partesCir);
+                                                    break;
+                                                default:
+                                                    echo '—';
+                                            }
+                                            ?>
+                                        </td>
 
-                                            <td class="admin-celda-texto"><?= htmlspecialchars($serv['Descripcion'] ?? '') ?></td>
-                                            <td><?= htmlspecialchars($serv['Duracion'] ?? '') ?> min</td>
-                                            <td>$ <?= number_format($serv['Precio'] ?? 0, 0, ',', '.') ?></td>
-
-                                            <td class="text-end">
-                                                <button class="btn btn-sm admin-btn-icono" type="button" aria-label="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" aria-label="Eliminar">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
+                                        <td><?= htmlspecialchars($serv['Duracion'] ?? '0') ?> min</td>
+                                        <td class="text-end">$ <?= number_format($serv['Precio'] ?? 0, 0, ',', '.') ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
                                 <?php endif; ?>
                             </tbody>
-
-
                         </table>
                     </div>
                 </div>
@@ -171,7 +215,7 @@ function obtenerClaseBadge($tipo)
         </div>
     </div>
 
-    <!-- agregar servicio -->
+    <!-- Modal para agregar servicio -->
     <div class="modal fade admin-modal" id="modalServicio" tabindex="-1" aria-labelledby="modalServicioTitulo" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form class="modal-content" action="#" method="post">
@@ -191,22 +235,15 @@ function obtenerClaseBadge($tipo)
                                 <input type="hidden" id="TipoServicio" name="TipoServicio" value="<?= htmlspecialchars($tiposPermitidos[0]) ?>">
                             <?php else: ?>
                                 <label class="form-label" for="TipoServicio">Tipo</label>
-                                <?php if (!empty($tiposPermitidos)): ?>
-                                    <select class="form-select" id="TipoServicio" name="TipoServicio" required onchange="mostrarCamposTipo(this.value)">
-                                        <option value="" selected disabled>Elegir tipo</option>
-                                        <?php foreach ($tiposPermitidos as $tipoOpcion): ?>
-                                            <option value="<?= $tipoOpcion ?>"><?= $tipoOpcion === 'Vacunacion' ? 'Vacunación' : $tipoOpcion ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                <?php else: ?>
-                                    <select class="form-select" id="TipoServicio" name="TipoServicio" required onchange="mostrarCamposTipo(this.value)">
-                                        <option value="" selected disabled>Elegir tipo</option>
-                                        <option value="Consulta">Consulta</option>
-                                        <option value="Vacunacion">Vacunación</option>
-                                        <option value="Peluqueria">Peluquería</option>
-                                        <option value="Cirugia">Cirugía</option>
-                                    </select>
-                                <?php endif; ?>
+                                <select class="form-select" id="TipoServicio" name="TipoServicio" required onchange="mostrarCamposTipo(this.value)">
+                                    <option value="" selected disabled>Elegir tipo</option>
+                                    <?php
+                                    $opcionesModal = empty($tiposPermitidos) ? ['Consulta', 'Vacunacion', 'Peluqueria', 'Cirugia'] : $tiposPermitidos;
+                                    foreach ($opcionesModal as $tipoOpcion):
+                                    ?>
+                                        <option value="<?= $tipoOpcion ?>"><?= $tipoOpcion === 'Vacunacion' ? 'Vacunación' : $tipoOpcion ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             <?php endif; ?>
                         </div>
 
@@ -222,7 +259,9 @@ function obtenerClaseBadge($tipo)
                             <label class="form-label" for="Precio">Precio ($)</label>
                             <input class="form-control" type="number" id="Precio" name="Precio" min="0" step="0.01" placeholder="900">
                         </div>
-                        <div id="camposConsulta" class="campos-tipo d-none row g-3">
+
+                        <!-- Campos dinámicos de Consulta -->
+                        <div id="camposConsulta" class="campos-tipo d-none row g-3 mt-1">
                             <div class="col-sm-12">
                                 <label class="form-label" for="Motivo">Motivo</label>
                                 <input class="form-control" type="text" id="Motivo" name="Motivo">
@@ -240,7 +279,8 @@ function obtenerClaseBadge($tipo)
                             </div>
                         </div>
 
-                        <div id="camposVacunacion" class="campos-tipo d-none row g-3">
+                        <!-- Campos dinámicos de Vacunación -->
+                        <div id="camposVacunacion" class="campos-tipo d-none row g-3 mt-1">
                             <div class="col-sm-4">
                                 <label class="form-label" for="LoteVacuna">Lote</label>
                                 <input class="form-control" type="text" id="LoteVacuna" name="LoteVacuna">
@@ -255,7 +295,8 @@ function obtenerClaseBadge($tipo)
                             </div>
                         </div>
 
-                        <div id="camposPeluqueria" class="campos-tipo d-none row g-3">
+                        <!-- Campos dinámicos de Peluquería -->
+                        <div id="camposPeluqueria" class="campos-tipo d-none row g-3 mt-1">
                             <div class="col-sm-6">
                                 <label class="form-label" for="TipoCorte">Tipo de corte</label>
                                 <input class="form-control" type="text" id="TipoCorte" name="TipoCorte">
@@ -266,7 +307,8 @@ function obtenerClaseBadge($tipo)
                             </div>
                         </div>
 
-                        <div id="camposCirugia" class="campos-tipo d-none row g-3">
+                        <!-- Campos dinámicos de Cirugía -->
+                        <div id="camposCirugia" class="campos-tipo d-none row g-3 mt-1">
                             <div class="col-sm-4">
                                 <label class="form-label" for="TipoAnestesia">Anestesia</label>
                                 <input class="form-control" type="text" id="TipoAnestesia" name="TipoAnestesia">
@@ -314,11 +356,6 @@ function obtenerClaseBadge($tipo)
                 'Cirugia': 'camposCirugia'
             };
 
-            const idDiv = mapa[tipo];
-            if (idDiv) {
-                const div = document.getElementById(idDiv);
-                div.classList.remove('d-none');
-            }
         }
     </script>
 </body>
