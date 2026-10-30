@@ -17,18 +17,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $conexion = new Conexion();
 
-        $sql = "SELECT login.tipoUsuario, e.rol
-        FROM login
-        INNER JOIN hace h ON login.Correo = h.Correo
-        INNER JOIN empleado e ON h.CI = e.CI
-        WHERE login.Correo = :correo";
+        $sql = "SELECT LOGIN.TipoUsuario AS tipoUsuario, e.Rol AS rol
+        FROM LOGIN
+        INNER JOIN HACE h ON LOGIN.Correo = h.Correo
+        LEFT JOIN EMPLEADO e ON h.CI = e.CI
+        WHERE LOGIN.Correo = :correo";
         $stmt = $conexion->establecerConexion()->prepare($sql);
 
         $stmt->execute([':correo' => $correo]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($usuario['tipoUsuario'] === 'admin') {
+            $_SESSION['rol'] = 'admin';
             header("Location: ../PHP/admin/index.php");
+            exit();
         } elseif ($usuario['tipoUsuario'] === 'empleado') {
             switch ($usuario['rol']) {
                 case 'Veterinario':
@@ -50,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } else {
             header("Location: ../PHP/usuario/index.php");
+            exit();
         }
     } else {
         $error = "Correo o contraseña incorrectos.";

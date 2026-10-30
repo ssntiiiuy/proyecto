@@ -37,7 +37,7 @@ class Login
         try {
             $conectar = (new Conexion())->establecerConexion();
 
-            $sqlquery = "SELECT * FROM login WHERE Correo = :correo";
+            $sqlquery = "SELECT * FROM LOGIN WHERE Correo = :correo";
             $statement = $conectar->prepare($sqlquery);
             $statement->execute([":correo" => $correo]);
 
@@ -63,7 +63,7 @@ class Login
         try {
             $conectar = (new Conexion())->establecerConexion();
 
-            $statement = $conectar->prepare("SELECT Correo FROM login WHERE Correo = :correo");
+            $statement = $conectar->prepare("SELECT Correo FROM LOGIN WHERE Correo = :correo");
             $statement->execute([":correo" => $correo]);
 
             if ($statement->fetch(PDO::FETCH_ASSOC)) {
@@ -81,7 +81,7 @@ class Login
         try {
             $conectar = (new Conexion())->establecerConexion();
 
-            $statement = $conectar->prepare("UPDATE login SET Contraseña = :pass WHERE Correo = :correo");
+            $statement = $conectar->prepare("UPDATE LOGIN SET Contraseña = :pass WHERE Correo = :correo");
             $statement->execute([
                 ":pass"   => password_hash($nueva, PASSWORD_DEFAULT),
                 ":correo" => $correo

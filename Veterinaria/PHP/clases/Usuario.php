@@ -197,8 +197,8 @@ class Usuario
 
         $conexion = (new Conexion())->establecerConexion();
         $sql = "SELECT e.Rol
-            FROM empleado e
-            INNER JOIN usuario u ON e.CI = u.CI
+            FROM EMPLEADO e
+            INNER JOIN USUARIO u ON e.CI = u.CI
             INNER JOIN HACE h ON u.CI = h.CI
             WHERE h.Correo = :correo";
         $stmt = $conexion->prepare($sql);
