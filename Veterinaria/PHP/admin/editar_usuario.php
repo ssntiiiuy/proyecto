@@ -24,6 +24,12 @@ $error = null;
 $ciUsuario = $usuario['CI'];
 $correoUsuario = $usuario['Correo'] ?? '—';
 $telefonosForm = $usuario['telefonos'];
+$datosForm = [
+  'Nombre' => $usuario['Nombre'] ?? '',
+  'Apellido' => $usuario['Apellido'] ?? '',
+  'Direccion' => $usuario['Direccion'] ?? '',
+  'Rol' => $usuario['Rol'] ?? ''
+];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $datosForm = $_POST;
