@@ -107,7 +107,7 @@ class HistorialClinico
         $siguienteId = ($row && $row['max_id'] !== null) ? (int)$row['max_id'] + 1 : 1;
 
         // 2. Insertar usando el formato de array asociativo con parámetros nombrados
-        $sql = "INSERT INTO historial_clinico (IdMascota, IdHistorialClinico, Anamnesis, Antecedentes, Tratamiento, Diagnostico, Fecha, Peso)
+        $sql = "INSERT INTO historial_clinico (IdMascota, IdHistorialClinico, Anamnesis, Antecedentes, Tratamiento, Diagnóstico, Fecha, Peso)
                 VALUES (:idMascota, :idHistorial, :anamnesis, :antecedentes, :tratamiento, :diagnostico, :fecha, :peso)";
 
         $stmt = $conexion->prepare($sql);
@@ -151,7 +151,7 @@ class HistorialClinico
                 SET Anamnesis = :anamnesis,
                     Antecedentes = :antecedentes,
                     Tratamiento = :tratamiento,
-                    Diagnostico = :diagnostico,
+                    Diagnóstico = :diagnostico,
                     Fecha = :fecha,
                     Peso = :peso
                 WHERE IdMascota = :idMascota AND IdHistorialClinico = :idHistorial";
