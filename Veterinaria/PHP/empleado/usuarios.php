@@ -90,10 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <ul class="nav admin-tabs" role="tablist">
-              <h2>Listado de servicios</h2>
+              <h2>Listado de clientes</h2>
             </ul>
             <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalUsuario">
-              <i class="bi bi-plus-lg"></i> Agregar usuario
+              <i class="bi bi-plus-lg"></i> Agregar clientes
             </button>
 
           </div>
