@@ -6,12 +6,27 @@ require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
 require_once __DIR__ . '/../clases/Producto.php';
 
-$estadoFiltro = $_GET['estado'] ?? '';
-$datosCitas = Cita::listadoCita($estadoFiltro !== '' ? $estadoFiltro : null);
+$datosCitas = Cita::listadoCita();
 $citas = $datosCitas['citas'];
 
-/* limitar a las próximas 5 citas en el dashboard */
-$citasProximas = array_slice($citas, 0, 5);
+$mesSolicitado = $_GET['mes'] ?? date('Y-m');
+$fechaMes = DateTime::createFromFormat('!Y-m', $mesSolicitado);
+if (!$fechaMes || $fechaMes->format('Y-m') !== $mesSolicitado) {
+  $fechaMes = new DateTime('first day of this month');
+}
+$diasEnMes = (int) $fechaMes->format('t');
+$espaciosIniciales = (int) $fechaMes->format('N') - 1;
+$mesAnterior = (clone $fechaMes)->modify('-1 month')->format('Y-m');
+$mesSiguiente = (clone $fechaMes)->modify('+1 month')->format('Y-m');
+$nombresMeses = [1 => 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
+$citasPorDia = [];
+$totalCitasMes = 0;
+foreach ($citas as $cita) {
+  if (substr($cita['Fecha'], 0, 7) === $fechaMes->format('Y-m')) {
+    $citasPorDia[(int) date('j', strtotime($cita['Fecha']))][] = $cita;
+    $totalCitasMes++;
+  }
+}
 
 $citasHoy = Cita::contarCitasHoy();
 $stockBajo = Producto::contarStockBajo();
@@ -99,59 +114,46 @@ $clientesRegistrados = (int)$conexion->query("SELECT COUNT(*) FROM CLIENTE")->fe
           </div>
         </div>
 
-        <div class="admin-card">
-          <div class="admin-card-header">
-            <h2>Próximas citas</h2>
-            <a class="admin-card-link" href="citas.php">Ver todas</a>
+        <section class="admin-card admin-calendario">
+          <div class="admin-card-header admin-calendario-encabezado">
+            <div>
+              <h2>Agenda de citas</h2>
+              <p><?= $totalCitasMes ?> <?= $totalCitasMes === 1 ? 'cita' : 'citas' ?> este mes</p>
+            </div>
+            <a class="btn admin-calendario-todas" href="citas.php">Ver todas <i class="bi bi-arrow-right"></i></a>
           </div>
-          <div class="table-responsive">
-            <table class="table admin-tabla mb-0">
-              <thead>
-                <tr>
-                  <th scope="col">Fecha</th>
-                  <th scope="col">Hora</th>
-                  <th scope="col">Cliente</th>
-                  <th scope="col">Mascota</th>
-                  <th scope="col">Servicio</th>
-                  <th scope="col">Estado</th>
-                  <th scope="col" class="text-end">Acciones</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <?php if (empty($citas)): ?>
-                  <tr>
-                    <td colspan="7" class="text-center">No hay citas registradas.</td>
-                  </tr>
-                  <?php else: foreach ($citas as $c): ?>
-                    <tr>
-                      <td><?= htmlspecialchars(date('d/m/Y', strtotime($c['Fecha']))) ?></td>
-                      <td><?= htmlspecialchars(substr($c['Hora'], 0, 5)) ?></td>
-                      <td><?= htmlspecialchars($c['ClienteNombre'] . ' ' . $c['ClienteApellido']) ?></td>
-                      <td><?= htmlspecialchars($c['MascotaNombre']) ?></td>
-                      <td><?= htmlspecialchars($c['ServicioNombre']) ?></td>
-                      <td>
-                        <?php
-                        $claseBadge = match ($c['Estado']) {
-                          'Confirmada' => 'badge-success',
-                          'Pendiente'  => 'badge-info',
-                          'Cancelada'  => 'badge-danger',
-                          default      => 'badge-secondary',
-                        };
-                        ?>
-                        <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($c['Estado']) ?></span>
-                      </td>
-                      <td class="text-end">
-                        <a class="btn btn-sm admin-btn-icono" href="editar_cita.php?id=<?= $c['IdCita'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
-                        <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="citas.php?eliminar=<?= $c['IdCita'] ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
-                      </td>
-                    </tr>
-                <?php endforeach;
-                endif; ?>
-              </tbody>
-            </table>
+          <div class="admin-calendario-controles">
+            <a class="btn admin-calendario-flecha" href="?mes=<?= $mesAnterior ?>" aria-label="Mes anterior"><i class="bi bi-chevron-left"></i></a>
+            <h3><span><?= ucfirst($nombresMeses[(int) $fechaMes->format('n')]) ?></span> <?= $fechaMes->format('Y') ?></h3>
+            <a class="btn admin-calendario-flecha" href="?mes=<?= $mesSiguiente ?>" aria-label="Mes siguiente"><i class="bi bi-chevron-right"></i></a>
+            <a class="admin-calendario-hoy" href="?mes=<?= date('Y-m') ?>">Hoy</a>
           </div>
-        </div>
+          <div class="admin-calendario-scroll">
+          <div class="admin-calendario-grid">
+            <?php foreach (['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as $diaSemana) { ?>
+              <div class="admin-calendario-dia-semana"><?= $diaSemana ?></div>
+            <?php } ?>
+            <?php for ($espacio = 0; $espacio < $espaciosIniciales; $espacio++) { ?>
+              <div class="admin-calendario-dia admin-calendario-vacio"></div>
+            <?php } ?>
+            <?php for ($dia = 1; $dia <= $diasEnMes; $dia++) { ?>
+              <?php $fechaDia = $fechaMes->format('Y-m') . '-' . str_pad((string) $dia, 2, '0', STR_PAD_LEFT); ?>
+              <div class="admin-calendario-dia <?= $fechaDia === date('Y-m-d') ? 'admin-calendario-dia-hoy' : '' ?>">
+                <span class="admin-calendario-numero"><?= $fechaDia === date('Y-m-d') ? '<span class="admin-calendario-etiqueta-hoy">Hoy</span>' : '' ?><span><?= $dia ?></span></span>
+                <?php if (!empty($citasPorDia[$dia])) { ?>
+                  <?php foreach ($citasPorDia[$dia] as $cita) { ?>
+                    <?php $estadoCita = match ($cita['Estado']) { 'Confirmada' => 'confirmada', 'Pendiente' => 'pendiente', 'Cancelada' => 'cancelada', default => 'otra' }; ?>
+                    <a class="admin-calendario-cita estado-<?= $estadoCita ?>" href="editar_cita.php?id=<?= (int) $cita['IdCita'] ?>" title="<?= htmlspecialchars($cita['ClienteNombre'] . ' ' . $cita['ClienteApellido'] . ' · ' . $cita['MascotaNombre'] . ' · ' . $cita['ServicioNombre']) ?>">
+                      <span class="admin-calendario-hora"><?= htmlspecialchars(substr($cita['Hora'], 0, 5)) ?></span>
+                      <span><?= htmlspecialchars($cita['MascotaNombre']) ?></span>
+                    </a>
+                  <?php } ?>
+                <?php } ?>
+              </div>
+            <?php } ?>
+          </div>
+          </div>
+        </section>
 
       </main>
     </div>

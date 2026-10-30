@@ -206,6 +206,182 @@
   overflow: hidden;
 }
 
+.admin-calendario-encabezado p {
+  margin: 0.25rem 0 0;
+  color: var(--sienra-text-muted);
+  font-size: 0.82rem;
+}
+
+.admin-calendario-todas {
+  color: var(--sienra-text-muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.admin-calendario-todas:hover,
+.admin-calendario-hoy:hover {
+  color: var(--sienra-heading, #ffffff);
+}
+
+.admin-calendario-controles {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.6rem;
+  padding: 1.1rem 1.25rem;
+}
+
+.admin-calendario-controles h3 {
+  min-width: 220px;
+  margin: 0;
+  text-transform: capitalize;
+  font: 600 1.35rem 'Poppins', sans-serif;
+  color: var(--sienra-heading, #ffffff);
+}
+
+.admin-calendario-controles h3 span {
+  margin-right: 0.25rem;
+}
+
+.admin-calendario-flecha {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.15));
+  color: var(--sienra-text);
+}
+
+.admin-calendario-hoy {
+  margin-left: 0.3rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.15));
+  border-radius: 6px;
+  color: var(--sienra-text-muted);
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.admin-calendario-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.08));
+  border-left: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.08));
+}
+
+.admin-calendario-dia-semana,
+.admin-calendario-dia {
+  min-width: 0;
+  border-right: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.08));
+  border-bottom: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.08));
+}
+
+.admin-calendario-dia-semana {
+  padding: 0.65rem 0.75rem;
+  text-align: right;
+  background: var(--sienra-panel-2);
+  color: var(--sienra-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-calendario-dia {
+  min-height: 125px;
+  padding: 0.55rem;
+  background: var(--sienra-panel);
+}
+
+.admin-calendario-dia-hoy {
+  background: color-mix(in srgb, var(--sienra-info) 25%, var(--sienra-panel));
+}
+
+.admin-calendario-vacio {
+  background: var(--sienra-panel-2);
+  opacity: 0.55;
+}
+
+.admin-calendario-numero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 25px;
+  margin-bottom: 0.45rem;
+  color: var(--sienra-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-calendario-dia-hoy .admin-calendario-numero > span:last-child {
+  display: inline-flex;
+  width: 27px;
+  height: 27px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--sienra-info);
+  color: var(--sienra-heading, #ffffff);
+}
+
+.admin-calendario-etiqueta-hoy {
+  color: var(--sienra-text-muted);
+  font-size: 0.68rem;
+}
+
+.admin-calendario-cita {
+  display: flex;
+  gap: 0.3rem;
+  overflow: hidden;
+  margin-bottom: 0.3rem;
+  padding: 0.3rem 0.4rem;
+  border-left: 3px solid var(--sienra-info);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--sienra-info) 35%, var(--sienra-panel));
+  color: var(--sienra-text);
+  font-size: 0.72rem;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-calendario-cita.estado-confirmada { border-left-color: var(--sienra-success-text); }
+.admin-calendario-cita.estado-pendiente { border-left-color: #75b9ed; }
+.admin-calendario-cita.estado-cancelada { border-left-color: var(--sienra-danger-text); }
+
+.admin-calendario-hora {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+
+.admin-calendario-cita:hover {
+  background: var(--sienra-info);
+}
+
+@media (max-width: 767.98px) {
+  .admin-calendario-scroll {
+    overflow-x: auto;
+  }
+
+  .admin-calendario-grid {
+    min-width: 720px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .admin-calendario-controles {
+    flex-wrap: wrap;
+    padding: 0.9rem;
+  }
+
+  .admin-calendario-controles h3 {
+    min-width: 0;
+    flex: 1;
+    font-size: 1.1rem;
+  }
+}
+
 .admin-card-header {
   display: flex;
   align-items: center;
