@@ -81,10 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <header class="site-header site-header-dark">
         <nav class="navbar">
             <div class="container-fluid px-3 px-lg-4 justify-content-between">
-                <a class="navbar-brand d-flex align-items-center gap-2">
-                    <img src="img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+                <div class="navbar-brand d-flex align-items-center gap-2">
+                    <img src="../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
                     <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
-                </a>
+                </div>
 
                 <a class="nav-link icon-badge icon-badge-user" href="LoginHTML.php" aria-label="Cuenta">
                     <i class="bi bi-person-fill"></i>
