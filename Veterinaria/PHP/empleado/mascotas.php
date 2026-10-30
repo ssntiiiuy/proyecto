@@ -1,19 +1,11 @@
 <?php
-$rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
+$rolesPermitidos = ['admin'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Mascota.php';
 
 $error = null;
-
-/* eliminar: solo se borra por POST, despues de confirmar */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
-  $mascota = new Mascota();
-  $resultado = $mascota->eliminarMascota((int) $_POST['IdMascota']);
-  header("Location: mascotas.php?msg=" . $resultado);
-  exit();
-}
 
 /* mensajes fijos que se muestran despues de editar o eliminar */
 $mensajes = [
@@ -25,44 +17,52 @@ $mensajes = [
 ];
 $mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 
-/* confirmacion: mascotas.php?eliminar=Id muestra el aviso arriba del listado */
-$mascotaEliminar = null;
-if (isset($_GET['eliminar'])) {
-  $mascotaEliminar = Mascota::buscarPorId((int) $_GET['eliminar']);
-  if (!$mascotaEliminar) {
-    $mensaje = $mensajes['noexiste'];
-  }
-}
-
-/* funcion para guardar los datos */
+/* listado de mascotas con buscador */
 $busqueda = trim($_GET['busqueda'] ?? '');
 $datosMascotas = Mascota::listadoMascotas($busqueda);
 $mascotas = $datosMascotas['mascotas'];
 
 $conexion = (new Conexion())->establecerConexion();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
-  $datosForm = $_POST;
+$clienteEncontrado = null;
+$errorCedula = null;
 
+/* se pide la cedula primero para agregar mascota */
+if (isset($_GET['ci']) && trim($_GET['ci']) !== '') {
+  $ciBuscada = trim($_GET['ci']);
+
+  $sqlCliente = $conexion->prepare("SELECT u.CI, u.Nombre, u.Apellido FROM CLIENTE c INNER JOIN USUARIO u ON c.CI = u.CI WHERE c.CI = :ci");
+  $sqlCliente->execute([':ci' => $ciBuscada]);
+  $clienteEncontrado = $sqlCliente->fetch(PDO::FETCH_ASSOC);
+
+  if (!$clienteEncontrado) {
+    $errorCedula = "No existe un cliente con esa cédula.";
+  }
+}
+
+/* procesar guardado de la mascota */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $nombre = trim($_POST['Nombre'] ?? '');
   $especie = trim($_POST['Especie'] ?? '');
   $raza = trim($_POST['Raza'] ?? '');
   $fechaNacimiento = trim($_POST['FechaNacimiento'] ?? '');
   $ciDueño = trim($_POST['CI'] ?? '');
 
+  $sqlCheck = $conexion->prepare("SELECT 1 FROM CLIENTE WHERE CI = :ci");
+  $sqlCheck->execute([':ci' => $ciDueño]);
+
   /* se valida antes de guardar */
-  if ($nombre === '') {
+  if (!$sqlCheck->fetch()) {
+    $error = "La cédula no corresponde a ningún cliente.";
+  } elseif ($nombre === '') {
     $error = "Falta el nombre de la mascota.";
   } elseif (!in_array($especie, ['Perro', 'Gato', 'Otro'])) {
     $error = "Elegí la especie de la mascota.";
-  } elseif ($ciDueño === '') {
-    $error = "Elegí el dueño de la mascota.";
   } elseif ($fechaNacimiento !== '' && strtotime($fechaNacimiento) === false) {
     $error = "La fecha de nacimiento no es válida.";
   } elseif (!empty($fechaNacimiento) && $fechaNacimiento > date('Y-m-d')) {
     $error = "La fecha de nacimiento no puede ser posterior a hoy.";
   } else {
-    /* si la fecha queda vacia se guarda NULL */
     if ($fechaNacimiento === '') {
       $fechaNacimiento = null;
     }
@@ -82,6 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     }
   }
 }
+
+/* el modal se abre solo si venimos de buscar una cédula */
+$modalAbierto = isset($_GET['ci']);
 ?>
 
 <!DOCTYPE html>
@@ -122,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="alert alert-<?= $mensaje[0] ?>" role="alert"><?= htmlspecialchars($mensaje[1]) ?></div>
         <?php } ?>
 
-        <?php if ($error) { ?>
+        <?php if (!empty($error) && !$modalAbierto) { ?>
           <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
         <?php } ?>
 
@@ -142,15 +145,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <h2>Listado de mascotas</h2>
-            <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalMascota">
+            <a href="mascotas.php?ci=" class="btn btn-sm admin-btn-agregar" role="button">
               <i class="bi bi-plus-lg"></i> Agregar mascota
-            </button>
+            </a>
           </div>
 
           <!-- listado por parametros -->
           <form class="d-flex gap-2 mb-3 mt-3 mx-3 mx-lg-4" action="mascotas.php" method="get">
             <input class="form-control" type="text" name="busqueda" placeholder="Buscar por C.I. o nombre..."
-                   value="<?= htmlspecialchars($busqueda) ?>">
+              value="<?= htmlspecialchars($busqueda) ?>">
             <button class="btn admin-btn-agregar ms-2" type="submit"><i class="bi bi-search"></i></button>
             <?php if ($busqueda !== ''): ?>
               <a class="btn admin-btn-cancelar ms-2" href="mascotas.php">Limpiar</a>
@@ -175,8 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                   <tr>
                     <td colspan="7" class="text-center">No hay mascotas registradas.</td>
                   </tr>
-                  <?php else: foreach ($mascotas as $masc): ?>
-
+                <?php else: foreach ($mascotas as $masc): ?>
                     <tr>
                       <td><?= htmlspecialchars($masc['IdMascota']) ?></td>
                       <td><?= htmlspecialchars($masc['Nombre']) ?></td>
@@ -199,71 +201,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     </div>
   </div>
 
-  <!-- agregar mascota -->
-  <div class="modal fade admin-modal" id="modalMascota" tabindex="-1" aria-labelledby="modalMascotaTitulo" aria-hidden="true">
+  <!-- agregar mascota (modal con paso previo de cédula) -->
+  <div class="modal fade admin-modal <?= $modalAbierto ? 'show' : '' ?>"
+    id="modalMascota"
+    tabindex="-1"
+    aria-labelledby="modalMascotaTitulo"
+    aria-hidden="<?= $modalAbierto ? 'false' : 'true' ?>"
+    style="<?= $modalAbierto ? 'display:block;' : '' ?>">
     <div class="modal-dialog modal-dialog-centered">
-      <form class="modal-content" action="#" method="post">
+      <div class="modal-content">
         <div class="modal-header">
           <h2 class="modal-title" id="modalMascotaTitulo">Agregar mascota</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          <a href="mascotas.php" class="btn-close" aria-label="Cerrar"></a>
         </div>
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-sm-12">
-              <label class="form-label" for="Nombre">Nombre</label>
-              <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Rex" maxlength="100" value="<?= htmlspecialchars($datosForm['Nombre'] ?? '') ?>" required>
+
+        <?php if (!$clienteEncontrado): ?>
+
+          <!-- pedido de cedula -->
+          <form method="get" action="mascotas.php">
+            <div class="modal-body">
+              <label class="form-label" for="ci">Cédula del dueño</label>
+              <input class="form-control" type="text" id="ci" name="ci" placeholder="Ej: 45678901"
+                value="<?= htmlspecialchars($_GET['ci'] ?? '') ?>" required>
+              <?php if ($errorCedula): ?>
+                <div class="form-text text-danger"><?= htmlspecialchars($errorCedula) ?></div>
+              <?php endif; ?>
             </div>
-            <div class="col-sm-6">
-              <label class="form-label" for="Especie">Especie</label>
-              <select class="form-select" id="Especie" name="Especie" required>
-                <option value="" <?= empty($datosForm['Especie']) ? 'selected' : '' ?> disabled>Elegir especie</option>
-                <option value="Perro" <?= (($datosForm['Especie'] ?? '') === 'Perro') ? 'selected' : '' ?>>Perro</option>
-                <option value="Gato" <?= (($datosForm['Especie'] ?? '') === 'Gato') ? 'selected' : '' ?>>Gato</option>
-                <option value="Otro" <?= (($datosForm['Especie'] ?? '') === 'Otro') ? 'selected' : '' ?>>Otro</option>
-              </select>
+            <div class="modal-footer">
+              <a href="mascotas.php" class="btn admin-btn-cancelar">Cancelar</a>
+              <button type="submit" class="btn admin-btn-agregar">Buscar</button>
             </div>
-            <div class="col-sm-6">
-              <label class="form-label" for="Raza">Raza</label>
-              <input class="form-control" type="text" id="Raza" name="Raza" placeholder="Labrador" maxlength="100" value="<?= htmlspecialchars($datosForm['Raza'] ?? '') ?>">
+          </form>
+
+        <?php else: ?>
+
+          <!-- datos de la mascota -->
+          <form method="post" action="mascotas.php">
+            <div class="modal-body">
+              <input type="hidden" name="CI" value="<?= htmlspecialchars($clienteEncontrado['CI']) ?>">
+
+              <div class="mb-3">
+                <span class="text-muted">Dueño:</span>
+                <strong><?= htmlspecialchars($clienteEncontrado['Nombre'] . ' ' . $clienteEncontrado['Apellido']) ?></strong>
+                <a href="mascotas.php?ci=" class="ms-2">(cambiar)</a>
+              </div>
+
+              <?php if (isset($error)): ?>
+                <div class="alert alert-danger py-2"><?= htmlspecialchars($error) ?></div>
+              <?php endif; ?>
+
+              <div class="row g-3">
+                <div class="col-sm-12">
+                  <label class="form-label" for="Nombre">Nombre</label>
+                  <input class="form-control" type="text" id="Nombre" name="Nombre" placeholder="Rex" maxlength="100" required>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="Especie">Especie</label>
+                  <select class="form-select" id="Especie" name="Especie" required>
+                    <option value="" selected disabled>Elegir especie</option>
+                    <option value="Perro">Perro</option>
+                    <option value="Gato">Gato</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="Raza">Raza</label>
+                  <input class="form-control" type="text" id="Raza" name="Raza" placeholder="Labrador" maxlength="100">
+                </div>
+                <div class="col-sm-12">
+                  <label class="form-label" for="FechaNacimiento">Fecha de nacimiento</label>
+                  <input class="form-control" type="date" id="FechaNacimiento" name="FechaNacimiento" max="<?= date('Y-m-d') ?>">
+                </div>
+              </div>
             </div>
-            <div class="col-sm-6">
-              <label class="form-label" for="FechaNacimiento">Fecha de nacimiento</label>
-              <input class="form-control" type="date" id="FechaNacimiento" name="FechaNacimiento"
-                max="<?= date('Y-m-d') ?>"
-                value="<?= htmlspecialchars($datosForm['FechaNacimiento'] ?? '') ?>">
+            <div class="modal-footer">
+              <a href="mascotas.php" class="btn admin-btn-cancelar">Cancelar</a>
+              <button type="submit" name="guardar" class="btn admin-btn-agregar">Guardar</button>
             </div>
-            <div class="col-sm-6">
-              <label class="form-label" for="CI">Dueño</label>
-              <select class="form-select" id="CI" name="CI" required>
-                <option value="" <?= empty($datosForm['CI']) ? 'selected' : '' ?> disabled>Elegir cliente</option>
-                <?php
-                $stmtCli = $conexion->query("SELECT u.CI, u.Nombre, u.Apellido FROM CLIENTE c INNER JOIN USUARIO u ON c.CI = u.CI");
-                while ($cli = $stmtCli->fetch(PDO::FETCH_ASSOC)):
-                ?>
-                  <option value="<?= $cli['CI'] ?>" <?= (($datosForm['CI'] ?? '') == $cli['CI']) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($cli['Nombre'] . ' ' . $cli['Apellido']) ?> (CI: <?= $cli['CI'] ?>)
-                  </option>
-                <?php endwhile; ?>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn admin-btn-cancelar" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn admin-btn-agregar" name="guardar">Guardar</button>
-        </div>
-      </form>
+          </form>
+
+        <?php endif; ?>
+      </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-  <?php if ($error): ?>
-    <script>
-      new bootstrap.Modal(document.getElementById('modalMascota')).show();
-    </script>
+  <?php if ($modalAbierto): ?>
+    <div class="modal-backdrop fade show"></div>
   <?php endif; ?>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
