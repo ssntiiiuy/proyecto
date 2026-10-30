@@ -91,8 +91,7 @@ $facturas = Factura::listadoFactura($busqueda)['facturas'];
                       <td><?= htmlspecialchars(date('d/m/Y', strtotime($f['FechaVencimiento']))) ?></td>
                       <td>
                         <?php if ($f['ClienteNombre']) { ?>
-                          <?= htmlspecialchars($f['ClienteNombre'] . ' ' . $f['ClienteApellido']) ?>
-                          <span class="admin-subtexto"><?= htmlspecialchars($f['ClienteCI']) ?></span>
+                          <?= htmlspecialchars($f['ClienteNombre'] . ' ' . $f['ClienteApellido']) ?><span class="admin-subtexto"> CI: <?= htmlspecialchars($f['ClienteCI']) ?></span>
                         <?php } else { ?>
                           <span class="admin-sin-dato">Sin cliente</span>
                         <?php } ?>
