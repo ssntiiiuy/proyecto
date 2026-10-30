@@ -11,7 +11,7 @@ require_once  __DIR__ . '/../clases/Servicio.php';
 /* el admin tambien puede emitir facturas (RF46, actor Encargado), ademas del cajero */
 
 /* RUT y nombre fijos de la clinica: FACTURA no guarda estos datos del cliente, son los datos de quien emite */
-const RUT_CLINICA = '217654320018';
+const RUT_CLINICA = '10.00.00.00.10';
 const NOMBRE_CLINICA = 'Clínica Veterinaria Sienra';
 
 $clientes = Usuario::listadoUsuarios()['clientes'];

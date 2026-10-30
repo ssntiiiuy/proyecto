@@ -1,19 +1,20 @@
 <?php
+$rolesPermitidos = ['admin', 'Cajero'];
+require_once __DIR__ . '/../includes/verificar_sesion.php';
+
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Usuario.php';
 require_once __DIR__ . '/../clases/Producto.php';
 require_once __DIR__ . '/../clases/Factura.php';
-
-/* solo el cajero factura (RNF4: "los auxiliares de caja se limitan a la facturacion") */
-$rolesPermitidos = ['Cajero'];
-require_once __DIR__ . '/../includes/verificar_sesion.php';
+require_once  __DIR__ . '/../clases/Servicio.php';
 
 /* RUT y nombre fijos de la clinica: FACTURA no guarda estos datos del cliente, son los datos de quien emite */
-const RUT_CLINICA = '217654320018';
+const RUT_CLINICA = '10.00.00.00.10';
 const NOMBRE_CLINICA = 'Clínica Veterinaria Sienra';
 
 $clientes = Usuario::listadoUsuarios()['clientes'];
 $productos = Producto::listadoProductos()['productos'];
+$servicios = Servicio::listadoServicios()['servicios'];
 
 $error = null;
 $idFacturaCreada = null;
@@ -78,13 +79,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
   <div class="admin-wrapper" data-bs-theme="light">
     <?php
-    $paginaActiva = 'caja';
+    $paginaActiva = 'facturas';
     include __DIR__ . '/includes/sidebar.php';
     ?>
 
     <div class="admin-contenido">
       <?php
-      $tituloPagina = 'Nueva venta';
+      $tituloPagina = 'Nueva factura';
       include __DIR__ . '/includes/topbar.php';
       ?>
 
@@ -170,7 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     </div>
   </div>
 
-  <!-- fila molde: la copia el JS, por eso no tiene name (si no, se mandaria una linea vacia) -->
   <template id="plantillaLinea">
     <tr class="fila-linea">
       <td>
@@ -179,6 +179,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <?php foreach ($productos as $p) { ?>
             <option value="<?= (int)$p['IdProducto'] ?>" data-precio="<?= htmlspecialchars($p['Precio']) ?>" data-stock="<?= (int)$p['Stock'] ?>">
               <?= htmlspecialchars($p['Nombre']) ?> ($ <?= number_format((float)$p['Precio'], 2, ',', '.') ?> · stock <?= (int)$p['Stock'] ?>)
+            </option>
+          <?php } ?>
+          <?php foreach ($servicios as $s) { ?>
+            <option value="<?= (int)$s['IdServicio'] ?>" data-precio="<?= htmlspecialchars($s['Precio']) ?>">
+              <?= htmlspecialchars($s['Nombre']) ?> ($ <?= number_format((float)$s['Precio'], 2, ',', '.') ?>)
             </option>
           <?php } ?>
         </select>
@@ -232,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     function agregarLinea() {
       const fila = plantilla.content.firstElementChild.cloneNode(true);
 
-      /* recien aca se le ponen los name, asi las filas vacias nunca llegan al servidor */
+      /* aca se le ponen los name, asi las filas vacias nunca llegan al servidor */
       fila.querySelector('.select-producto').setAttribute('name', 'idProducto[]');
       fila.querySelector('.input-cantidad').setAttribute('name', 'cantidad[]');
 
