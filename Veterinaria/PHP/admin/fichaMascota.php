@@ -1,7 +1,4 @@
 <?php
-$rolesPermitidos = ['admin'];
-require_once __DIR__ . '/../includes/verificar_sesion.php';
-
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Mascota.php';
 require_once __DIR__ . '/../clases/HistorialClinico.php';
@@ -39,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $anamnesis    = trim($_POST['Anamnesis'] ?? '');
         $antecedentes = trim($_POST['Antecedentes'] ?? '');
         $tratamiento  = trim($_POST['Tratamiento'] ?? '');
-        $diagnostico  = trim($_POST['Diagnostico'] ?? '');
+        $diagnostico  = trim($_POST['Diagnóstico'] ?? '');
         $fecha        = trim($_POST['Fecha'] ?? '');
         $peso         = !empty($_POST['Peso']) ? (float)$_POST['Peso'] : null;
 
@@ -185,7 +182,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                                     <?php else: foreach ($historiales as $h): ?>
                                         <tr>
                                             <td><?= $h['Fecha'] ? date('d/m/Y', strtotime($h['Fecha'])) : '—' ?></td>
-                                            <td><?= htmlspecialchars($h['Diagnostico'] ?? '') ?></td>
+                                            <td><?= htmlspecialchars($h['Diagnóstico'] ?? '') ?></td>
                                             <td><?= htmlspecialchars($h['Anamnesis'] ?? '') ?></td>
                                             <td><?= htmlspecialchars($h['Antecedentes'] ?? '') ?></td>
                                             <td><?= htmlspecialchars($h['Tratamiento'] ?? '') ?></td>
