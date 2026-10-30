@@ -24,19 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $telefono = trim($_POST['telefono']);
   $direccion = trim($_POST['direccion']);
   $contraseña = $_POST['contrasena'];
-  $tipoUsuario = $_POST['tipo_usuario'];
+  $tipoUsuario = 'cliente';
   $rol = null;
-
-  /* asigna rol si es empleado; desde este panel no se pueden crear admins */
-  if ($tipoUsuario === 'empleado') {
-    if (empty($_POST['rol'])) {
-      $error = "Debe seleccionar un rol para el empleado.";
-    } else {
-      $rol = trim($_POST['rol']);
-    }
-  } elseif ($tipoUsuario !== 'cliente') {
-    $error = "Tipo de usuario no válido.";
-  }
 
   if (empty($error)) {
     $usuario = new Usuario();
@@ -93,32 +82,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               <h2>Listado de clientes</h2>
             </ul>
             <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalUsuario">
-              <i class="bi bi-plus-lg"></i> Agregar clientes
+              <i class="bi bi-plus-lg"></i> Agregar cliente
             </button>
 
           </div>
-          <!-- Buscador de usuarios -->
               <form class="d-flex gap-2 mb-3 mt-3 mx-3 mx-lg-4"
-                action="empleados.php" method="get">
+      action="usuarios.php" method="get">
 
-                <input class="form-control"
-                  type="text"
-                  name="busqueda"
-                  placeholder="Buscar por C.I., nombre, apellido o correo..."
-                  value="<?= htmlspecialchars($busqueda) ?>">
+    <input class="form-control"
+           type="text"
+           name="busqueda"
+           placeholder="Buscar por C.I., nombre, apellido o correo..."
+           value="<?= htmlspecialchars($busqueda) ?>">
 
-                <button class="btn admin-btn-agregar ms-2" type="submit">
-                  <i class="bi bi-search"></i>
-                </button>
+    <button class="btn admin-btn-agregar ms-2" type="submit">
+        <i class="bi bi-search"></i>
+    </button>
 
-                <?php if ($busqueda !== ''): ?>
-                  <a class="btn admin-btn-cancelar ms-2"
-                    href="empleados.php">
-                    Limpiar
-                  </a>
-                <?php endif; ?>
-
-              </form>
+    <?php if ($busqueda !== ''): ?>
+        <a class="btn admin-btn-cancelar ms-2"
+           href="usuarios.php">
+            Limpiar
+        </a>
+    <?php endif; ?>
+</form>
           <div class="tab-content">
             <div class="tab-pane fade show active" id="panelClientes" role="tabpanel" aria-labelledby="tabClientes" tabindex="0">
               <div class="table-responsive">
@@ -204,25 +191,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             <div class="col-sm-6">
               <label class="form-label" for="contrasena">Contraseña</label>
               <input class="form-control" type="password" id="contrasena" name="contrasena" required>
-            </div>
-            <div class="col-sm-6">
-              <label class="form-label" for="tipo_usuario">Tipo de usuario</label>
-              <select class="form-select" id="tipo_usuario" name="tipo_usuario" required>
-                <option value="" <?= empty($datosForm['tipo_usuario']) ? 'selected' : '' ?> disabled>Elegir tipo</option>
-                <option value="cliente" <?= (($datosForm['tipo_usuario'] ?? '') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
-                <option value="empleado" <?= (($datosForm['tipo_usuario'] ?? '') === 'empleado') ? 'selected' : '' ?>>Empleado</option>
-              </select>
-            </div>
-
-            <div class="col-sm-6">
-              <label class="form-label" for="rol">Rol <span class="admin-aclaracion">(Completar solo si es empleado)</span></label>
-              <select class="form-select" id="rol" name="rol">
-                <option value="" <?= empty($datosForm['rol']) ? 'selected' : '' ?> disabled>Elegir rol</option>
-                <option value="Veterinario" <?= (($datosForm['rol'] ?? '') === 'Veterinario') ? 'selected' : '' ?>>Veterinario</option>
-                <option value="Cirujano" <?= (($datosForm['rol'] ?? '') === 'Cirujano') ? 'selected' : '' ?>>Cirujano</option>
-                <option value="Peluquero" <?= (($datosForm['rol'] ?? '') === 'Peluquero') ? 'selected' : '' ?>>Peluquero</option>
-                <option value="Cajero" <?= (($datosForm['rol'] ?? '') === 'Cajero') ? 'selected' : '' ?>>Cajero</option>
-              </select>
             </div>
           </div>
         </div>
