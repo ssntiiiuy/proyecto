@@ -10,24 +10,20 @@ try {
   $conexion = (new Conexion())->establecerConexion();
 
   $sql = "SELECT usuario.CI, usuario.Nombre FROM USUARIO INNER JOIN HACE ON usuario.CI = hace.CI WHERE hace.Correo = :correo";
-
   $stmt = $conexion->prepare($sql);
   $stmt->execute([':correo' => $_SESSION['correo']]);
-
   $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
   if (!$usuario) {
-    header('Location: ../../PHP/LoginHTML.php');
+    header('Location: /../LoginHTML.php');
     exit();
   }
 
   $nombreUsuario = $usuario['Nombre'];
   $ci = (int) $usuario['CI'];
 
-  // mascotas del cliente
-  $mascotas = Mascota::listadoMascotasPorCliente($ci); // requiere el require_once de Mascota.php arriba
+  $mascotas = Mascota::listadoMascotasPorCliente($ci);
 
-  // próximo turno
   $sqlTurno = "SELECT c.Fecha, c.Hora, c.Estado, s.Nombre AS NombreServicio, m.Nombre AS NombreMascota
              FROM CITA c
              INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
@@ -38,7 +34,6 @@ try {
   $stmtTurno->execute([':ci' => $ci]);
   $proximoTurno = $stmtTurno->fetch(PDO::FETCH_ASSOC);
 
-  // carnet de vacunas de todas sus mascotas
   $sqlCarnet = "SELECT cv.TipoVacunacion, cv.FechaProximaVacunacion, m.Nombre AS NombreMascota
               FROM CARNET_VACUNACION cv
               INNER JOIN MASCOTA m ON cv.IdMascota = m.IdMascota
@@ -48,18 +43,13 @@ try {
   $stmtCarnet->execute([':ci' => $ci]);
   $carnet = $stmtCarnet->fetchAll(PDO::FETCH_ASSOC);
 
-  // próxima vacuna por vencer, para el banner de alerta
   $proximaVacuna = null;
-  $hoy = new DateTime();
-  $limiteAlerta = (new DateTime())->modify('+1 month'); // De hoy a 30 días
+  $limiteAlerta = (new DateTime())->modify('+1 month');
 
   foreach ($carnet as $v) {
     if (!empty($v['FechaProximaVacunacion'])) {
       $fechaVenc = new DateTime($v['FechaProximaVacunacion']);
-
-
       if ($fechaVenc <= $limiteAlerta) {
-        // Si es la primera que cumple la regla, o encontramos una que vence antes que la actual
         if (!$proximaVacuna || $fechaVenc < new DateTime($proximaVacuna['FechaProximaVacunacion'])) {
           $proximaVacuna = $v;
         }
@@ -71,6 +61,10 @@ try {
   echo "<b>Error SQL en index.php:</b> " . $e->getMessage();
   echo "</div>";
 }
+
+// variables que necesita header.php
+$paginaActiva = 'citas';
+$mostrarCarrito = true;
 ?>
 
 <!DOCTYPE html>
@@ -92,57 +86,7 @@ try {
 
 <body>
 
-  <header class="site-header" data-bs-theme="light">
-    <nav class="navbar navbar-expand-lg">
-      <div class="container-fluid px-3 px-lg-4">
-
-        <a class="navbar-brand d-flex align-items-center gap-2" href="../PHP/index.php">
-          <img src="../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
-          <span class="brand-text">Clínica<br>Veterinaria<br>SIENRA</span>
-        </a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Abrir menú">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navMain">
-          <ul class="navbar-nav mx-auto gap-lg-2">
-            <li class="nav-item"><a class="nav-link" href="catalogo.php">Catálogo</a></li>
-            <li class="nav-item"><a class="nav-link" href="mascotas.php">Mascotas</a></li>
-            <li class="nav-item"><a class="nav-link" href="index.php">Citas</a></li>
-            <li class="nav-item"><a class="nav-link" href="nosotros.php">Nosotros</a></li>
-          </ul>
-
-          <ul class="navbar-nav ms-lg-3 align-items-center gap-2">
-            <li class="nav-item">
-              <button class="nav-link icon-badge" type="button" data-tema-toggle aria-label="Cambiar entre tema claro y oscuro">
-                <i class="bi bi-sun-fill tema-icono-sol"></i>
-                <i class="bi bi-moon-fill tema-icono-luna"></i>
-              </button>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link icon-badge" href="#" aria-label="Carrito">
-                <i class="bi bi-cart3"></i>
-              </a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link icon-badge icon-badge-user" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Usuario">
-                <i class="bi bi-person-fill"></i>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-                <li><span class="dropdown-item-text text-muted small"><?= htmlspecialchars($nombreUsuario) ?></span></li>
-                <li>
-                  <hr class="dropdown-divider">
-                </li>
-                <li><a class="dropdown-item" href="#">Mi perfil</a></li>
-                <li><a class="dropdown-item" href="../../PHP/LoginHTML.php">Cerrar sesión</a></li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-  </header>
+  <?php require __DIR__ . '/includes/header.php'; ?>
 
   <main class="dashboard">
     <div class="container-lg py-4">
@@ -243,6 +187,7 @@ try {
 
         </div>
       </div>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

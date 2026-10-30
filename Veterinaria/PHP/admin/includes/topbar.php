@@ -51,7 +51,30 @@ try {
       <li>
         <hr class="dropdown-divider">
       </li>
-      <li><a class="dropdown-item" href="../cerrar_sesion.php">Cerrar sesión</a></li>
+      <li>
+        <a class="dropdown-item" href="../cerrar_sesion.php" data-bs-toggle="modal" data-bs-target="#modalCerrarSesionEmpleado">
+          Cerrar sesión
+        </a>
+      </li>
     </ul>
   </div>
 </header>
+
+<!-- Modal de confirmación para cerrar sesión -->
+<div class="modal fade" id="modalCerrarSesionEmpleado" tabindex="-1" aria-labelledby="modalCerrarSesionEmpleadoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCerrarSesionEmpleadoLabel">Cerrar sesión</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro de que deseas cerrar sesión?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <a href="../cerrar_sesion.php" class="btn btn-danger">Sí, cerrar sesión</a>
+      </div>
+    </div>
+  </div>
+</div>
