@@ -59,7 +59,7 @@ $nombreUsuario = $nombreUsuario ?? ($_SESSION['nombre'] ?? 'Usuario');
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="#">Mi perfil</a></li>
               <li>
-                <a class="dropdown-item" href="../LoginHTML.php" id="btnCerrarSesion" data-bs-toggle="modal" data-bs-target="#modalCerrarSesion">
+                <a class="dropdown-item" href="../cerrar_sesion.php" data-bs-toggle="modal" data-bs-target="#modalCerrarSesion">
                   Cerrar sesión
                 </a>
               </li>
@@ -84,7 +84,7 @@ $nombreUsuario = $nombreUsuario ?? ($_SESSION['nombre'] ?? 'Usuario');
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <a href="../LoginHTML.php" class="btn btn-danger">Sí, cerrar sesión</a>
+        <a href="../cerrar_sesion.php" class="btn btn-danger">Sí, cerrar sesión</a>
       </div>
     </div>
   </div>

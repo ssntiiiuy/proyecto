@@ -132,14 +132,6 @@ class Factura
         }
     }
 
-    /**
-     * Crea una factura con sus lineas en una sola transaccion.
-     * $ci puede ser null (venta sin cliente registrado / venta anonima).
-     * $lineas = [['idProducto' => int, 'cantidad' => int], ...] - el IVA es siempre IVA_GENERAL, no se recibe por parametro.
-     * El vencimiento se calcula solo (Fecha + DIAS_VENCIMIENTO), no se recibe por parametro.
-     * Descuenta stock y, si hay cliente, deja registrado quien compro (COMPRA) via CI.
-     * Devuelve el IdFactura creado, o lanza Exception con el motivo si algo falla (stock insuficiente, etc).
-     */
     public function crearFactura(?int $ci, string $rut, array $lineas, string $nombreVeterinaria = 'Clínica Veterinaria Sienra'): int
     {
         if (empty($lineas)) {
@@ -235,8 +227,6 @@ class Factura
         }
     }
 
-    /* no hay columna de baja logica en FACTURA, asi que se borra en cascada igual que Producto/Servicio/Cita.
-       antes de borrar, se devuelve el stock que esa factura habia descontado. */
     public function eliminarFactura(int $id): bool
     {
         try {

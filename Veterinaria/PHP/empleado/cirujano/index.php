@@ -1,4 +1,7 @@
 <?php
+$rolesPermitidos = ['Cirujano'];
+require_once __DIR__ . '/../../includes/verificar_sesion.php';
+
 require_once __DIR__ . '/../../clases/Conexion.php';
 require_once __DIR__ . '/../../clases/Cita.php';
 

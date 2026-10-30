@@ -19,7 +19,13 @@ $mapaRolCarpeta = [
 ];
 
 $carpetaRol = $mapaRolCarpeta[$rol] ?? '';
-$baseRol = $carpetaRol ? "/PHP/empleado/{$carpetaRol}" : '';
+/* si la pagina esta en empleado/<rol>/ hay que subir una carpeta mas */
+if (in_array(basename(dirname($_SERVER['SCRIPT_FILENAME'])), $mapaRolCarpeta, true)) {
+  $rutaEmpleado = '../';
+} else {
+  $rutaEmpleado = '';
+}
+$baseRol = $carpetaRol ? "{$rutaEmpleado}{$carpetaRol}" : '';
 
 /* cada rol ve solo lo que le corresponde (RNF4: niveles de acceso segun el rol) */
 if ($rol === 'Cajero') {
@@ -28,12 +34,12 @@ if ($rol === 'Cajero') {
       'dashboard' => ["{$baseRol}/index.php", 'bi-speedometer2', 'Dashboard'],
     ],
     'Caja' => [
-      'caja'      => ['/PHP/empleado/caja.php', 'bi-cash-coin', 'Nueva venta'],
-      'facturas'  => ['/PHP/empleado/facturas.php', 'bi-receipt', 'Facturas'],
+      'caja'      => ["{$rutaEmpleado}caja.php", 'bi-cash-coin', 'Nueva venta'],
+      'facturas'  => ["{$rutaEmpleado}facturas.php", 'bi-receipt', 'Facturas'],
     ],
     'Clientes' => [
-      'usuarios'  => ['/PHP/empleado/usuarios.php', 'bi-people', 'Clientes'],
-      'mascotas'  => ['/PHP/empleado/mascotas.php', 'bi-heart-pulse', 'Mascotas'],
+      'usuarios'  => ["{$rutaEmpleado}usuarios.php", 'bi-people', 'Clientes'],
+      'mascotas'  => ["{$rutaEmpleado}mascotas.php", 'bi-heart-pulse', 'Mascotas'],
     ],
   ];
 } elseif (in_array($rol, ['Veterinario', 'Cirujano', 'Peluquero'], true)) {
@@ -43,19 +49,19 @@ if ($rol === 'Cajero') {
       'dashboard' => ["{$baseRol}/index.php", 'bi-speedometer2', 'Dashboard'],
     ],
     'Mi trabajo' => [
-      'agenda'    => ['/PHP/empleado/citas.php', 'bi-calendar-check', 'Mi agenda'],
-      'mascotas'  => ['/PHP/empleado/mascotas.php', 'bi-heart-pulse', 'Mascotas'],
-      'servicios' => ['/PHP/empleado/servicios.php', 'bi-clipboard2-pulse', 'Servicios'],
+      'agenda'    => ["{$rutaEmpleado}citas.php", 'bi-calendar-check', 'Mi agenda'],
+      'mascotas'  => ["{$rutaEmpleado}mascotas.php", 'bi-heart-pulse', 'Mascotas'],
+      'servicios' => ["{$rutaEmpleado}servicios.php", 'bi-clipboard2-pulse', 'Servicios'],
     ],
     'Clientes' => [
-      'usuarios'  => ['/PHP/empleado/usuarios.php', 'bi-people', 'Clientes'],
+      'usuarios'  => ["{$rutaEmpleado}usuarios.php", 'bi-people', 'Clientes'],
     ],
   ];
 } else {
   /* rol desconocido o sesion sin iniciar: solo el dashboard (que redirige al login) */
   $gruposMenu = [
     '' => [
-      'dashboard' => [$carpetaRol ? "{$baseRol}/index.php" : '/PHP/LoginHTML.php', 'bi-speedometer2', 'Dashboard'],
+      'dashboard' => [$carpetaRol ? "{$baseRol}/index.php" : "{$rutaEmpleado}../LoginHTML.php", 'bi-speedometer2', 'Dashboard'],
     ],
   ];
 }
@@ -69,9 +75,9 @@ if ($rol === 'Cajero') {
     </div>
 
     <div class="offcanvas-body flex-column">
-      <?php $hrefDashboard = $carpetaRol ? "{$baseRol}/index.php" : '/PHP/LoginHTML.php'; ?>
+      <?php $hrefDashboard = $carpetaRol ? "{$baseRol}/index.php" : "{$rutaEmpleado}../LoginHTML.php"; ?>
       <a class="admin-brand d-none d-lg-flex" href="<?= $hrefDashboard ?>">
-        <img src="/PHP/img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+        <img src="<?= $rutaEmpleado ?>../../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
         <span class="admin-brand-text">Panel Sienra</span>
       </a>
 

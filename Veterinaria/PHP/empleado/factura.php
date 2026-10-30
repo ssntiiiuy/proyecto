@@ -2,14 +2,8 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Factura.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-  session_start();
-}
-
-if (($_SESSION['rol'] ?? null) !== 'Cajero') {
-  header('Location: /PHP/LoginHTML.php');
-  exit();
-}
+$rolesPermitidos = ['Cajero'];
+require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 $idFactura = (int)($_GET['IdFactura'] ?? 0);
 $factura = Factura::buscarPorId($idFactura);

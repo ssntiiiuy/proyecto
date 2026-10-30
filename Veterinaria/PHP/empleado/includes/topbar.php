@@ -64,7 +64,7 @@ try {
         <hr class="dropdown-divider">
       </li>
       <li>
-        <a class="dropdown-item" href="/../../PHP/LoginHTML.php" id="btnCerrarSesionAdmin" data-bs-toggle="modal" data-bs-target="#modalCerrarSesionAdmin">
+        <a class="dropdown-item" href="<?= $rutaEmpleado ?>../cerrar_sesion.php" data-bs-toggle="modal" data-bs-target="#modalCerrarSesionAdmin">
           Cerrar sesión
         </a>
       </li>
@@ -85,7 +85,7 @@ try {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <a href="/../../PHP/LoginHTML.php" class="btn btn-danger">Sí, cerrar sesión</a>
+        <a href="<?= $rutaEmpleado ?>../cerrar_sesion.php" class="btn btn-danger">Sí, cerrar sesión</a>
       </div>
     </div>
   </div>
