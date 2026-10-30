@@ -136,6 +136,18 @@ class Cita
         }
     }
 
+    public static function mascotaPerteneceACliente(int $idMascota, int $ci): bool
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $stmt = $conexion->prepare("SELECT 1 FROM MASCOTA WHERE IdMascota = :idMascota AND CI = :ci");
+            $stmt->execute([':idMascota' => $idMascota, ':ci' => $ci]);
+            return (bool)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
     /**
      * Agenda filtrada por tipo(s) de servicio (Consulta, Vacunacion, Peluqueria, Cirugia).
      * Se usa para que cada rol de empleado vea solo las citas que le corresponden.
