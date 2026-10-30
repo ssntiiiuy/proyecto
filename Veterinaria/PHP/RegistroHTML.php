@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $direccion = $calle1 . ", " . $calle2;
     $contraseña = $_POST['password'];
     $confirmar = $_POST['confirm_password'];
-    $tipoUsuario = $_POST['tipo_usuario'];
+    $tipoUsuario = 'cliente';
 
     if ($contraseña !== $confirmar) {
         $error = "Las contraseñas no coinciden.";
@@ -45,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['telefono'] = $telefono;
             $_POST['calle1'] = $calle1;
             $_POST['calle2'] = $calle2;
-            $_POST['tipo_usuario'] = $tipoUsuario;
         }
     }
 }
@@ -80,10 +79,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <header class="site-header site-header-dark">
         <nav class="navbar">
             <div class="container-fluid px-3 px-lg-4 justify-content-between">
-                <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
+                <div class="navbar-brand d-flex align-items-center gap-2">
                     <img src="../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
                     <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
-                </a>
+                </div>
 
                 <a class="nav-link icon-badge icon-badge-user" href="LoginHTML.php" aria-label="Cuenta">
                     <i class="bi bi-person-fill"></i>
@@ -120,16 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-6 mb-2">
                     <label for="apellido" class="form-label">Apellido</label>
                     <input type="text" class="form-control auth-input" id="apellido" name="apellido" placeholder="Pérez" value="<?= htmlspecialchars($_POST['apellido'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-12 mb-2">
-                    <label for="Tipo de usuario" class="form-label">Tipo de usuario</label>
-                    <select class="form-control auth-input" id="tipo_usuario" name="tipo_usuario" required>
-                        <option value="" <?= empty($_POST['tipo_usuario']) ? 'selected' : '' ?>>Seleccionar</option>
-                        <option value="cliente" <?= (($_POST['tipo_usuario'] ?? '') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
-                        <option value="empleado" <?= (($_POST['tipo_usuario'] ?? '') === 'empleado') ? 'selected' : '' ?>>Empleado</option>
-                        <option value="admin" <?= (($_POST['tipo_usuario'] ?? '') === 'admin') ? 'selected' : '' ?>>Admin</option>
-                    </select>
                 </div>
 
                 <div class="col-6 mb-2">
