@@ -6,6 +6,7 @@ require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Usuario.php';
 require_once __DIR__ . '/../clases/Producto.php';
 require_once __DIR__ . '/../clases/Factura.php';
+require_once  __DIR__ . '/../clases/Servicio.php';
 
 /* el admin tambien puede emitir facturas (RF46, actor Encargado), ademas del cajero */
 
@@ -15,6 +16,7 @@ const NOMBRE_CLINICA = 'Clínica Veterinaria Sienra';
 
 $clientes = Usuario::listadoUsuarios()['clientes'];
 $productos = Producto::listadoProductos()['productos'];
+$servicios = Servicio::listadoServicios()['servicios'];
 
 $error = null;
 $idFacturaCreada = null;
@@ -171,7 +173,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     </div>
   </div>
 
-  <!-- fila molde: la copia el JS, por eso no tiene name (si no, se mandaria una linea vacia) -->
   <template id="plantillaLinea">
     <tr class="fila-linea">
       <td>
@@ -180,6 +181,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <?php foreach ($productos as $p) { ?>
             <option value="<?= (int)$p['IdProducto'] ?>" data-precio="<?= htmlspecialchars($p['Precio']) ?>" data-stock="<?= (int)$p['Stock'] ?>">
               <?= htmlspecialchars($p['Nombre']) ?> ($ <?= number_format((float)$p['Precio'], 2, ',', '.') ?> · stock <?= (int)$p['Stock'] ?>)
+            </option>
+          <?php } ?>
+          <?php foreach ($servicios as $s) { ?>
+            <option value="<?= (int)$s['IdServicio'] ?>" data-precio="<?= htmlspecialchars($s['Precio']) ?>">
+              <?= htmlspecialchars($s['Nombre']) ?> ($ <?= number_format((float)$s['Precio'], 2, ',', '.') ?>)
             </option>
           <?php } ?>
         </select>
@@ -233,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     function agregarLinea() {
       const fila = plantilla.content.firstElementChild.cloneNode(true);
 
-      /* recien aca se le ponen los name, asi las filas vacias nunca llegan al servidor */
+      /* aca se le ponen los name, asi las filas vacias nunca llegan al servidor */
       fila.querySelector('.select-producto').setAttribute('name', 'idProducto[]');
       fila.querySelector('.input-cantidad').setAttribute('name', 'cantidad[]');
 
