@@ -174,7 +174,6 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                                     <th scope="col">Antecedentes</th>
                                     <th scope="col">Tratamiento</th>
                                     <th scope="col">Peso</th>
-                                    <th scope="col" class="text-end">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -190,16 +189,6 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                                             <td><?= htmlspecialchars($h['Antecedentes'] ?? '') ?></td>
                                             <td><?= htmlspecialchars($h['Tratamiento'] ?? '') ?></td>
                                             <td><?= htmlspecialchars($h['Peso'] ?? '—') ?> kg</td>
-                                            <td class="text-end">
-                                                <button class="btn btn-sm admin-btn-icono" type="button" data-bs-toggle="modal" data-bs-target="#modalHistorial"
-                                                    onclick='editarHistorial(<?= json_encode($h) ?>)' aria-label="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" data-bs-toggle="modal" data-bs-target="#modalEliminarHistorial"
-                                                    onclick="confirmarEliminarHistorial(<?= $h['IdHistorialClinico'] ?>)" aria-label="Eliminar">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
                                         </tr>
                                 <?php endforeach;
                                 endif; ?>
@@ -225,7 +214,6 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                                     <th scope="col">Última vacunación</th>
                                     <th scope="col">Próxima vacunación</th>
                                     <th scope="col">Desparasitación</th>
-                                    <th scope="col" class="text-end">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -239,16 +227,6 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                                             <td><?= $c['FechaUltimaVacunacion'] ? date('d/m/Y', strtotime($c['FechaUltimaVacunacion'])) : '—' ?></td>
                                             <td><?= $c['FechaProximaVacunacion'] ? date('d/m/Y', strtotime($c['FechaProximaVacunacion'])) : '—' ?></td>
                                             <td><?= htmlspecialchars($c['TipoDesparasitacion'] ?? '—') ?></td>
-                                            <td class="text-end">
-                                                <button class="btn btn-sm admin-btn-icono" type="button" data-bs-toggle="modal" data-bs-target="#modalCarnet"
-                                                    onclick='editarCarnet(<?= json_encode($c) ?>)' aria-label="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm admin-btn-icono admin-btn-eliminar" type="button" data-bs-toggle="modal" data-bs-target="#modalEliminarCarnet"
-                                                    onclick="confirmarEliminarCarnet(<?= $c['IdCarnetVacunacion'] ?>)" aria-label="Eliminar">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
                                         </tr>
                                 <?php endforeach;
                                 endif; ?>
