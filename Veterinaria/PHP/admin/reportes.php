@@ -13,14 +13,14 @@ $anioSeleccionado = isset($_GET['anio']) ? $_GET['anio'] : date('Y');
 
 // Construir la condición de filtrado SQL según el tipo elegido
 if ($tipoReporte === 'diario') {
-    $condicionSql = "DATE(f.Fecha) = :fecha";
-    $parametros = [':fecha' => $fechaDiaria];
+  $condicionSql = "DATE(f.Fecha) = :fecha";
+  $parametros = [':fecha' => $fechaDiaria];
 } elseif ($tipoReporte === 'anual') {
-    $condicionSql = "YEAR(f.Fecha) = :anio";
-    $parametros = [':anio' => $anioSeleccionado];
+  $condicionSql = "YEAR(f.Fecha) = :anio";
+  $parametros = [':anio' => $anioSeleccionado];
 } else { // Mensual por defecto
-    $condicionSql = "MONTH(f.Fecha) = :mes AND YEAR(f.Fecha) = :anio";
-    $parametros = [':mes' => $mesSeleccionado, ':anio' => $anioSeleccionado];
+  $condicionSql = "MONTH(f.Fecha) = :mes AND YEAR(f.Fecha) = :anio";
+  $parametros = [':mes' => $mesSeleccionado, ':anio' => $anioSeleccionado];
 }
 
 // 2. Consultas para las Tarjetas de Resumen (KPIs)
@@ -61,12 +61,17 @@ $categorias = $sqlCategorias->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reporte de ventas - Panel Sienra</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="../../CSS/style.css">
   <link rel="stylesheet" href="../../CSS/admin.css">
   <script src="../../JS/tema.js"></script>
@@ -80,16 +85,18 @@ $categorias = $sqlCategorias->fetchAll(PDO::FETCH_ASSOC);
     window.addEventListener('DOMContentLoaded', cambiarTipoReporte);
   </script>
 </head>
+
 <body>
   <div class="admin-wrapper">
     <?php
-      $paginaActiva = 'reportes';
-      include __DIR__ . '/includes/sidebar.php';
+    $paginaActiva = 'reportes';
+    include __DIR__ . '/includes/sidebar.php';
     ?>
+
     <div class="admin-contenido">
       <?php
-        $tituloPagina = 'Reportes';
-        include __DIR__ . '/includes/topbar.php';
+      $tituloPagina = 'Reportes';
+      include __DIR__ . '/includes/topbar.php';
       ?>
 
       <main class="container-fluid px-3 px-lg-4 py-4">
@@ -197,14 +204,17 @@ $categorias = $sqlCategorias->fetchAll(PDO::FETCH_ASSOC);
               </thead>
               <tbody>
                 <?php if (empty($categorias)): ?>
-                  <tr><td colspan="3" class="text-center text-muted py-3">No hay ventas registradas para este período.</td></tr>
-                <?php else: foreach($categorias as $cat): ?>
                   <tr>
-                    <td><?= htmlspecialchars($cat['Categoria']) ?></td>
-                    <td class="text-end"><?= $cat['Unidades'] ?></td>
-                    <td class="text-end">$ <?= number_format($cat['TotalVendido'], 2, ',', '.') ?></td>
+                    <td colspan="3" class="text-center text-muted py-3">No hay ventas registradas para este período.</td>
                   </tr>
-                <?php endforeach; endif; ?>
+                  <?php else: foreach ($categorias as $cat): ?>
+                    <tr>
+                      <td><?= htmlspecialchars($cat['Categoria']) ?></td>
+                      <td class="text-end"><?= $cat['Unidades'] ?></td>
+                      <td class="text-end">$ <?= number_format($cat['TotalVendido'], 2, ',', '.') ?></td>
+                    </tr>
+                <?php endforeach;
+                endif; ?>
               </tbody>
             </table>
           </div>
@@ -215,4 +225,5 @@ $categorias = $sqlCategorias->fetchAll(PDO::FETCH_ASSOC);
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

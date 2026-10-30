@@ -1,4 +1,6 @@
 <?php
+/* $rolesPermitidos = ['Cliente'];
+require_once __DIR__ . '/../../includes/verificar_sesion.php'; // hay que agregarlo pero todavia no anda */
 session_start();
 
 require_once __DIR__ . '/../clases/Conexion.php';
@@ -15,7 +17,7 @@ try {
   $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
   if (!$usuario) {
-    header('Location: /../LoginHTML.php');
+    header('Location: ../LoginHTML.php');
     exit();
   }
 
