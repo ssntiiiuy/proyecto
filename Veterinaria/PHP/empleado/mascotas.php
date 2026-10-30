@@ -129,19 +129,6 @@ $modalAbierto = isset($_GET['ci']);
           <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
         <?php } ?>
 
-        <?php if ($mascotaEliminar) { ?>
-          <div class="alert alert-warning" role="alert">
-            <form class="d-flex flex-wrap align-items-center gap-2" action="mascotas.php" method="post">
-              <span class="me-auto">
-                ¿Eliminar la mascota <strong><?= htmlspecialchars($mascotaEliminar['Nombre']) ?></strong> (Id <?= $mascotaEliminar['IdMascota'] ?>)? Esta acción no se puede deshacer.
-              </span>
-              <input type="hidden" name="IdMascota" value="<?= $mascotaEliminar['IdMascota'] ?>">
-              <a class="btn btn-sm admin-btn-cancelar" href="mascotas.php">Cancelar</a>
-              <button type="submit" class="btn btn-sm btn-danger" name="eliminar">Sí, eliminar</button>
-            </form>
-          </div>
-        <?php } ?>
-
         <div class="admin-card">
           <div class="admin-card-header flex-wrap">
             <h2>Listado de mascotas</h2>
