@@ -1,6 +1,51 @@
 <?php
 $rolesPermitidos = ['admin'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
+require_once __DIR__ . '/../clases/Conexion.php';
+
+// Obtener el ID de la factura desde la URL
+$idFactura = isset($_GET['id']) ? (int) $_GET['id'] : (isset($_GET['IdFactura']) ? (int) $_GET['IdFactura'] : 0);
+
+$conexion = (new Conexion())->establecerConexion();
+
+// 1. Buscar los datos generales de la factura y del cliente asociado mediante la tabla compra
+$sqlFactura = $conexion->prepare("
+    SELECT f.*, u.Nombre as ClienteNombre, u.Apellido as ClienteApellido, u.CI as ClienteCI
+    FROM factura f
+    LEFT JOIN compra co ON f.IdFactura = co.IdFactura
+    LEFT JOIN cliente c ON co.CI = c.CI
+    LEFT JOIN usuario u ON c.CI = u.CI
+    WHERE f.IdFactura = :id
+    LIMIT 1
+");
+$sqlFactura->execute([':id' => $idFactura]);
+$factura = $sqlFactura->fetch(PDO::FETCH_ASSOC);
+
+// Si no existe la factura, redirigir al listado
+if (!$factura) {
+    header("Location: facturas.php?msg=noexiste");
+    exit();
+}
+
+// 2. Buscar las líneas y productos asociados a esta factura
+try {
+    $sqlLineas = $conexion->prepare("
+        SELECT lf.*, p.Nombre as ProductoNombre, p.Precio as ProductoPrecio
+        FROM linea_factura lf
+        JOIN compra co ON lf.IdFactura = co.IdFactura AND lf.IdLineaFactura = co.IdLineaFactura
+        JOIN producto p ON co.IdProducto = p.IdProducto
+        WHERE lf.IdFactura = :id
+    ");
+    $sqlLineas->execute([':id' => $idFactura]);
+    $lineas = $sqlLineas->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Si hay un error en la consulta SQL, lo mostramos en pantalla para depurar
+    echo "Error en SQL de líneas: " . $e->getMessage();
+    exit();
+}
+
+$subtotalGeneral = 0;
+$ivaGeneral = 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -36,35 +81,37 @@ require_once __DIR__ . '/../includes/verificar_sesion.php';
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
-        <!-- TODO BD: buscar la factura por $_GET['IdFactura']; por ahora siempre se ve la 0004 -->
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
           <a class="btn btn-sm admin-btn-cancelar" href="facturas.php"><i class="bi bi-arrow-left"></i> Volver al listado</a>
         </div>
 
         <div class="admin-card mb-4">
           <div class="admin-card-header">
-            <h2>Factura N.º 0004</h2>
+            <h2>Factura N.º <?= str_pad($factura['IdFactura'], 4, '0', STR_PAD_LEFT) ?></h2>
           </div>
           <div class="row g-3 admin-factura-datos">
             <div class="col-sm-6 col-xl-4">
               <p class="admin-dato-label">Emitida por</p>
-              <p class="admin-dato-valor">Clínica Veterinaria Sienra</p>
+              <p class="admin-dato-valor"><?= htmlspecialchars($factura['NombreVeterinaria'] ?? 'Clínica Veterinaria Sienra') ?></p>
             </div>
             <div class="col-sm-6 col-xl-4">
               <p class="admin-dato-label">RUT</p>
-              <p class="admin-dato-valor">217654320018</p>
+              <p class="admin-dato-valor"><?= htmlspecialchars($factura['Rut'] ?? '—') ?></p>
             </div>
             <div class="col-sm-6 col-xl-4">
               <p class="admin-dato-label">Cliente</p>
-              <p class="admin-dato-valor">Jorge Pérez <span class="admin-sin-dato">(4.567.890-1)</span></p>
+              <p class="admin-dato-valor">
+                <?= htmlspecialchars(($factura['ClienteNombre'] ?? 'Cliente') . ' ' . ($factura['ClienteApellido'] ?? '')) ?>
+                <span class="admin-sin-dato">(<?= htmlspecialchars($factura['ClienteCI'] ?? 'Sin CI') ?>)</span>
+              </p>
             </div>
             <div class="col-sm-6 col-xl-4">
               <p class="admin-dato-label">Fecha</p>
-              <p class="admin-dato-valor">08/10/2026</p>
+              <p class="admin-dato-valor"><?= isset($factura['Fecha']) && $factura['Fecha'] ? date('d/m/Y', strtotime($factura['Fecha'])) : '—' ?></p>
             </div>
             <div class="col-sm-6 col-xl-4">
               <p class="admin-dato-label">Vencimiento</p>
-              <p class="admin-dato-valor">07/11/2026</p>
+              <p class="admin-dato-valor"><?= isset($factura['FechaVencimiento']) && $factura['FechaVencimiento'] ? date('d/m/Y', strtotime($factura['FechaVencimiento'])) : '—' ?></p>
             </div>
           </div>
         </div>
@@ -85,48 +132,51 @@ require_once __DIR__ . '/../includes/verificar_sesion.php';
                   <th scope="col" class="text-end">Subtotal</th>
                 </tr>
               </thead>
-              <!-- TODO BD: LINEA_FACTURA + producto por ARTICULO_FACTURA, precio de PRODUCTO.Precio -->
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Comida para perros 3kg</td>
-                  <td class="text-end">2</td>
-                  <td class="text-end">$ 1.299,00</td>
-                  <td class="text-end">22 %</td>
-                  <td class="text-end">$ 2.598,00</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>Plato para perros</td>
-                  <td class="text-end">1</td>
-                  <td class="text-end">$ 499,00</td>
-                  <td class="text-end">22 %</td>
-                  <td class="text-end">$ 499,00</td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>Cucha para perros</td>
-                  <td class="text-end">1</td>
-                  <td class="text-end">$ 899,00</td>
-                  <td class="text-end">22 %</td>
-                  <td class="text-end">$ 899,00</td>
-                </tr>
+                <?php if (empty($lineas)): ?>
+                  <tr>
+                    <td colspan="6" class="text-center">No hay líneas registradas para esta factura.</td>
+                  </tr>
+                <?php else: ?>
+                  <?php foreach ($lineas as $index => $l):
+                        $cantidad = isset($l['Cantidad']) ? $l['Cantidad'] : 1;
+                        $precioUnitario = isset($l['ProductoPrecio']) ? $l['ProductoPrecio'] : 0;
+                        $subtotalLinea = $cantidad * $precioUnitario;
+                        $porcentajeIva = 22; // IVA estándar
+                        $ivaLinea = $subtotalLinea * ($porcentajeIva / 100);
+
+                        $subtotalGeneral += $subtotalLinea;
+                        $ivaGeneral += $ivaLinea;
+                  ?>
+                    <tr>
+                      <td><?= $index + 1 ?></td>
+                      <td><?= htmlspecialchars($l['ProductoNombre'] ?? 'Artículo') ?></td>
+                      <td class="text-end"><?= $cantidad ?></td>
+                      <td class="text-end">$ <?= number_format($precioUnitario, 2, ',', '.') ?></td>
+                      <td class="text-end"><?= $porcentajeIva ?> %</td>
+                      <td class="text-end">$ <?= number_format($subtotalLinea, 2, ',', '.') ?></td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
 
+          <?php
+            $totalGeneral = $subtotalGeneral + $ivaGeneral;
+          ?>
           <dl class="admin-factura-totales">
             <div>
               <dt>Subtotal</dt>
-              <dd>$ 3.996,00</dd>
+              <dd>$ <?= number_format($subtotalGeneral, 2, ',', '.') ?></dd>
             </div>
             <div>
-              <dt>IVA (22 %)</dt>
-              <dd>$ 879,12</dd>
+              <dt>IVA (22%)</dt>
+              <dd>$ <?= number_format($ivaGeneral, 2, ',', '.') ?></dd>
             </div>
             <div class="admin-factura-total">
               <dt>Total</dt>
-              <dd>$ 4.875,12</dd>
+              <dd>$ <?= number_format($totalGeneral, 2, ',', '.') ?></dd>
             </div>
           </dl>
         </div>
