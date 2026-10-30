@@ -103,14 +103,20 @@ class Usuario
             $stmtClientes->execute($params);
             $clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
 
-            $sqlEmpleados = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado,
+            $sqlEmpleados = "SELECT u.CI, u.Nombre, u.Apellido, u.Direccion,
+                       CASE
+                           WHEN l.TipoUsuario = 'admin' THEN 'Administrador'
+                           WHEN e.Rol IS NULL OR LOWER(TRIM(e.Rol)) = 'null' OR TRIM(e.Rol) = '' THEN 'Empleado'
+                           ELSE e.Rol
+                       END AS Rol,
+                       h.Correo, l.FechaCreado,
                        GROUP_CONCAT(t.numTelUsuario SEPARATOR '<br>') AS Telefonos
                 FROM EMPLEADO e
                 INNER JOIN USUARIO u ON e.CI = u.CI
                 INNER JOIN HACE h ON u.CI = h.CI
                 INNER JOIN LOGIN l ON h.Correo = l.Correo
                 LEFT JOIN TELEFONO_USUARIO t ON u.CI = t.CI
-                GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, h.Correo, l.FechaCreado
+                GROUP BY u.CI, u.Nombre, u.Apellido, u.Direccion, e.Rol, l.TipoUsuario, h.Correo, l.FechaCreado
                 $condicionBusqueda";
             $stmtEmpleados = $conexion->prepare($sqlEmpleados);
             $stmtEmpleados->execute($params);
