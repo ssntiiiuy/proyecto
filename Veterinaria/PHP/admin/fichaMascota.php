@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // 4. Eliminar Carnet 
+    // 4. Eliminar Carnet
     if (isset($_POST['eliminarCarnet'])) {
         $idCarnetEliminar = (int) ($_POST['IdCarnetVacunacion'] ?? 0);
         $c = new CarnetVacunacion();
