@@ -8,7 +8,7 @@ $idFactura = isset($_GET['id']) ? (int) $_GET['id'] : (isset($_GET['IdFactura'])
 
 $conexion = (new Conexion())->establecerConexion();
 
-// 1. Buscar los datos generales de la factura y del cliente asociado mediante la tabla compra
+// 1. Buscar los datos generales de la factura
 $sqlFactura = $conexion->prepare("
     SELECT f.*, u.Nombre as ClienteNombre, u.Apellido as ClienteApellido, u.CI as ClienteCI
     FROM factura f
@@ -21,31 +21,30 @@ $sqlFactura = $conexion->prepare("
 $sqlFactura->execute([':id' => $idFactura]);
 $factura = $sqlFactura->fetch(PDO::FETCH_ASSOC);
 
-// Si no existe la factura, redirigir al listado
 if (!$factura) {
     header("Location: facturas.php?msg=noexiste");
     exit();
 }
 
-// 2. Buscar las líneas y productos asociados a esta factura
+// 2. Buscar las líneas usando correctamente articulo_factura
 try {
     $sqlLineas = $conexion->prepare("
         SELECT lf.*, p.Nombre as ProductoNombre, p.Precio as ProductoPrecio
         FROM linea_factura lf
-        JOIN compra co ON lf.IdFactura = co.IdFactura AND lf.IdLineaFactura = co.IdLineaFactura
-        JOIN producto p ON co.IdProducto = p.IdProducto
+        JOIN articulo_factura af ON lf.IdFactura = af.IdFactura AND lf.IdLineaFactura = af.IdLineaFactura
+        JOIN producto p ON af.IdProducto = p.IdProducto
         WHERE lf.IdFactura = :id
     ");
     $sqlLineas->execute([':id' => $idFactura]);
     $lineas = $sqlLineas->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    // Si hay un error en la consulta SQL, lo mostramos en pantalla para depurar
     echo "Error en SQL de líneas: " . $e->getMessage();
     exit();
 }
 
 $subtotalGeneral = 0;
 $ivaGeneral = 0;
+$totalGeneral = 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -53,7 +52,7 @@ $ivaGeneral = 0;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detalle de factura - Panel Sienra</title>
+  <title>Factura N.º <?= str_pad($factura['IdFactura'], 4, '0', STR_PAD_LEFT) ?> - Panel Sienra</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -66,6 +65,12 @@ $ivaGeneral = 0;
 </head>
 
 <body>
+
+<?php if (isset($_GET['nueva_id'])): ?>
+<script>
+    window.open('factura.php?IdFactura=<?= (int)$_GET['nueva_id'] ?>', '_blank');
+</script>
+<?php endif; ?>
 
   <div class="admin-wrapper">
     <?php
@@ -83,13 +88,15 @@ $ivaGeneral = 0;
 
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
           <a class="btn btn-sm admin-btn-cancelar" href="facturas.php"><i class="bi bi-arrow-left"></i> Volver al listado</a>
+          <button type="button" class="btn btn-sm btn-success" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir factura</button>
         </div>
 
         <div class="admin-card mb-4">
-          <div class="admin-card-header">
+          <div class="admin-card-header d-flex justify-content-between align-items-center">
             <h2>Factura N.º <?= str_pad($factura['IdFactura'], 4, '0', STR_PAD_LEFT) ?></h2>
+            <span class="text-muted">Original</span>
           </div>
-          <div class="row g-3 admin-factura-datos">
+          <div class="row g-3 admin-factura-datos p-3">
             <div class="col-sm-6 col-xl-4">
               <p class="admin-dato-label">Emitida por</p>
               <p class="admin-dato-valor"><?= htmlspecialchars($factura['NombreVeterinaria'] ?? 'Clínica Veterinaria Sienra') ?></p>
@@ -101,7 +108,7 @@ $ivaGeneral = 0;
             <div class="col-sm-6 col-xl-4">
               <p class="admin-dato-label">Cliente</p>
               <p class="admin-dato-valor">
-                <?= htmlspecialchars(($factura['ClienteNombre'] ?? 'Cliente') . ' ' . ($factura['ClienteApellido'] ?? '')) ?>
+                <?= htmlspecialchars(($factura['ClienteNombre'] ?? 'Consumidor') . ' ' . ($factura['ClienteApellido'] ?? '')) ?>
                 <span class="admin-sin-dato">(<?= htmlspecialchars($factura['ClienteCI'] ?? 'Sin CI') ?>)</span>
               </p>
             </div>
@@ -118,7 +125,7 @@ $ivaGeneral = 0;
 
         <div class="admin-card">
           <div class="admin-card-header">
-            <h2>Líneas</h2>
+            <h2>Líneas de productos</h2>
           </div>
           <div class="table-responsive">
             <table class="table admin-tabla mb-0">
@@ -127,34 +134,35 @@ $ivaGeneral = 0;
                   <th scope="col">N.º línea</th>
                   <th scope="col">Producto</th>
                   <th scope="col" class="text-end">Cantidad</th>
-                  <th scope="col" class="text-end">Precio unitario</th>
-                  <th scope="col" class="text-end">IVA</th>
+                  <th scope="col" class="text-end">Precio (c/ IVA)</th>
                   <th scope="col" class="text-end">Subtotal</th>
                 </tr>
               </thead>
               <tbody>
                 <?php if (empty($lineas)): ?>
                   <tr>
-                    <td colspan="6" class="text-center">No hay líneas registradas para esta factura.</td>
+                    <td colspan="5" class="text-center">No hay líneas registradas para esta factura.</td>
                   </tr>
                 <?php else: ?>
                   <?php foreach ($lineas as $index => $l):
-                        $cantidad = isset($l['Cantidad']) ? $l['Cantidad'] : 1;
-                        $precioUnitario = isset($l['ProductoPrecio']) ? $l['ProductoPrecio'] : 0;
-                        $subtotalLinea = $cantidad * $precioUnitario;
-                        $porcentajeIva = 22; // IVA estándar
-                        $ivaLinea = $subtotalLinea * ($porcentajeIva / 100);
+                        $cantidad = (int) ($l['Cantidad'] ?? 1);
+                        $precioConIva = (float) ($l['ProductoPrecio'] ?? 0);
+
+                        // Cálculo exacto con IVA incluido (22%)
+                        $totalLinea = $cantidad * $precioConIva;
+                        $subtotalLinea = $totalLinea / 1.22; // Base sin IVA
+                        $ivaLinea = $totalLinea - $subtotalLinea; // IVA desglosado
 
                         $subtotalGeneral += $subtotalLinea;
                         $ivaGeneral += $ivaLinea;
+                        $totalGeneral += $totalLinea;
                   ?>
                     <tr>
                       <td><?= $index + 1 ?></td>
                       <td><?= htmlspecialchars($l['ProductoNombre'] ?? 'Artículo') ?></td>
                       <td class="text-end"><?= $cantidad ?></td>
-                      <td class="text-end">$ <?= number_format($precioUnitario, 2, ',', '.') ?></td>
-                      <td class="text-end"><?= $porcentajeIva ?> %</td>
-                      <td class="text-end">$ <?= number_format($subtotalLinea, 2, ',', '.') ?></td>
+                      <td class="text-end">$ <?= number_format($precioConIva, 2, ',', '.') ?></td>
+                      <td class="text-end">$ <?= number_format($totalLinea, 2, ',', '.') ?></td>
                     </tr>
                   <?php endforeach; ?>
                 <?php endif; ?>
@@ -162,12 +170,9 @@ $ivaGeneral = 0;
             </table>
           </div>
 
-          <?php
-            $totalGeneral = $subtotalGeneral + $ivaGeneral;
-          ?>
-          <dl class="admin-factura-totales">
+          <dl class="admin-factura-totales p-3">
             <div>
-              <dt>Subtotal</dt>
+              <dt>Subtotal (Neto)</dt>
               <dd>$ <?= number_format($subtotalGeneral, 2, ',', '.') ?></dd>
             </div>
             <div>

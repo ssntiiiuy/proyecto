@@ -6,12 +6,9 @@ require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Usuario.php';
 require_once __DIR__ . '/../clases/Producto.php';
 require_once __DIR__ . '/../clases/Factura.php';
-require_once  __DIR__ . '/../clases/Servicio.php';
+require_once __DIR__ . '/../clases/Servicio.php';
 
-/* el admin tambien puede emitir facturas (RF46, actor Encargado), ademas del cajero */
-
-/* RUT y nombre fijos de la clinica: FACTURA no guarda estos datos del cliente, son los datos de quien emite */
-const RUT_CLINICA = '10.00.00.00.10';
+const RUT_CLINICA = '10.10.00.00.10';
 const NOMBRE_CLINICA = 'Clínica Veterinaria Sienra';
 
 $clientes = Usuario::listadoUsuarios()['clientes'];
@@ -22,13 +19,11 @@ $error = null;
 $idFacturaCreada = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
-  /* el cliente es opcional: '' = venta sin cliente registrado */
   $ciTexto = trim($_POST['ci'] ?? '');
   $ci = $ciTexto === '' ? null : (int)$ciTexto;
   $idsProducto = $_POST['idProducto'] ?? [];
   $cantidades = $_POST['cantidad'] ?? [];
 
-  /* se arma la lista de lineas descartando las filas que quedaron vacias */
   $lineas = [];
   foreach ($idsProducto as $i => $idProducto) {
     $idProducto = trim($idProducto);
@@ -48,11 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     try {
       $factura = new Factura();
       $idFacturaCreada = $factura->crearFactura($ci, RUT_CLINICA, $lineas, NOMBRE_CLINICA);
-      header("Location: factura.php?IdFactura={$idFacturaCreada}&msg=creada");
+      // Redirige al listado pasando 'nueva_id' para que se abra automáticamente en pestaña nueva
+      header("Location: facturas.php?msg=creada&nueva_id=" . $idFacturaCreada);
       exit();
     } catch (Exception $e) {
       $error = $e->getMessage();
-      /* el stock pudo haber cambiado: se recarga para que los selects muestren numeros actuales */
       $productos = Producto::listadoProductos()['productos'];
     }
   }
@@ -111,9 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                     <option value="<?= (int)$cl['CI'] ?>"><?= htmlspecialchars($cl['Nombre'] . ' ' . $cl['Apellido']) ?> (CI <?= htmlspecialchars($cl['CI']) ?>)</option>
                   <?php } ?>
                 </select>
-                <?php if (empty($clientes)) { ?>
-                  <div class="form-text text-warning">No hay clientes registrados todavía.</div>
-                <?php } ?>
               </div>
               <div class="col-sm-6 col-lg-3">
                 <label class="form-label">Vencimiento</label>
@@ -149,11 +141,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="admin-card mb-4">
             <dl class="admin-factura-totales">
               <div>
-                <dt>Subtotal</dt>
+                <dt>Subtotal (Neto)</dt>
                 <dd id="totalSubtotal">$ 0,00</dd>
               </div>
               <div>
-                <dt>IVA</dt>
+                <dt>IVA (22%)</dt>
                 <dd id="totalIva">$ 0,00</dd>
               </div>
               <div class="admin-factura-total">
@@ -202,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   <script>
     const cuerpoLineas = document.getElementById('cuerpoLineas');
     const plantilla = document.getElementById('plantillaLinea');
-    const IVA_GENERAL = <?= Factura::IVA_GENERAL ?>; // fijo: no se puede editar desde el formulario
+    const IVA_GENERAL = <?= Factura::IVA_GENERAL ?>;
 
     function formatearMoneda(valor) {
       return '$ ' + valor.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -211,15 +203,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     function recalcularFila(fila) {
       const select = fila.querySelector('.select-producto');
       const opcion = select.selectedOptions[0];
-      const precio = opcion ? parseFloat(opcion.dataset.precio || '0') : 0;
+      const precioUnitario = opcion ? parseFloat(opcion.dataset.precio || '0') : 0;
       const cantidad = parseFloat(fila.querySelector('.input-cantidad').value || '0');
 
-      const subtotal = precio * cantidad;
-      const conIva = subtotal * (1 + IVA_GENERAL / 100);
+      // El precio ingresado incluye IVA (ej. $1000 total)
+      const conIva = precioUnitario * cantidad;
+      const subtotal = conIva / (1 + IVA_GENERAL / 100); // Base neta
+      const iva = conIva - subtotal; // IVA desglosado
 
       fila.querySelector('.subtotal-linea').textContent = formatearMoneda(conIva);
       fila.dataset.subtotal = subtotal;
-      fila.dataset.iva = conIva - subtotal;
+      fila.dataset.iva = iva;
 
       recalcularTotales();
     }
@@ -239,7 +233,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     function agregarLinea() {
       const fila = plantilla.content.firstElementChild.cloneNode(true);
 
-      /* aca se le ponen los name, asi las filas vacias nunca llegan al servidor */
       fila.querySelector('.select-producto').setAttribute('name', 'idProducto[]');
       fila.querySelector('.input-cantidad').setAttribute('name', 'cantidad[]');
 
@@ -259,7 +252,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
     document.getElementById('btnAgregarLinea').addEventListener('click', agregarLinea);
 
-    /* arranca con una linea lista para completar */
     agregarLinea();
 
     document.getElementById('formFactura').addEventListener('submit', (evento) => {

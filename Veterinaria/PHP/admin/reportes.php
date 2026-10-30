@@ -5,13 +5,13 @@ require_once __DIR__ . '/../clases/Conexion.php';
 
 $conexion = (new Conexion())->establecerConexion();
 
-// 1. Tipo de reporte (diario, mensual, anual) y valores de filtrado
+// tipos de reporte y valores de filtrado
 $tipoReporte = isset($_GET['tipo']) ? $_GET['tipo'] : 'mensual';
 $fechaDiaria = isset($_GET['fecha']) ? $_GET['fecha'] : date('Y-m-d');
 $mesSeleccionado = isset($_GET['mes']) ? $_GET['mes'] : date('m');
 $anioSeleccionado = isset($_GET['anio']) ? $_GET['anio'] : date('Y');
 
-// Construir la condición de filtrado SQL según el tipo elegido
+// coondicion de reporte
 if ($tipoReporte === 'diario') {
   $condicionSql = "DATE(f.Fecha) = :fecha";
   $parametros = [':fecha' => $fechaDiaria];
@@ -23,7 +23,6 @@ if ($tipoReporte === 'diario') {
   $parametros = [':mes' => $mesSeleccionado, ':anio' => $anioSeleccionado];
 }
 
-// 2. Consultas para las Tarjetas de Resumen (KPIs)
 $sqlKpi = $conexion->prepare("
     SELECT
         COALESCE(SUM(p.Precio * lf.Cantidad), 0) as VentasTotales,
@@ -43,7 +42,6 @@ $facturasEmitidas = $kpi['FacturasEmitidas'] ?? 0;
 $unidadesVendidas = $kpi['UnidadesVendidas'] ?? 0;
 $ticketPromedio = $facturasEmitidas > 0 ? ($ventasTotales / $facturasEmitidas) : 0;
 
-// 3. Consulta para la tabla de "Ventas por categoría"
 $sqlCategorias = $conexion->prepare("
     SELECT
         p.Categoria,
@@ -103,7 +101,7 @@ $categorias = $sqlCategorias->fetchAll(PDO::FETCH_ASSOC);
         <h1 class="h3 mb-1">Reporte de ventas</h1>
         <p class="text-muted mb-4">Resumen y estadísticas de facturación del período</p>
 
-        <!-- Filtros Dinámicos (Diario, Mensual, Anual) -->
+        <!-- filtros dinamicos -->
         <div class="admin-card mb-4 p-3">
           <form method="get" action="reportes.php" class="row g-3 align-items-end">
             <input type="hidden" name="tipo" id="hiddenTipo" value="<?= htmlspecialchars($tipoReporte) ?>">
@@ -160,7 +158,7 @@ $categorias = $sqlCategorias->fetchAll(PDO::FETCH_ASSOC);
           </form>
         </div>
 
-        <!-- Tarjetas de Resumen (KPIs) -->
+        <!-- tarjetas de resumen -->
         <div class="row g-3 mb-4">
           <div class="col-md-3">
             <div class="admin-card p-3 border-start border-primary border-4">
@@ -188,7 +186,7 @@ $categorias = $sqlCategorias->fetchAll(PDO::FETCH_ASSOC);
           </div>
         </div>
 
-        <!-- Tabla de Ventas por Categoría -->
+        <!-- tabla de ventas por categoría -->
         <div class="admin-card mb-4">
           <div class="admin-card-header">
             <h2>Ventas por categoría</h2>
