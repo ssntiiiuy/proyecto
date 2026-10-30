@@ -81,6 +81,7 @@ $mascotas = Mascota::listadoMascotasPorCliente($ci, $orden, $dir);
                   <td><?= htmlspecialchars($m['Especie']) ?></td>
                   <td><?= htmlspecialchars($m['Raza']) ?></td>
                   <td><?= $m['FechaNacimiento'] ? date('d/m/Y', strtotime($m['FechaNacimiento'])) : '—' ?></td>
+                  <td>Masculino</td>
                 </tr>
             <?php endforeach;
             endif; ?>

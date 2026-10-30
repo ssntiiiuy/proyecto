@@ -179,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
           <div class="alert alert-warning" role="alert">
             <form class="d-flex flex-wrap align-items-center gap-2" action="usuarios.php?pestana=<?= $pestana ?>" method="post">
               <span class="me-auto">
-                ¿Eliminar al usuario <strong><?= htmlspecialchars($usuarioEliminar['Nombre'] . ' ' . $usuarioEliminar['Apellido']) ?></strong> (C.I. <?= $usuarioEliminar['CI'] ?>) con su login y sus teléfonos? Esta acción no se puede deshacer.
+                ¿Está seguro que desea eliminar al usuario <strong><?= htmlspecialchars($usuarioEliminar['Nombre'] . ' ' . $usuarioEliminar['Apellido']) ?></strong> (C.I. <?= $usuarioEliminar['CI'] ?>)? Esta acción no se puede deshacer.
               </span>
               <input type="hidden" name="CI" value="<?= $usuarioEliminar['CI'] ?>">
               <a class="btn btn-sm admin-btn-cancelar" href="usuarios.php?pestana=<?= $pestana ?>">Cancelar</a>
