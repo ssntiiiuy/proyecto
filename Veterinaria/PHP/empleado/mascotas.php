@@ -147,6 +147,9 @@ $modalAbierto = isset($_GET['ci']);
             <?php endif; ?>
           </form>
 
+          <!-- para que el peluquero no pueda ver fichas -->
+          <?php $puedeVerFichas = ($_SESSION['rol'] ?? '') !== 'Peluquero'; ?>
+
           <div class="table-responsive">
             <table class="table admin-tabla mb-0">
               <thead>
@@ -157,15 +160,19 @@ $modalAbierto = isset($_GET['ci']);
                   <th scope="col">Raza</th>
                   <th scope="col">Fecha de nacimiento</th>
                   <th scope="col">Dueño</th>
-                  <th scope="col" class="text-end">Acciones</th>
+                  <?php if ($puedeVerFichas): ?>
+                    <th scope="col" class="text-end">Acciones</th>
+                  <?php endif; ?>
                 </tr>
               </thead>
               <tbody>
                 <?php if (empty($mascotas)): ?>
                   <tr>
-                    <td colspan="7" class="text-center">No hay mascotas registradas.</td>
+                    <td colspan="<?= $puedeVerFichas ? 7 : 6 ?>" class="text-center">
+                      No hay mascotas registradas.
+                    </td>
                   </tr>
-                <?php else: foreach ($mascotas as $masc): ?>
+                  <?php else: foreach ($mascotas as $masc): ?>
                     <tr>
                       <td><?= htmlspecialchars($masc['IdMascota']) ?></td>
                       <td><?= htmlspecialchars($masc['Nombre']) ?></td>
@@ -173,9 +180,15 @@ $modalAbierto = isset($_GET['ci']);
                       <td><?= htmlspecialchars($masc['Raza']) ?></td>
                       <td><?= $masc['FechaNacimiento'] ? date('d/m/Y', strtotime($masc['FechaNacimiento'])) : '—' ?></td>
                       <td><?= htmlspecialchars($masc['NombreDueño'] . ' ' . $masc['ApellidoDueño']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($masc['CI']) ?></span></td>
-                      <td class="text-end">
-                        <a class="btn btn-sm admin-btn-icono" href="fichaMascota.php?id=<?= $masc['IdMascota'] ?>" aria-label="Ver ficha"><i class="bi bi-file-earmark-text"></i></a>
-                      </td>
+                      <?php if ($puedeVerFichas): ?>
+                        <td class="text-end">
+                          <a class="btn btn-sm admin-btn-icono"
+                            href="fichaMascota.php?id=<?= $masc['IdMascota'] ?>"
+                            aria-label="Ver ficha">
+                            <i class="bi bi-file-earmark-text"></i>
+                          </a>
+                        </td>
+                      <?php endif; ?>
                     </tr>
                 <?php endforeach;
                 endif; ?>

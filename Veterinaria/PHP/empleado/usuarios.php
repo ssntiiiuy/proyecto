@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Usuarios - Panel Sienra</title>
+  <title>Clientes - Panel Sienra</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <form class="modal-content" action="#" method="post">
         <div class="modal-header">
-          <h2 class="modal-title" id="modalUsuarioTitulo">Agregar usuario</h2>
+          <h2 class="modal-title" id="modalUsuarioTitulo">Agregar cliente</h2>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
         <div class="modal-body">

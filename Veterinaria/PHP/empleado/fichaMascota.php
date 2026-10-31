@@ -1,5 +1,5 @@
 <?php
-$rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
+$rolesPermitidos = ['Veterinario', 'Cajero', 'Cirujano'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
