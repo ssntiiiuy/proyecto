@@ -43,18 +43,6 @@
   text-decoration: none;
 }
 
-.admin-brand .brand-logo {
-  border-radius: 8px;
-  background-color: #ffffff;
-}
-
-.admin-brand-text {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
-  color: #ffffff;
-}
-
 .admin-sidebar-rol {
   display: flex;
   align-items: center;

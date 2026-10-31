@@ -16,10 +16,10 @@ $nombreUsuario = $nombreUsuario ?? ($_SESSION['nombre'] ?? 'Usuario');
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid px-3 px-lg-4">
 
-      <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
-        <img src="/img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
+      <div class="navbar-brand d-flex align-items-center gap-2">
+        <img src="../../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
         <span class="brand-text">Clínica<br>Veterinaria<br>SIENRA</span>
-      </a>
+      </div>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Abrir menú">
         <span class="navbar-toggler-icon"></span>

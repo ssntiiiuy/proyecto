@@ -74,16 +74,18 @@ if ($rol === 'Cajero') {
   <!-- en pantallas chicas el menú se abre como offcanvas desde la topbar -->
   <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="adminSidebar" aria-labelledby="adminSidebarTitulo">
     <div class="offcanvas-header">
-      <span class="admin-brand-text" id="adminSidebarTitulo">Panel Sienra</span>
+      <div class="d-flex align-items-center gap-2" id="adminSidebarTitulo">
+        <img src="<?= $rutaEmpleado ?>../../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo">
+        <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
+      </div>
       <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="Cerrar menú"></button>
     </div>
 
     <div class="offcanvas-body flex-column">
-      <?php $hrefDashboard = $carpetaRol ? "{$baseRol}/index.php" : "{$rutaEmpleado}../LoginHTML.php"; ?>
-      <a class="admin-brand d-none d-lg-flex" href="<?= $hrefDashboard ?>">
+      <div class="admin-brand d-none d-lg-flex gap-2">
         <img src="<?= $rutaEmpleado ?>../../img/logo.png" alt="Logo Clínica Veterinaria Sienra" class="brand-logo" onerror="this.style.display='none'">
-        <span class="admin-brand-text">Panel Sienra</span>
-      </a>
+        <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
+      </div>
 
       <?php if ($rol) { ?>
         <p class="admin-sidebar-rol"><i class="bi bi-person-badge"></i> <?= htmlspecialchars($rol) ?></p>
