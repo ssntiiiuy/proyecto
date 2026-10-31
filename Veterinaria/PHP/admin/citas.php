@@ -5,6 +5,19 @@ require_once __DIR__ . '/../includes/verificar_sesion.php';
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
 
+$hoyAgenda = (new DateTimeImmutable('now', new DateTimeZone('America/Montevideo')))->format('Y-m-d');
+$_SESSION['tokenCitas'] = $_SESSION['tokenCitas'] ?? bin2hex(random_bytes(32));
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accionEstado'])) {
+  $resultado = false;
+  $nuevoEstado = ['confirmar' => 'Confirmada', 'cancelar' => 'Cancelada'][$_POST['accionEstado']] ?? null;
+  if ($nuevoEstado && hash_equals($_SESSION['tokenCitas'], (string) ($_POST['tokenCitas'] ?? ''))) {
+    $resultado = (new Cita())->cambiarEstado((int) ($_POST['IdCita'] ?? 0), $nuevoEstado);
+  }
+  header('Location: citas.php?msg=' . ($resultado ? 'estado' : 'estado_error'));
+  exit();
+}
+
 /* eliminar: solo se borra por POST, despues de confirmar */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
   $cita = new Cita();
@@ -15,6 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar'])) {
 
 /* mensajes fijos que se muestran despues de editar o eliminar */
 $mensajes = [
+  'estado' => ['success', 'El estado de la cita se actualizó.'],
+  'estado_error' => ['danger', 'No se pudo cambiar el estado. Solo se pueden cancelar citas pendientes o confirmar su llegada el día de la cita.'],
   'editado' => ['success', 'Los cambios de la cita se guardaron.'],
   'eliminado' => ['success', 'La cita se eliminó.'],
   'noexiste' => ['danger', 'La cita no existe.'],
@@ -76,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $idServicio = trim($_POST['IdServicio'] ?? '');
   $fecha = trim($_POST['Fecha'] ?? '');
   $hora = trim($_POST['Hora'] ?? '');
-  $estado = trim($_POST['Estado'] ?? '');
 
   $sqlCheck = $conexion->prepare("SELECT 1 FROM CLIENTE WHERE CI = :ci");
   $sqlCheck->execute([':ci' => $ci]);
@@ -103,12 +117,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     $error = "La fecha no puede ser anterior a hoy.";
   } elseif ($hora === '') {
     $error = "Falta la hora de la cita.";
-  } elseif (!in_array($estado, ['Pendiente', 'Confirmada', 'Cancelada'])) {
-    $error = "Elegí un estado válido para la cita.";
   } else {
     try {
       $cita = new Cita();
-      $resultado = $cita->crearCita((int)$ci, (int)$idServicio, (int)$idMascota, $fecha, $hora, $estado);
+      $resultado = $cita->crearCita((int)$ci, (int)$idServicio, (int)$idMascota, $fecha, $hora, 'Pendiente');
     } catch (Throwable $e) {
       $resultado = false;
     }
@@ -251,6 +263,16 @@ $modalAbierto = isset($_GET['ci']);
                         <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($c['Estado']) ?></span>
                       </td>
                       <td class="text-end">
+                        <?php if ($c['Estado'] === 'Pendiente') { ?>
+                          <form method="post" action="citas.php" class="d-inline">
+                            <input type="hidden" name="IdCita" value="<?= (int) $c['IdCita'] ?>">
+                            <input type="hidden" name="tokenCitas" value="<?= htmlspecialchars($_SESSION['tokenCitas']) ?>">
+                            <?php if ($c['Fecha'] === $hoyAgenda) { ?>
+                              <button class="btn btn-sm btn-outline-success" name="accionEstado" value="confirmar">Confirmar llegada</button>
+                            <?php } ?>
+                            <button class="btn btn-sm btn-outline-danger" name="accionEstado" value="cancelar">Cancelar cita</button>
+                          </form>
+                        <?php } ?>
                         <a class="btn btn-sm admin-btn-icono" href="editar_cita.php?id=<?= $c['IdCita'] ?>" aria-label="Editar"><i class="bi bi-pencil"></i></a>
                         <a class="btn btn-sm admin-btn-icono admin-btn-eliminar" href="citas.php?eliminar=<?= $c['IdCita'] ?>" aria-label="Eliminar"><i class="bi bi-trash"></i></a>
                       </td>
@@ -344,14 +366,7 @@ $modalAbierto = isset($_GET['ci']);
                   <label class="form-label" for="Hora">Hora</label>
                   <input class="form-control" type="time" id="Hora" name="Hora" required>
                 </div>
-                <div class="col-sm-6">
-                  <label class="form-label" for="Estado">Estado</label>
-                  <select class="form-select" id="Estado" name="Estado" required>
-                    <option value="Pendiente" selected>Pendiente</option>
-                    <option value="Confirmada">Confirmada</option>
-                    <option value="Cancelada">Cancelada</option>
-                  </select>
-                </div>
+                <p class="form-text mb-0">La cita se creará pendiente. La llegada se confirma el día de la cita.</p>
               </div>
             </div>
             <div class="modal-footer">

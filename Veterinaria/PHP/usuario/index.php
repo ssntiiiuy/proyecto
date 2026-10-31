@@ -11,6 +11,7 @@ require_once __DIR__ . '/../clases/Servicio.php';
 $nombreUsuario = "Usuario";
 $errorAgenda = null;
 $avisoAgenda = isset($_GET['agendada']);
+$_SESSION['tokenCitas'] = $_SESSION['tokenCitas'] ?? bin2hex(random_bytes(32));
 
 try {
   $conexion = (new Conexion())->establecerConexion();
@@ -28,18 +29,27 @@ try {
   $nombreUsuario = $usuario['Nombre'];
   $ci = (int) $usuario['CI'];
 
+  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancelarCita'])) {
+    if (hash_equals($_SESSION['tokenCitas'], (string) ($_POST['tokenCitas'] ?? ''))
+        && (new Cita())->cambiarEstado((int) ($_POST['IdCita'] ?? 0), 'Cancelada', $ci)) {
+      header('Location: index.php?cancelada=1');
+      exit();
+    }
+    $errorAgenda = 'No se pudo cancelar la cita. Solo podés cancelar tus propias citas pendientes.';
+  }
+
   $mascotas = Mascota::listadoMascotasPorCliente($ci);
   $servicios = Servicio::listadoServicios()['servicios'];
 
-  $sqlTurno = "SELECT c.Fecha, c.Hora, c.Estado, s.Nombre AS NombreServicio, m.Nombre AS NombreMascota
+  $sqlTurno = "SELECT c.IdCita, c.Fecha, c.Hora, c.Estado, s.Nombre AS NombreServicio, m.Nombre AS NombreMascota
              FROM CITA c
              INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
              INNER JOIN MASCOTA m ON c.IdMascota = m.IdMascota
-             WHERE c.CI = :ci AND c.Fecha >= CURDATE()
-             ORDER BY c.Fecha ASC, c.Hora ASC LIMIT 1";
+             WHERE c.CI = :ci AND c.Fecha >= CURDATE() AND c.Estado IN ('Pendiente', 'Confirmada')
+             ORDER BY c.Fecha ASC, c.Hora ASC";
   $stmtTurno = $conexion->prepare($sqlTurno);
   $stmtTurno->execute([':ci' => $ci]);
-  $proximoTurno = $stmtTurno->fetch(PDO::FETCH_ASSOC);
+  $turnos = $stmtTurno->fetchAll(PDO::FETCH_ASSOC);
 
   $sqlCarnet = "SELECT cv.TipoVacunacion, cv.FechaProximaVacunacion, m.Nombre AS NombreMascota
               FROM CARNET_VACUNACION cv
@@ -69,7 +79,7 @@ try {
   echo "</div>";
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($ci)) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($ci) && !isset($_POST['cancelarCita'])) {
   $idMascota = (int)($_POST['IdMascota'] ?? 0);
   $idServicio = (int)($_POST['IdServicio'] ?? 0);
   $fecha = trim($_POST['Fecha'] ?? '');
@@ -141,7 +151,10 @@ $mostrarCarrito = true;
       <div class="row g-3 mt-1">
 
         <?php if ($avisoAgenda) { ?>
-          <div class="col-12"><div class="alert alert-success mb-0">Tu solicitud de turno quedó pendiente de confirmación.</div></div>
+          <div class="col-12"><div class="alert alert-success mb-0">Tu turno quedó pendiente. El personal confirmará tu llegada el día de la cita.</div></div>
+        <?php } ?>
+        <?php if (isset($_GET['cancelada'])) { ?>
+          <div class="col-12"><div class="alert alert-success mb-0">Tu cita se canceló.</div></div>
         <?php } ?>
         <?php if ($errorAgenda) { ?>
           <div class="col-12"><div class="alert alert-danger mb-0"><?= htmlspecialchars($errorAgenda) ?></div></div>
@@ -170,18 +183,28 @@ $mostrarCarrito = true;
             <div class="panel-header">
               <h2>Mis turnos</h2>
             </div>
-            <?php if ($proximoTurno): ?>
+            <?php foreach ($turnos as $proximoTurno) { ?>
               <div class="pet-row">
                 <div>
                   <p class="pet-name"><?= htmlspecialchars($proximoTurno['NombreMascota']) ?></p>
                   <p class="pet-meta"><?= htmlspecialchars($proximoTurno['NombreServicio']) ?> -
                     <?= date('d/m/Y', strtotime($proximoTurno['Fecha'])) ?> - <?= substr($proximoTurno['Hora'], 0, 5) ?></p>
                 </div>
-                <span class="badge badge-success"><?= htmlspecialchars($proximoTurno['Estado']) ?></span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge <?= $proximoTurno['Estado'] === 'Confirmada' ? 'badge-success' : 'badge-info' ?>"><?= htmlspecialchars($proximoTurno['Estado']) ?></span>
+                  <?php if ($proximoTurno['Estado'] === 'Pendiente') { ?>
+                    <form method="post" action="index.php">
+                      <input type="hidden" name="IdCita" value="<?= (int) $proximoTurno['IdCita'] ?>">
+                      <input type="hidden" name="tokenCitas" value="<?= htmlspecialchars($_SESSION['tokenCitas']) ?>">
+                      <button class="btn btn-sm btn-outline-danger" name="cancelarCita" value="1">Cancelar cita</button>
+                    </form>
+                  <?php } ?>
+                </div>
               </div>
-            <?php else: ?>
+            <?php } ?>
+            <?php if (empty($turnos)) { ?>
               <p class="pet-meta">No tenés turnos próximos.</p>
-            <?php endif; ?>
+            <?php } ?>
           </div>
 
         </div>
@@ -271,7 +294,7 @@ $mostrarCarrito = true;
                   <input class="form-control" type="time" id="Hora" name="Hora" required>
                 </div>
               </div>
-              <p class="form-text mb-0 mt-3">La solicitud quedará pendiente hasta que la clínica la confirme.</p>
+              <p class="form-text mb-0 mt-3">El turno quedará pendiente. El personal confirmará tu llegada el día de la cita.</p>
             <?php } ?>
           </div>
           <div class="modal-footer">

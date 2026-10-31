@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $idServicio = (int) ($_POST['IdServicio'] ?? 0);
   $fecha = trim($_POST['Fecha'] ?? '');
   $hora = trim($_POST['Hora'] ?? '');
-  $estado = trim($_POST['Estado'] ?? '');
+  $estado = $cita['Estado'];
 
   /* la mascota elegida tiene que ser del mismo cliente */
   $mascotaDelCliente = false;
@@ -58,8 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     $error = "La fecha no puede ser anterior a hoy.";
   } elseif ($hora === '') {
     $error = "Falta la hora de la cita.";
-  } elseif (!in_array($estado, ['Pendiente', 'Confirmada', 'Cancelada'])) {
-    $error = "Elegí un estado válido para la cita.";
   } else {
     try {
       $resultado = (new Cita())->editarCita($id, $idServicio, $idMascota, $fecha, $hora, $estado);
@@ -159,12 +157,8 @@ $fechaMinima = min(date('Y-m-d'), $cita['Fecha']);
                 <input class="form-control" type="time" id="Hora" name="Hora" value="<?= htmlspecialchars(substr($datosForm['Hora'] ?? '', 0, 5)) ?>" required>
               </div>
               <div class="col-sm-6">
-                <label class="form-label" for="Estado">Estado</label>
-                <select class="form-select" id="Estado" name="Estado" required>
-                  <option value="Pendiente" <?= (($datosForm['Estado'] ?? '') === 'Pendiente') ? 'selected' : '' ?>>Pendiente</option>
-                  <option value="Confirmada" <?= (($datosForm['Estado'] ?? '') === 'Confirmada') ? 'selected' : '' ?>>Confirmada</option>
-                  <option value="Cancelada" <?= (($datosForm['Estado'] ?? '') === 'Cancelada') ? 'selected' : '' ?>>Cancelada</option>
-                </select>
+                <p class="form-label">Estado</p>
+                <p class="form-control-plaintext"><?= htmlspecialchars($cita['Estado']) ?></p>
               </div>
             </div>
 

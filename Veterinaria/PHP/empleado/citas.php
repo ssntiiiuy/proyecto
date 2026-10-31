@@ -26,6 +26,35 @@ if (!isset($tiposPorRol[$rol])) {
 
 $tipos = $tiposPorRol[$rol];
 
+$hoyAgenda = (new DateTimeImmutable('now', new DateTimeZone('America/Montevideo')))->format('Y-m-d');
+$_SESSION['tokenCitas'] = $_SESSION['tokenCitas'] ?? bin2hex(random_bytes(32));
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accionEstado'])) {
+  $resultado = false;
+  $idCita = (int) ($_POST['IdCita'] ?? 0);
+  $nuevoEstado = ['confirmar' => 'Confirmada', 'cancelar' => 'Cancelada'][$_POST['accionEstado']] ?? null;
+  if ($nuevoEstado && hash_equals($_SESSION['tokenCitas'], (string) ($_POST['tokenCitas'] ?? ''))) {
+    // La autorización depende del rol, no del empleado que inició sesión.
+    $agendaRol = Cita::listadoCitaPorTipo($tipos)['citas'];
+    if (in_array($idCita, array_map('intval', array_column($agendaRol, 'IdCita')), true)) {
+      $resultado = (new Cita())->cambiarEstado($idCita, $nuevoEstado);
+    }
+  }
+  header('Location: citas.php?' . http_build_query([
+    'mes' => $_GET['mes'] ?? date('Y-m'),
+    'estado' => $_GET['estado'] ?? '',
+    'filtro' => $_GET['filtro'] ?? '',
+    'msg' => $resultado ? 'estado' : 'estado_error'
+  ]));
+  exit();
+}
+
+$mensajesEstado = [
+  'estado' => ['success', 'El estado de la cita se actualizó.'],
+  'estado_error' => ['danger', 'No se pudo cambiar el estado. Solo se pueden cancelar citas pendientes de tu agenda o confirmar su llegada el día de la cita.']
+];
+$mensajeEstado = $mensajesEstado[$_GET['msg'] ?? ''] ?? null;
+
 $estado = $_GET['estado'] ?? '';
 $filtro = $_GET['filtro'] ?? null;
 
@@ -92,6 +121,10 @@ $parametrosFiltro = array_filter([
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
+        <?php if ($mensajeEstado) { ?>
+          <div class="alert alert-<?= $mensajeEstado[0] ?>"><?= htmlspecialchars($mensajeEstado[1]) ?></div>
+        <?php } ?>
+
         <section class="admin-card admin-calendario">
           <div class="admin-card-header admin-calendario-encabezado">
             <div>
@@ -140,6 +173,16 @@ $parametrosFiltro = array_filter([
                         <span class="admin-calendario-hora"><?= htmlspecialchars(substr($cita['Hora'], 0, 5)) ?></span>
                         <span><?= htmlspecialchars($cita['MascotaNombre']) ?></span>
                       </div>
+                      <?php if ($cita['Estado'] === 'Pendiente') { ?>
+                        <form method="post" class="d-flex flex-wrap gap-1 mb-2">
+                          <input type="hidden" name="IdCita" value="<?= (int) $cita['IdCita'] ?>">
+                          <input type="hidden" name="tokenCitas" value="<?= htmlspecialchars($_SESSION['tokenCitas']) ?>">
+                          <?php if ($cita['Fecha'] === $hoyAgenda) { ?>
+                            <button class="btn btn-sm btn-outline-success" name="accionEstado" value="confirmar">Confirmar llegada</button>
+                          <?php } ?>
+                          <button class="btn btn-sm btn-outline-danger" name="accionEstado" value="cancelar">Cancelar cita</button>
+                        </form>
+                      <?php } ?>
                     <?php } ?>
                   <?php } ?>
                 </div>

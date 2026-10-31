@@ -315,6 +315,34 @@ class Cita
         }
     }
 
+    public function cambiarEstado(int $id, string $estado, ?int $ci = null): bool
+    {
+        if (!in_array($estado, ['Confirmada', 'Cancelada'], true) || ($ci !== null && $estado !== 'Cancelada')) {
+            return false;
+        }
+
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $sql = "UPDATE CITA SET Estado = :estado WHERE IdCita = :id AND Estado = 'Pendiente'";
+            $parametros = [':estado' => $estado, ':id' => $id];
+
+            if ($estado === 'Confirmada') {
+                $sql .= " AND Fecha = :hoy";
+                $parametros[':hoy'] = (new DateTimeImmutable('now', new DateTimeZone('America/Montevideo')))->format('Y-m-d');
+            }
+            if ($ci !== null) {
+                $sql .= " AND CI = :ci";
+                $parametros[':ci'] = $ci;
+            }
+
+            $consulta = $conexion->prepare($sql);
+            $consulta->execute($parametros);
+            return $consulta->rowCount() === 1;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
     /* ninguna tabla usa CITA, asi que no hay borrado bloqueado */
     public function eliminarCita(int $id): bool
     {
