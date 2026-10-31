@@ -28,6 +28,12 @@ $sql .= " ORDER BY $orderBy";
 $stmt = $conexion->prepare($sql);
 $stmt->execute($params);
 $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$categoriasVisuales = [
+  'Accesorios' => ['icono' => 'bi-bag-heart', 'clase' => 'accesorios'],
+  'Alimentos' => ['icono' => 'bi-basket2-fill', 'clase' => 'alimentos'],
+  'Farmacia' => ['icono' => 'bi-capsule', 'clase' => 'farmacia'],
+  'Higiene' => ['icono' => 'bi-droplet-fill', 'clase' => 'higiene']
+];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -87,7 +93,11 @@ $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <?php else: foreach ($productos as $p): ?>
                 <div class="col">
                   <div class="producto-card">
-                    <div class="producto-img" aria-hidden="true"><?= htmlspecialchars($p['Categoria']) ?></div>
+                    <?php $visual = $categoriasVisuales[$p['Categoria']] ?? ['icono' => 'bi-box-seam', 'clase' => 'general']; ?>
+                    <div class="producto-categoria producto-categoria-<?= $visual['clase'] ?>">
+                      <i class="bi <?= $visual['icono'] ?>" aria-hidden="true"></i>
+                      <span><?= htmlspecialchars($p['Categoria']) ?></span>
+                    </div>
                     <p class="producto-nombre"><?= htmlspecialchars($p['Nombre']) ?></p>
                     <p class="producto-precio">$<?= number_format($p['Precio'], 0, ',', '.') ?></p>
                     <button class="btn btn-carrito" type="button">Añadir al carrito</button>

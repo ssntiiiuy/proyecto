@@ -426,20 +426,48 @@ body {
   padding: 1rem;
 }
 
-/* cuadro gris en lugar de la foto del producto */
-.producto-img {
+/* franja compacta para identificar el tipo de producto */
+.producto-categoria {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  min-height: 4.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #EEF0F3;
-  border: 1px dashed #C5CBD3;
+  gap: 0.6rem;
   border-radius: 8px;
-  color: #8A94A3;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   margin-bottom: 0.75rem;
+}
+
+.producto-categoria i {
+  font-size: 1.35rem;
+}
+
+.producto-categoria-accesorios {
+  background-color: #E8EFFC;
+  color: #37598B;
+}
+
+.producto-categoria-alimentos {
+  background-color: #E5F3E9;
+  color: #27653E;
+}
+
+.producto-categoria-farmacia {
+  background-color: #F0EAFE;
+  color: #6743A5;
+}
+
+.producto-categoria-higiene {
+  background-color: #FFF0DF;
+  color: #8A4B1B;
+}
+
+.producto-categoria-general {
+  background-color: #EEF0F3;
+  color: #667085;
 }
 
 .producto-nombre {
