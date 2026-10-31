@@ -39,6 +39,7 @@ if ($rol === 'Cajero') {
     'Caja' => [
       'caja'      => ["{$rutaEmpleado}caja.php", 'bi-cash-coin', 'Nueva venta'],
       'facturas'  => ["{$rutaEmpleado}facturas.php", 'bi-receipt', 'Facturas'],
+      'productos'  => ["{$rutaEmpleado}productos.php", 'bi-box-seam', 'Productos'],
     ],
     'Clientes' => [
       'usuarios'  => ["{$rutaEmpleado}usuarios.php", 'bi-people', 'Clientes'],
