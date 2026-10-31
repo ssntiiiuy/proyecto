@@ -55,11 +55,11 @@ $mascotas = Mascota::listadoMascotasPorCliente($ci, $orden, $dir);
         <table class="table mascotas-tabla mb-0">
           <thead>
             <tr>
-              <th class="mascotas-titulo" colspan="5" scope="colgroup">Mis mascotas</th>
+              <th class="mascotas-titulo" colspan="4" scope="colgroup">Mis mascotas</th>
             </tr>
             <tr>
               <?php
-              $columnas = ['Nombre' => 'Nombre', 'Especie' => 'Tipo de animal', 'Raza' => 'Raza', 'FechaNacimiento' => 'Fecha de nacimiento', 'Sexo' => 'Sexo'];
+              $columnas = ['Nombre' => 'Nombre', 'Especie' => 'Tipo de animal', 'Raza' => 'Raza', 'FechaNacimiento' => 'Fecha de nacimiento'];
               foreach ($columnas as $col => $etiqueta):
                 $flecha = ($orden === $col) ? ($dir === 'asc' ? ' ▲' : ' ▼') : '';
               ?>
@@ -74,7 +74,7 @@ $mascotas = Mascota::listadoMascotasPorCliente($ci, $orden, $dir);
           <tbody>
             <?php if (empty($mascotas)): ?>
               <tr>
-                <td colspan="5" class="text-center">No tenés mascotas registradas.</td>
+                <td colspan="4" class="text-center">No tenés mascotas registradas.</td>
               </tr>
               <?php else: foreach ($mascotas as $m): ?>
                 <tr>
@@ -82,7 +82,6 @@ $mascotas = Mascota::listadoMascotasPorCliente($ci, $orden, $dir);
                   <td><?= htmlspecialchars($m['Especie']) ?></td>
                   <td><?= htmlspecialchars($m['Raza']) ?></td>
                   <td><?= $m['FechaNacimiento'] ? date('d/m/Y', strtotime($m['FechaNacimiento'])) : '—' ?></td>
-                  <td>Masculino</td>
                 </tr>
             <?php endforeach;
             endif; ?>
