@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
   <div class="admin-wrapper" data-bs-theme="light">
     <?php
-    $paginaActiva = 'facturas';
+    $paginaActiva = 'caja';
     include __DIR__ . '/includes/sidebar.php';
     ?>
 

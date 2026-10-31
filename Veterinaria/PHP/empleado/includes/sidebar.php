@@ -33,9 +33,6 @@ if ($rol === 'Cajero') {
     '' => [
       'dashboard' => ["{$baseRol}/index.php", 'bi-speedometer2', 'Dashboard'],
     ],
-    'Agenda' => [
-      'agenda' => ["{$rutaEmpleado}citas.php", 'bi-calendar-check', 'Agenda de citas'],
-    ],
     'Caja' => [
       'caja'      => ["{$rutaEmpleado}caja.php", 'bi-cash-coin', 'Nueva venta'],
       'facturas'  => ["{$rutaEmpleado}facturas.php", 'bi-receipt', 'Facturas'],

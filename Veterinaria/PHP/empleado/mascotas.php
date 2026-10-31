@@ -148,7 +148,13 @@ $modalAbierto = isset($_GET['ci']);
           </form>
 
           <!-- para que el peluquero no pueda ver fichas -->
-          <?php $puedeVerFichas = ($_SESSION['rol'] ?? '') !== 'Peluquero'; ?>
+          <?php
+          $puedeVerFichas = !in_array(
+            $_SESSION['rol'] ?? '',
+            ['Peluquero', 'Cajero'],
+            true
+          );
+          ?>
 
           <div class="table-responsive">
             <table class="table admin-tabla mb-0">
