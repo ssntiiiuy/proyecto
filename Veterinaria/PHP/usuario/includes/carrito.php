@@ -71,6 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accionCarrito'])) {
       // Impide repetir la compra desde un formulario anterior.
       $_SESSION['tokenCarrito'] = bin2hex(random_bytes(32));
       $_SESSION['avisoCarrito'] = ['success', 'Compra registrada. Factura N.º ' . $idFacturaCarrito . '.'];
+      if ((new Factura())->enviarPorCorreo($idFacturaCarrito, $correoCarrito)) {
+        $_SESSION['avisoCarrito'][1] .= ' Enviamos la factura a tu correo.';
+      } else {
+        $_SESSION['avisoCarrito'] = ['warning', 'Compra registrada. Factura N.º ' . $idFacturaCarrito . '. No pudimos enviar el correo; contactá a la clínica para solicitar tu factura.'];
+      }
     } else {
       throw new Exception('La acción del carrito no es válida.');
     }

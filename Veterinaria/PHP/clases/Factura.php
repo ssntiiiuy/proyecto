@@ -248,6 +248,81 @@ class Factura
         }
     }
 
+    public function enviarPorCorreo(int $idFactura, string $correo): bool
+    {
+        try {
+            $factura = self::buscarPorId($idFactura);
+            $lineas = self::listadoLineas($idFactura);
+            if (!$factura || empty($lineas) || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('Faltan los datos de la factura o un correo válido.');
+            }
+
+            $configuracion = __DIR__ . '/../config/correo.php';
+            if (!is_file($configuracion)) {
+                throw new Exception('Falta la configuración del correo.');
+            }
+            require $configuracion;
+            require_once __DIR__ . '/../PHPMailer/Exception.php';
+            require_once __DIR__ . '/../PHPMailer/PHPMailer.php';
+            require_once __DIR__ . '/../PHPMailer/SMTP.php';
+
+            $numero = str_pad((string) $idFactura, 4, '0', STR_PAD_LEFT);
+            $nombreCliente = trim($factura['ClienteNombre'] . ' ' . $factura['ClienteApellido']);
+            $fecha = date('d/m/Y', strtotime($factura['Fecha']));
+            $vencimiento = date('d/m/Y', strtotime($factura['FechaVencimiento']));
+            $cuerpo = '<html lang="es"><body style="font-family:Arial,sans-serif;color:#1F2733">'
+                . '<h1 style="font-size:22px">' . htmlspecialchars($factura['NombreVeterinaria']) . '</h1>'
+                . '<h2 style="font-size:18px">Factura N.º ' . $numero . '</h2>'
+                . '<p>RUT: ' . htmlspecialchars($factura['Rut']) . '<br>Fecha: ' . $fecha . '<br>Vencimiento: ' . $vencimiento . '</p>'
+                . '<p>Cliente: ' . htmlspecialchars($nombreCliente) . '<br>C.I.: ' . htmlspecialchars((string) $factura['ClienteCI']) . '</p>'
+                . '<table cellpadding="8" cellspacing="0" border="1" style="border-collapse:collapse;width:100%;max-width:650px;border-color:#DDE2E8">'
+                . '<thead><tr><th>Producto</th><th>Cantidad</th><th>Precio unitario (IVA incluido)</th><th>Importe</th></tr></thead><tbody>';
+            $texto = $factura['NombreVeterinaria'] . "\nFactura N.º " . $numero
+                . "\nRUT: " . $factura['Rut'] . "\nFecha: " . $fecha . "\nVencimiento: " . $vencimiento
+                . "\nCliente: " . $nombreCliente . "\nC.I.: " . $factura['ClienteCI'] . "\n\n";
+            $neto = 0;
+            $total = 0;
+            foreach ($lineas as $linea) {
+                // Los importes salen de la factura guardada, no del precio actual del catálogo.
+                $importe = (float) $linea['SubtotalConIva'];
+                $unitario = $importe / (int) $linea['Cantidad'];
+                $neto += (float) $linea['Subtotal'];
+                $total += $importe;
+                $cuerpo .= '<tr><td>' . htmlspecialchars($linea['ProductoNombre']) . '</td><td align="right">' . (int) $linea['Cantidad']
+                    . '</td><td align="right">$ ' . number_format($unitario, 2, ',', '.')
+                    . '</td><td align="right">$ ' . number_format($importe, 2, ',', '.') . '</td></tr>';
+                $texto .= $linea['ProductoNombre'] . ' — ' . (int) $linea['Cantidad'] . ' × $ ' . number_format($unitario, 2, ',', '.')
+                    . ' = $ ' . number_format($importe, 2, ',', '.') . "\n";
+            }
+            $cuerpo .= '</tbody></table><p>Subtotal neto: $ ' . number_format($neto, 2, ',', '.')
+                . '<br>IVA: $ ' . number_format($total - $neto, 2, ',', '.')
+                . '<br><strong>Total: $ ' . number_format($total, 2, ',', '.') . '</strong></p></body></html>';
+            $texto .= "\nSubtotal neto: $ " . number_format($neto, 2, ',', '.')
+                . "\nIVA: $ " . number_format($total - $neto, 2, ',', '.') . "\nTotal: $ " . number_format($total, 2, ',', '.');
+
+            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = $correoUsuario;
+            $mail->Password = $correoContrasena;
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
+            $mail->Timeout = 15;
+            $mail->CharSet = 'UTF-8';
+            $mail->setFrom($correoUsuario, $correoNombre);
+            $mail->addAddress($correo, $nombreCliente);
+            $mail->isHTML(true);
+            $mail->Subject = 'Factura N.º ' . $numero . ' - Clínica Veterinaria Sienra';
+            $mail->Body = $cuerpo;
+            $mail->AltBody = $texto;
+            return $mail->send();
+        } catch (\Throwable $e) {
+            error_log('Factura N.º ' . $idFactura . ': no se pudo enviar el correo.');
+            return false;
+        }
+    }
+
     public function eliminarFactura(int $id): bool
     {
         try {
