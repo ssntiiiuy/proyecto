@@ -497,6 +497,60 @@ body {
   color: #ffffff;
 }
 
+/* Carrito lateral */
+.carrito-panel {
+  --bs-offcanvas-width: 420px;
+  --bs-offcanvas-bg: var(--sienra-panel);
+  --bs-offcanvas-color: var(--sienra-text);
+}
+
+.carrito-panel .offcanvas-header,
+.carrito-panel .offcanvas-body,
+.carrito-pie {
+  padding: 1.5rem;
+}
+
+.carrito-panel h2,
+.carrito-panel h3 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+}
+
+.carrito-panel h2 { font-size: 1.3rem; }
+.carrito-panel h3 { font-size: 1rem; margin: 0.3rem 0; }
+.carrito-detalle { color: var(--sienra-text-muted); font-size: 0.85rem; }
+.carrito-pie { flex-shrink: 0; }
+.carrito-articulo { padding: 1rem 0; border-bottom: 1px solid var(--bs-border-color); }
+.carrito-articulo:first-of-type { padding-top: 0; }
+.carrito-quitar { padding: 0.25rem; color: var(--sienra-text-muted); }
+.carrito-quitar:hover { color: var(--sienra-text); }
+
+.carrito-cantidad {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.carrito-cantidad .btn { color: var(--sienra-text); border-radius: 0; min-width: 36px; }
+.carrito-cantidad span { min-width: 36px; text-align: center; }
+.carrito-vacio { padding: 3rem 0; text-align: center; color: var(--sienra-text-muted); }
+.carrito-vacio > i { font-size: 2.5rem; }
+.carrito-vacio h3 { margin-top: 1rem; color: var(--sienra-text); }
+
+.carrito-contador {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 18px;
+  padding: 1px 4px;
+  border-radius: 12px;
+  background: #2E8B4F;
+  color: #ffffff;
+  font-size: 0.65rem;
+}
+
 /* Mascotas */
 .mascotas {
   min-height: calc(100vh - 72px);

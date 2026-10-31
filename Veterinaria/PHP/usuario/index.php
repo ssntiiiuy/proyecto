@@ -2,6 +2,7 @@
 /* $rolesPermitidos = ['Cliente'];
 require_once __DIR__ . '/../../includes/verificar_sesion.php'; // hay que agregarlo pero todavia no anda */
 session_start();
+require_once __DIR__ . '/includes/carrito.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Mascota.php';

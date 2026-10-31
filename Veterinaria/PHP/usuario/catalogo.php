@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . '/includes/carrito.php';
 require_once __DIR__ . '/../clases/Conexion.php';
 $conexion = (new Conexion())->establecerConexion();
 
@@ -15,7 +16,7 @@ $ordenesValidos = [
 $ordenGet = $_GET['orden'] ?? 'ultimos';
 $orderBy = $ordenesValidos[$ordenGet] ?? $ordenesValidos['ultimos'];
 
-$sql = "SELECT IdProducto, Nombre, Categoria, Precio FROM PRODUCTO";
+$sql = "SELECT IdProducto, Nombre, Categoria, Precio, Stock FROM PRODUCTO";
 $params = [];
 
 if (!empty($categoriasSeleccionadas)) {
@@ -99,8 +100,12 @@ $categoriasVisuales = [
                       <span><?= htmlspecialchars($p['Categoria']) ?></span>
                     </div>
                     <p class="producto-nombre"><?= htmlspecialchars($p['Nombre']) ?></p>
-                    <p class="producto-precio">$<?= number_format($p['Precio'], 0, ',', '.') ?></p>
-                    <button class="btn btn-carrito" type="button">Añadir al carrito</button>
+                    <p class="producto-precio">$<?= number_format($p['Precio'], 2, ',', '.') ?></p>
+                    <form method="post">
+                      <input type="hidden" name="tokenCarrito" value="<?= htmlspecialchars($_SESSION['tokenCarrito']) ?>">
+                      <input type="hidden" name="IdProducto" value="<?= (int) $p['IdProducto'] ?>">
+                      <button class="btn btn-carrito" name="accionCarrito" value="agregar" <?= (int) $p['Stock'] <= 0 ? 'disabled' : '' ?>><?= (int) $p['Stock'] > 0 ? 'Añadir al carrito' : 'Sin stock' ?></button>
+                    </form>
                   </div>
                 </div>
             <?php endforeach;

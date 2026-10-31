@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . '/includes/carrito.php';
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Mascota.php';
 
@@ -44,7 +45,7 @@ $mascotas = Mascota::listadoMascotasPorCliente($ci, $orden, $dir);
 <body>
   <?php
   $paginaActiva = 'mascotas';
-  $mostrarCarrito = false;
+  $mostrarCarrito = true;
   include __DIR__ . '/includes/header.php';
   ?>
 

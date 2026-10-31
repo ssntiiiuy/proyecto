@@ -45,9 +45,12 @@ $nombreUsuario = $nombreUsuario ?? ($_SESSION['nombre'] ?? 'Usuario');
           </li>
           <?php if ($mostrarCarrito) { ?>
             <li class="nav-item">
-              <a class="nav-link icon-badge" href="#" aria-label="Carrito">
+              <button class="nav-link icon-badge position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#panelCarrito" aria-controls="panelCarrito" aria-label="Abrir carrito">
                 <i class="bi bi-cart3"></i>
-              </a>
+                <?php if ($cantidadCarrito > 0) { ?>
+                  <span class="carrito-contador"><?= $cantidadCarrito ?></span>
+                <?php } ?>
+              </button>
             </li>
           <?php } ?>
           <li class="nav-item dropdown">
@@ -70,6 +73,8 @@ $nombreUsuario = $nombreUsuario ?? ($_SESSION['nombre'] ?? 'Usuario');
     </div>
   </nav>
 </header>
+
+<?php if ($mostrarCarrito) { include __DIR__ . '/panel_carrito.php'; } ?>
 
 <!-- Modal de confirmación para cerrar sesión -->
 <div class="modal fade" id="modalCerrarSesion" tabindex="-1" aria-labelledby="modalCerrarSesionLabel" aria-hidden="true">
