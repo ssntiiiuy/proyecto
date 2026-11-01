@@ -3,6 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// abro la sesion para poder leer y guardar los datos del usuario
 session_start();
 
 require_once __DIR__ . '/clases/Conexion.php';
@@ -11,8 +12,10 @@ require_once __DIR__ . '/clases/Usuario.php';
 
 $error = "";
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // leo los datos del registro y saco los espacios de los extremos
     $ci = trim($_POST['ci']);
     $nombre = trim($_POST['nombre']);
     $apellido = trim($_POST['apellido']);
@@ -20,15 +23,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $telefono = trim($_POST['telefono']);
     $calle1 = trim($_POST['calle1']);
     $calle2 = trim($_POST['calle2']);
+    // junto las dos calles en el campo de direccion
     $direccion = $calle1 . ", " . $calle2;
     $contraseña = $_POST['password'];
     $confirmar = $_POST['confirm_password'];
     $tipoUsuario = 'cliente';
 
+    // antes de registrar compruebo que las dos contraseñas coincidan
     if ($contraseña !== $confirmar) {
         $error = "Las contraseñas no coinciden.";
     } else {
         $usuario = new Usuario();
+        // le paso los datos a la clase que guarda la cuenta y el cliente
         $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario, 'null');
 
         if ($resultado) {

@@ -7,6 +7,7 @@ class Conexion
     private $password = "";
     private ?PDO $pdo = null;
 
+    // si este objeto ya tiene una conexion la reutilizo, si no creo una con PDO
     public function establecerConexion(): PDO
     {
         if ($this->pdo !== null) {

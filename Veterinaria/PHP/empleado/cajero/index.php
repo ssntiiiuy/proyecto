@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Cajero'];
 require_once __DIR__ . '/../../includes/verificar_sesion.php';
 
@@ -6,9 +7,11 @@ require_once __DIR__ . '/../../clases/Conexion.php';
 require_once __DIR__ . '/../../clases/Factura.php';
 require_once __DIR__ . '/../../clases/Producto.php';
 
+// cargo la cantidad de facturas, el total vendido hoy y la alerta de stock
 $facturasHoy = Factura::contarFacturasHoy();
 $ventasHoy = Factura::totalVentasHoy();
 $stockBajo = Producto::contarStockBajo();
+// del listado ordenado por id me quedo con las cinco facturas mas recientes
 $ultimasFacturas = array_slice(Factura::listadoFactura()['facturas'], 0, 5);
 ?>
 

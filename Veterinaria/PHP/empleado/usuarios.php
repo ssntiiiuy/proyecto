@@ -1,10 +1,12 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Usuario.php';
 
+// leo la busqueda de la URL y quito los espacios de los extremos
 $busqueda = trim($_GET['busqueda'] ?? '');
 
 $datosUsuarios = Usuario::listadoUsuarios($busqueda);
@@ -15,6 +17,7 @@ $error = null;
 $datosForm = []; /* se guardan los datos del formulario para repoblarlo en caso de error */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  // conservo lo escrito para mostrarlo de nuevo si hay un error
   $datosForm = $_POST;
 
   $ci = trim($_POST['ci']);

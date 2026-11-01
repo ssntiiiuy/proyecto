@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -15,6 +16,7 @@ $mensajes = [
   'noexiste' => ['danger', 'La mascota no existe.'],
   'error' => ['danger', 'No se pudo completar la operación.']
 ];
+// uso el aviso correspondiente al resultado que llega en la URL
 $mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 
 /* listado de mascotas con buscador */
@@ -31,6 +33,7 @@ $errorCedula = null;
 if (isset($_GET['ci']) && trim($_GET['ci']) !== '') {
   $ciBuscada = trim($_GET['ci']);
 
+  // busco al cliente por cedula para obtener sus datos
   $sqlCliente = $conexion->prepare("SELECT u.CI, u.Nombre, u.Apellido FROM CLIENTE c INNER JOIN USUARIO u ON c.CI = u.CI WHERE c.CI = :ci");
   $sqlCliente->execute([':ci' => $ciBuscada]);
   $clienteEncontrado = $sqlCliente->fetch(PDO::FETCH_ASSOC);

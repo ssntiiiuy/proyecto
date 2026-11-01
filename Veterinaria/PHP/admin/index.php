@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['admin'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -9,16 +10,20 @@ require_once __DIR__ . '/../clases/Producto.php';
 $datosCitas = Cita::listadoCita();
 $citas = $datosCitas['citas'];
 
+// leo el mes solicitado o uso el actual si no se eligio otro
 $mesSolicitado = $_GET['mes'] ?? date('Y-m');
 $fechaMes = DateTime::createFromFormat('!Y-m', $mesSolicitado);
 if (!$fechaMes || $fechaMes->format('Y-m') !== $mesSolicitado) {
   $fechaMes = new DateTime('first day of this month');
 }
+// calculo cuantos dias tiene el mes y donde empieza en la semana
 $diasEnMes = (int) $fechaMes->format('t');
 $espaciosIniciales = (int) $fechaMes->format('N') - 1;
+// uso una copia de la fecha para calcular otros meses sin cambiar el elegido
 $mesAnterior = (clone $fechaMes)->modify('-1 month')->format('Y-m');
 $mesSiguiente = (clone $fechaMes)->modify('+1 month')->format('Y-m');
 $nombresMeses = [1 => 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
+// agrupo las citas por dia y cuento las que caen dentro del mes elegido
 $citasPorDia = [];
 $totalCitasMes = 0;
 foreach ($citas as $cita) {

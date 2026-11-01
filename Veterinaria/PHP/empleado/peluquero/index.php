@@ -1,15 +1,19 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Peluquero'];
 require_once __DIR__ . '/../../includes/verificar_sesion.php';
 
 require_once __DIR__ . '/../../clases/Conexion.php';
 require_once __DIR__ . '/../../clases/Cita.php';
 
+// limito el resumen a las citas de peluqueria
 $tipos = ['Peluqueria'];
 
 $datosCitas = Cita::listadoCitaPorTipo($tipos);
+// muestro las primeras cinco citas que devuelve el listado
 $citasProximas = array_slice($datosCitas['citas'], 0, 5);
 
+// cuento las citas de hoy y las pendientes o confirmadas de peluqueria
 $citasHoy = Cita::contarCitasHoyPorTipo($tipos);
 $pendientes = count(Cita::listadoCitaPorTipo($tipos, 'Pendiente')['citas']);
 $confirmadas = count(Cita::listadoCitaPorTipo($tipos, 'Confirmada')['citas']);

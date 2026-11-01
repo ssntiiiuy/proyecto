@@ -1,13 +1,16 @@
 <?php
+// abro la sesion para poder leer y guardar los datos del usuario
 session_start();
 require_once __DIR__ . '/includes/carrito.php';
 require_once __DIR__ . '/../clases/Conexion.php';
 $conexion = (new Conexion())->establecerConexion();
 
+// leo las categorias elegidas para filtrar los productos
 $categoriasSeleccionadas = $_GET['categoria'] ?? [];
 $categoriasValidas = ['accesorios', 'alimentos', 'farmacia', 'higiene'];
 $categoriasSeleccionadas = array_intersect($categoriasSeleccionadas, $categoriasValidas); // filtra cualquier valor
 
+// solo permito estos ordenes para no poner texto libre de la URL en la consulta
 $ordenesValidos = [
   'ultimos'     => 'IdProducto DESC',
   'precio_asc'  => 'Precio ASC',
@@ -20,6 +23,7 @@ $sql = "SELECT IdProducto, Nombre, Categoria, Precio, Stock FROM PRODUCTO";
 $params = [];
 
 if (!empty($categoriasSeleccionadas)) {
+  // creo un signo de pregunta por categoria y paso los valores por separado
   $marcas = implode(',', array_fill(0, count($categoriasSeleccionadas), '?'));
   $sql .= " WHERE Categoria IN ($marcas)";
   $params = $categoriasSeleccionadas;
@@ -27,6 +31,7 @@ if (!empty($categoriasSeleccionadas)) {
 $sql .= " ORDER BY $orderBy";
 
 $stmt = $conexion->prepare($sql);
+// ejecuto la consulta con las categorias elegidas y traigo los productos
 $stmt->execute($params);
 $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $categoriasVisuales = [

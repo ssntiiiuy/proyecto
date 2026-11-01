@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['admin'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -31,6 +32,7 @@ $mensajes = [
   'noexiste' => ['danger', 'El servicio no existe.'],
   'error' => ['danger', 'No se pudo completar la operación.']
 ];
+// uso el aviso correspondiente al resultado que llega en la URL
 $mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 
 /* confirmacion: servicios.php?eliminar=Id muestra el aviso arriba del listado */
@@ -38,15 +40,17 @@ $servicioEliminar = null;
 if (isset($_GET['eliminar'])) {
   $servicioEliminar = Servicio::buscarPorId((int) $_GET['eliminar']);
   if (!$servicioEliminar) {
+    // uso el aviso correspondiente al resultado que llega en la URL
     $mensaje = $mensajes['noexiste'];
   }
 }
 
 /* funcion para guardar los datos y filtrar por categoria y texto */
 $estadoFiltro = $_GET['estado'] ?? '';
+// leo la busqueda de la URL y quito los espacios de los extremos
 $busqueda = trim($_GET['busqueda'] ?? '');
 
-// Llamamos al método pasando ambos filtros
+// llamamos al método pasando ambos filtros
 $datosServicios = Servicio::listadoServicios($estadoFiltro !== '' ? $estadoFiltro : null, $busqueda);
 $servicios = $datosServicios['servicios'];
 
@@ -54,7 +58,9 @@ $conexion = (new Conexion())->establecerConexion();
 
 $error = null;
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  // conservo lo escrito para mostrarlo de nuevo si hay un error
   $datosForm = $_POST;
 
   $nombre = trim($_POST['Nombre'] ?? '');

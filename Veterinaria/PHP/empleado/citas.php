@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -6,6 +7,7 @@ require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
 
 if (session_status() === PHP_SESSION_NONE) {
+  // abro la sesion para poder leer y guardar los datos del usuario
   session_start();
 }
 
@@ -26,15 +28,19 @@ if (!isset($tiposPorRol[$rol])) {
 
 $tipos = $tiposPorRol[$rol];
 
+// uso la fecha de Uruguay para comparar con el dia de la cita
 $hoyAgenda = (new DateTimeImmutable('now', new DateTimeZone('America/Montevideo')))->format('Y-m-d');
+// guardo un codigo aleatorio para comprobar los formularios de citas
 $_SESSION['tokenCitas'] = $_SESSION['tokenCitas'] ?? bin2hex(random_bytes(32));
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accionEstado'])) {
   $resultado = false;
   $idCita = (int) ($_POST['IdCita'] ?? 0);
+  // traduzco la accion del formulario a un estado valido de la cita
   $nuevoEstado = ['confirmar' => 'Confirmada', 'cancelar' => 'Cancelada'][$_POST['accionEstado']] ?? null;
   if ($nuevoEstado && hash_equals($_SESSION['tokenCitas'], (string) ($_POST['tokenCitas'] ?? ''))) {
-    // La autorización depende del rol, no del empleado que inició sesión.
+    // la autorización depende del rol, no del empleado que inició sesión.
     $agendaRol = Cita::listadoCitaPorTipo($tipos)['citas'];
     if (in_array($idCita, array_map('intval', array_column($agendaRol, 'IdCita')), true)) {
       $resultado = (new Cita())->cambiarEstado($idCita, $nuevoEstado);
@@ -61,16 +67,20 @@ $filtro = $_GET['filtro'] ?? null;
 $datosCitas = Cita::listadoCitaPorTipo($tipos, $estado !== '' ? $estado : null, $filtro);
 $citas = $datosCitas['citas'];
 
+// leo el mes solicitado o uso el actual si no se eligio otro
 $mesSolicitado = $_GET['mes'] ?? date('Y-m');
 $fechaMes = DateTime::createFromFormat('!Y-m', $mesSolicitado);
 if (!$fechaMes || $fechaMes->format('Y-m') !== $mesSolicitado) {
   $fechaMes = new DateTime('first day of this month');
 }
+// calculo cuantos dias tiene el mes y donde empieza en la semana
 $diasEnMes = (int) $fechaMes->format('t');
 $espaciosIniciales = (int) $fechaMes->format('N') - 1;
+// uso una copia de la fecha para calcular otros meses sin cambiar el elegido
 $mesAnterior = (clone $fechaMes)->modify('-1 month')->format('Y-m');
 $mesSiguiente = (clone $fechaMes)->modify('+1 month')->format('Y-m');
 $nombresMeses = [1 => 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
+// agrupo las citas por dia y cuento las que caen dentro del mes elegido
 $citasPorDia = [];
 $totalCitasMes = 0;
 foreach ($citas as $cita) {

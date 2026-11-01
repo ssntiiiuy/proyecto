@@ -1,9 +1,10 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['admin', 'Cajero'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 require_once __DIR__ . '/../clases/Conexion.php';
 
-// Obtener el ID de la factura desde la URL
+// obtener el ID de la factura desde la URL
 $idFactura = isset($_GET['id']) ? (int) $_GET['id'] : (isset($_GET['IdFactura']) ? (int) $_GET['IdFactura'] : 0);
 
 $conexion = (new Conexion())->establecerConexion();
@@ -28,6 +29,7 @@ if (!$factura) {
 
 // 2. Buscar las líneas usando correctamente articulo_factura
 try {
+    // junto las lineas con sus productos usando la tabla articulo_factura
     $sqlLineas = $conexion->prepare("
         SELECT lf.*, p.Nombre as ProductoNombre, p.Precio as ProductoPrecio
         FROM linea_factura lf
@@ -42,6 +44,7 @@ try {
     exit();
 }
 
+// arranco los acumuladores en cero antes de sumar las lineas
 $subtotalGeneral = 0;
 $ivaGeneral = 0;
 $totalGeneral = 0;
@@ -145,6 +148,7 @@ $totalGeneral = 0;
                   </tr>
                 <?php else: ?>
                   <?php foreach ($lineas as $index => $l):
+                        // convierto la cantidad a entero y el precio a numero con decimales
                         $cantidad = (int) ($l['Cantidad'] ?? 1);
                         $precioConIva = (float) ($l['ProductoPrecio'] ?? 0);
 
@@ -153,6 +157,7 @@ $totalGeneral = 0;
                         $subtotalLinea = $totalLinea / 1.22; // Base sin IVA
                         $ivaLinea = $totalLinea - $subtotalLinea; // IVA desglosado
 
+                        // sumo los valores de esta linea a los totales de la factura
                         $subtotalGeneral += $subtotalLinea;
                         $ivaGeneral += $ivaLinea;
                         $totalGeneral += $totalLinea;

@@ -1,15 +1,20 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['admin'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
 
+// uso la fecha de Uruguay para comparar con el dia de la cita
 $hoyAgenda = (new DateTimeImmutable('now', new DateTimeZone('America/Montevideo')))->format('Y-m-d');
+// guardo un codigo aleatorio para comprobar los formularios de citas
 $_SESSION['tokenCitas'] = $_SESSION['tokenCitas'] ?? bin2hex(random_bytes(32));
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accionEstado'])) {
   $resultado = false;
+  // traduzco la accion del formulario a un estado valido de la cita
   $nuevoEstado = ['confirmar' => 'Confirmada', 'cancelar' => 'Cancelada'][$_POST['accionEstado']] ?? null;
   if ($nuevoEstado && hash_equals($_SESSION['tokenCitas'], (string) ($_POST['tokenCitas'] ?? ''))) {
     $resultado = (new Cita())->cambiarEstado((int) ($_POST['IdCita'] ?? 0), $nuevoEstado);
@@ -35,6 +40,7 @@ $mensajes = [
   'noexiste' => ['danger', 'La cita no existe.'],
   'error' => ['danger', 'No se pudo completar la operación.']
 ];
+// uso el aviso correspondiente al resultado que llega en la URL
 $mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 
 /* confirmacion: citas.php?eliminar=Id muestra el aviso arriba del listado */
@@ -42,6 +48,7 @@ $citaEliminar = null;
 if (isset($_GET['eliminar'])) {
   $citaEliminar = Cita::buscarPorId((int) $_GET['eliminar']);
   if (!$citaEliminar) {
+    // uso el aviso correspondiente al resultado que llega en la URL
     $mensaje = $mensajes['noexiste'];
   }
 }
@@ -50,7 +57,7 @@ $estado = $_GET['estado'] ?? null;
 $filtro = $_GET['filtro'] ?? null;
 $fechaFiltro = trim($_GET['fecha'] ?? '');
 
-// Si el usuario buscó por fecha, filtramos por fecha. Si no, usamos el filtro de estado general.
+// si el usuario buscó por fecha, filtramos por fecha. Si no, usamos el filtro de estado general.
 if ($fechaFiltro !== '') {
     $citas = Cita::listadoCitasPorFecha($fechaFiltro);
 } else {
@@ -60,6 +67,7 @@ if ($fechaFiltro !== '') {
 
 $conexion = (new Conexion())->establecerConexion();
 
+// cargo los servicios disponibles ordenados por nombre
 $sqlServicios = $conexion->query("SELECT IdServicio, Nombre FROM SERVICIO ORDER BY Nombre");
 $servicios = $sqlServicios->fetchAll(PDO::FETCH_ASSOC);
 
@@ -71,6 +79,7 @@ $errorCedula = null;
 if (isset($_GET['ci']) && trim($_GET['ci']) !== '') {
   $ciBuscada = trim($_GET['ci']);
 
+  // busco al cliente por cedula para obtener sus datos
   $sqlCliente = $conexion->prepare("SELECT u.CI, u.Nombre, u.Apellido FROM CLIENTE c INNER JOIN USUARIO u ON c.CI = u.CI WHERE c.CI = :ci");
   $sqlCliente->execute([':ci' => $ciBuscada]);
   $clienteEncontrado = $sqlCliente->fetch(PDO::FETCH_ASSOC);
@@ -78,6 +87,7 @@ if (isset($_GET['ci']) && trim($_GET['ci']) !== '') {
   if (!$clienteEncontrado) {
     $errorCedula = "No existe un cliente con esa cédula.";
   } else {
+    // cargo las mascotas del cliente para elegir una de ellas
     $sqlMascotas = $conexion->prepare("SELECT IdMascota, Nombre FROM MASCOTA WHERE CI = :ci ORDER BY Nombre");
     $sqlMascotas->execute([':ci' => $ciBuscada]);
     $mascotasCliente = $sqlMascotas->fetchAll(PDO::FETCH_ASSOC);

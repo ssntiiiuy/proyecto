@@ -1,4 +1,5 @@
 <?php
+// abro la sesion para poder leer y guardar los datos del usuario
 session_start();
 
 require_once __DIR__ . '/clases/Conexion.php';
@@ -12,9 +13,11 @@ use PHPMailer\PHPMailer\Exception;
 
 $error = "";
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $correo = trim($_POST['email'] ?? '');
 
+    // reviso que el correo tenga un formato valido antes de buscarlo
     if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
         $error = "Ingresá un correo válido.";
     } else {
@@ -23,8 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $login = new Login();
         if ($login->existeCorreo($correo)) {
+            // genero un codigo aleatorio de seis cifras para recuperar la cuenta
             $codigo = (string) random_int(100000, 999999);
 
+            // guardo el codigo con su correo, vencimiento y cantidad de intentos
             $_SESSION['recuperar'] = [
                 'correo'   => $correo,
                 'codigo'   => $codigo,
@@ -36,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $mail = new PHPMailer(true);
             try {
+                // configuro el envio por Gmail con la cuenta del archivo de configuracion
                 $mail->isSMTP();
                 $mail->Host       = 'smtp.gmail.com';
                 $mail->SMTPAuth   = true;
@@ -56,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     . '<p>El código vence en 15 minutos.</p>'
                     . '<p>Si no pediste el cambio, ignorá este correo: tu contraseña sigue igual.</p>'
                     . '<p>Clínica Veterinaria Sienra</p>';
+                // agrego una version en texto para los lectores que no muestran HTML
                 $mail->AltBody = "Hola,\n\n"
                     . "Recibimos un pedido para cambiar la contraseña de tu cuenta en la Clínica Veterinaria Sienra.\n\n"
                     . "Tu código es: " . $codigo . "\n\n"
@@ -63,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     . "Si no pediste el cambio, ignorá este correo: tu contraseña sigue igual.\n\n"
                     . "Clínica Veterinaria Sienra";
 
+                // intento enviar el codigo al correo de la cuenta
                 $mail->send();
             } catch (Exception $e) {
                 /* no se avisa en pantalla para no revelar si el correo existe; queda en el log de Apache */

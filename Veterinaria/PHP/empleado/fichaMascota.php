@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Veterinario', 'Cajero', 'Cirujano'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -7,6 +8,7 @@ require_once __DIR__ . '/../clases/Mascota.php';
 require_once __DIR__ . '/../clases/HistorialClinico.php';
 require_once __DIR__ . '/../clases/CarnetVacunacion.php';
 
+// tomo el id de la URL y busco la mascota de esta ficha
 $id = (int) ($_GET['id'] ?? 0);
 $mascota = Mascota::buscarPorId($id);
 
@@ -15,6 +17,7 @@ if (!$mascota) {
     exit();
 }
 
+// relaciono cada resultado con el aviso que se va a mostrar
 $mensajes = [
     'HCeditado' => ['success', 'Los cambios del historial clínico se guardaron.'],
     'HCeliminado' => ['success', 'El historial clínico se eliminó.'],
@@ -29,11 +32,14 @@ $mensajes = [
 
 $mensaje = null;
 if (isset($_GET['msg']) && isset($mensajes[$_GET['msg']])) {
+    // uso el aviso correspondiente al resultado que llega en la URL
     $mensaje = $mensajes[$_GET['msg']];
 }
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // leo los datos de la consulta para crear o editar el registro clinico
     if (isset($_POST['guardarHistorial'])) {
         $idHistorial  = (int) ($_POST['IdHistorialClinico'] ?? 0);
         $anamnesis    = trim($_POST['Anamnesis'] ?? '');
@@ -44,28 +50,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $peso         = !empty($_POST['Peso']) ? (float)$_POST['Peso'] : null;
 
         $historial = new HistorialClinico();
+        // con un id edito el registro existente; sin id creo uno nuevo
         if ($idHistorial > 0) {
             $ok = $historial->editarHistorialClinico($id, $idHistorial, $anamnesis, $antecedentes, $tratamiento, $diagnóstico, $fecha, $peso);
         } else {
             $ok = $historial->crearHistorialClinico($id, $anamnesis, $antecedentes, $tratamiento, $diagnóstico, $fecha, $peso);
         }
 
-        // Determinamos qué mensaje mostrar según el resultado de $ok
+        // determinamos qué mensaje mostrar según el resultado de $ok
         $msgKey = $ok ? 'HCeditado' : 'error';
 
         header("Location: fichaMascota.php?id=$id&msg=$msgKey");
         exit();
     }
 
-    // Eliminar Historial
+    // eliminar Historial
     if (isset($_POST['eliminarHistorial'])) {
         $idHistorialEliminar = (int) ($_POST['IdHistorialClinico'] ?? 0);
         $h = new HistorialClinico();
-        $resultado = $h->eliminarHistorialClinico($id, $idHistorialEliminar); // Pasamos $idmascota e $idHistorial
+        $resultado = $h->eliminarHistorialClinico($id, $idHistorialEliminar); // pasamos $idmascota e $idHistorial
         header("Location: fichaMascota.php?id=$id&msg=" . ($resultado ? 'HCeliminado' : 'error'));
         exit();
     }
 
+    // leo las fechas, vacunas y desparasitacion del carnet
     if (isset($_POST['guardarCarnet'])) {
         $idCarnet = (int) ($_POST['IdCarnetVacunacion'] ?? 0);
         $tVac     = trim($_POST['TipoVacunacion'] ?? '');
@@ -75,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tDesp    = trim($_POST['TipoDesparasitacion'] ?? '');
 
         $c = new CarnetVacunacion();
+        // distingo si se esta editando un carnet o agregando uno nuevo
         if ($idCarnet > 0) {
             $ok = $c->editarCarnet($idCarnet, $fProx, $fUlt, $tVac, $desp, $tDesp);
         } else {
@@ -99,9 +108,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if (isset($_GET['msg']) && isset($mensajes[$_GET['msg']])) {
+    // uso el aviso correspondiente al resultado que llega en la URL
     $mensaje = $mensajes[$_GET['msg']];
 }
 
+// cargo los registros clinicos y los carnets de esta mascota
 $historiales = HistorialClinico::listadoPorIdMascota($id);
 $carnet = CarnetVacunacion::listadoPorIdMascota($id);
 ?>

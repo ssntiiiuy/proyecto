@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['admin'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -16,6 +17,7 @@ if (!$cita) {
 
 $conexion = (new Conexion())->establecerConexion();
 
+// cargo los servicios disponibles ordenados por nombre
 $sqlServicios = $conexion->query("SELECT IdServicio, Nombre FROM SERVICIO ORDER BY Nombre");
 $servicios = $sqlServicios->fetchAll(PDO::FETCH_ASSOC);
 
@@ -28,6 +30,7 @@ $error = null;
 $datosForm = $cita; /* el formulario arranca con los datos de la base */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  // conservo lo escrito para mostrarlo de nuevo si hay un error
   $datosForm = $_POST;
 
   $idMascota = (int) ($_POST['IdMascota'] ?? 0);

@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['admin'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -18,7 +19,9 @@ $error = null;
 $datosForm = $proveedor; /* el formulario arranca con los datos de la base */
 $telefonosForm = $proveedor['telefonos'];
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  // conservo lo escrito para mostrarlo de nuevo si hay un error
   $datosForm = $_POST;
 
   $nombre = trim($_POST['Nombre'] ?? '');

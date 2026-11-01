@@ -1,15 +1,19 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Veterinario'];
 require_once __DIR__ . '/../../includes/verificar_sesion.php';
 
 require_once __DIR__ . '/../../clases/Conexion.php';
 require_once __DIR__ . '/../../clases/Cita.php';
 
+// el veterinario trabaja con consultas y vacunaciones
 $tipos = ['Consulta', 'Vacunacion'];
 
 $datosCitas = Cita::listadoCitaPorTipo($tipos);
+// me quedo con las primeras cinco citas del listado para el resumen
 $citasProximas = array_slice($datosCitas['citas'], 0, 5);
 
+// cuento las citas de hoy y las pendientes o confirmadas de estos tipos
 $citasHoy = Cita::contarCitasHoyPorTipo($tipos);
 $pendientes = count(Cita::listadoCitaPorTipo($tipos, 'Pendiente')['citas']);
 $confirmadas = count(Cita::listadoCitaPorTipo($tipos, 'Confirmada')['citas']);

@@ -3,20 +3,26 @@ require_once "clases/Conexion.php";
 require_once "clases/Login.php";
 require_once "clases/Usuario.php";
 
+// abro la sesion para poder leer y guardar los datos del usuario
 session_start();
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // quito espacios del correo; la contraseña se compara tal como se escribio
     $correo = trim($_POST['email']);
     $pass   = $_POST['password'];
 
     $login = new Login();
+    // solo guardo los datos en la sesion si las credenciales coinciden
     if ($login->validar($correo, $pass)) {
 
+        // guardo el correo y el rol para identificar la cuenta en las otras paginas
         $_SESSION['correo'] = $correo;
         $_SESSION['rol'] = Usuario::obtenerRolPorCorreo($correo);
 
         $conexion = new Conexion();
 
+        // consulto el tipo de cuenta y el rol para saber a que panel mandarlo
         $sql = "SELECT LOGIN.TipoUsuario AS tipoUsuario, e.Rol AS rol
         FROM LOGIN
         INNER JOIN HACE h ON LOGIN.Correo = h.Correo
@@ -27,11 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([':correo' => $correo]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        // cada tipo de cuenta entra al panel que le corresponde
         if ($usuario['tipoUsuario'] === 'admin') {
             $_SESSION['rol'] = 'admin';
             header("Location: ../PHP/admin/index.php");
             exit();
         } elseif ($usuario['tipoUsuario'] === 'empleado') {
+            // para los empleados el destino depende de su trabajo en la clinica
             switch ($usuario['rol']) {
                 case 'Veterinario':
                     header("Location: ../PHP/empleado/veterinario/index.php");

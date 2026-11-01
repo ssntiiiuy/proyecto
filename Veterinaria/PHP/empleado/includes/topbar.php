@@ -2,6 +2,7 @@
 
 /* iniciar sesion si no esta iniciada */
 if (session_status() === PHP_SESSION_NONE) {
+    // abro la sesion para poder leer y guardar los datos del usuario
     session_start();
 }
 
@@ -14,6 +15,7 @@ try {
   if (!empty($_SESSION['correo'])) {
     $conexion = (new Conexion())->establecerConexion();
 
+    // busco el nombre y apellido de la cuenta que inicio sesion
     $sql = "SELECT usuario.Nombre, usuario.Apellido FROM usuario INNER JOIN HACE ON usuario.CI = HACE.CI WHERE HACE.Correo = :correo";
     $stmt = $conexion->prepare($sql);
     $stmt->execute([':correo' => $_SESSION['correo']]);
@@ -25,6 +27,7 @@ try {
     }
   }
 
+    // busco el tipo de cuenta y el rol que le corresponden al usuario
     $sqlRol = "SELECT login.tipoUsuario, e.rol
         FROM login
         INNER JOIN hace h ON login.Correo = h.Correo

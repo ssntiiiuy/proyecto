@@ -12,11 +12,13 @@ require_once __DIR__ . '/../clases/Servicio.php';
 $nombreUsuario = "Usuario";
 $errorAgenda = null;
 $avisoAgenda = isset($_GET['agendada']);
+// guardo un codigo aleatorio para comprobar los formularios de citas
 $_SESSION['tokenCitas'] = $_SESSION['tokenCitas'] ?? bin2hex(random_bytes(32));
 
 try {
   $conexion = (new Conexion())->establecerConexion();
 
+  // busco al usuario que corresponde al correo de la sesion
   $sql = "SELECT usuario.CI, usuario.Nombre FROM USUARIO INNER JOIN HACE ON usuario.CI = hace.CI WHERE hace.Correo = :correo";
   $stmt = $conexion->prepare($sql);
   $stmt->execute([':correo' => $_SESSION['correo']]);
@@ -30,6 +32,7 @@ try {
   $nombreUsuario = $usuario['Nombre'];
   $ci = (int) $usuario['CI'];
 
+  // este bloque se ejecuta cuando se envia el formulario
   if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancelarCita'])) {
     if (hash_equals($_SESSION['tokenCitas'], (string) ($_POST['tokenCitas'] ?? ''))
         && (new Cita())->cambiarEstado((int) ($_POST['IdCita'] ?? 0), 'Cancelada', $ci)) {
@@ -39,9 +42,11 @@ try {
     $errorAgenda = 'No se pudo cancelar la cita. Solo podés cancelar tus propias citas pendientes.';
   }
 
+  // cargo las mascotas del cliente y los servicios que puede elegir para un turno
   $mascotas = Mascota::listadoMascotasPorCliente($ci);
   $servicios = Servicio::listadoServicios()['servicios'];
 
+  // traigo sus citas de hoy en adelante, dejando afuera las canceladas
   $sqlTurno = "SELECT c.IdCita, c.Fecha, c.Hora, c.Estado, s.Nombre AS NombreServicio, m.Nombre AS NombreMascota
              FROM CITA c
              INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
@@ -52,6 +57,7 @@ try {
   $stmtTurno->execute([':ci' => $ci]);
   $turnos = $stmtTurno->fetchAll(PDO::FETCH_ASSOC);
 
+  // busco las vacunas de sus mascotas con la fecha de la proxima dosis
   $sqlCarnet = "SELECT cv.TipoVacunacion, cv.FechaProximaVacunacion, m.Nombre AS NombreMascota
               FROM CARNET_VACUNACION cv
               INNER JOIN MASCOTA m ON cv.IdMascota = m.IdMascota
@@ -61,6 +67,7 @@ try {
   $stmtCarnet->execute([':ci' => $ci]);
   $carnet = $stmtCarnet->fetchAll(PDO::FETCH_ASSOC);
 
+  // de las vacunas que vencen hasta dentro de un mes elijo la fecha mas cercana
   $proximaVacuna = null;
   $limiteAlerta = (new DateTime())->modify('+1 month');
 
@@ -80,6 +87,7 @@ try {
   echo "</div>";
 }
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($ci) && !isset($_POST['cancelarCita'])) {
   $idMascota = (int)($_POST['IdMascota'] ?? 0);
   $idServicio = (int)($_POST['IdServicio'] ?? 0);
@@ -87,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($ci) && !isset($_POST['cancel
   $hora = trim($_POST['Hora'] ?? '');
   $fechaValida = DateTime::createFromFormat('!Y-m-d', $fecha);
 
+  // compruebo dueño, servicio, fecha y hora antes de solicitar el turno
   if (!$idMascota || !Cita::mascotaPerteneceACliente($idMascota, $ci)) {
     $errorAgenda = 'Elegí una de tus mascotas.';
   } elseif (!in_array($idServicio, array_map('intval', array_column($servicios, 'IdServicio')), true)) {
@@ -96,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($ci) && !isset($_POST['cancel
   } elseif (!preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $hora)) {
     $errorAgenda = 'Ingresá una hora válida.';
   } else {
+    // guardo la cita como pendiente y redirijo para no reenviar el formulario al recargar
     $cita = new Cita();
     if ($cita->crearCita($ci, $idServicio, $idMascota, $fecha, $hora, 'Pendiente')) {
       header('Location: index.php?agendada=1');

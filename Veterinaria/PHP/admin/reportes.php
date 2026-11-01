@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['admin'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 require_once __DIR__ . '/../clases/Conexion.php';
@@ -18,11 +19,12 @@ if ($tipoReporte === 'diario') {
 } elseif ($tipoReporte === 'anual') {
   $condicionSql = "YEAR(f.Fecha) = :anio";
   $parametros = [':anio' => $anioSeleccionado];
-} else { // Mensual por defecto
+} else { // mensual por defecto
   $condicionSql = "MONTH(f.Fecha) = :mes AND YEAR(f.Fecha) = :anio";
   $parametros = [':mes' => $mesSeleccionado, ':anio' => $anioSeleccionado];
 }
 
+// sumo las ventas, las unidades y las facturas del periodo elegido
 $sqlKpi = $conexion->prepare("
     SELECT
         COALESCE(SUM(p.Precio * lf.Cantidad), 0) as VentasTotales,
@@ -40,8 +42,10 @@ $kpi = $sqlKpi->fetch(PDO::FETCH_ASSOC);
 $ventasTotales = $kpi['VentasTotales'] ?? 0;
 $facturasEmitidas = $kpi['FacturasEmitidas'] ?? 0;
 $unidadesVendidas = $kpi['UnidadesVendidas'] ?? 0;
+// divido las ventas entre las facturas y evito dividir entre cero
 $ticketPromedio = $facturasEmitidas > 0 ? ($ventasTotales / $facturasEmitidas) : 0;
 
+// agrupo las ventas del mismo periodo por categoria de producto
 $sqlCategorias = $conexion->prepare("
     SELECT
         p.Categoria,

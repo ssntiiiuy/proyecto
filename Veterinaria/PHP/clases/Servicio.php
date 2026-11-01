@@ -9,6 +9,7 @@ class Servicio
     private ?string $descripcion;
     private ?int $duracion;
 
+    // cargo los datos iniciales en las propiedades de este objeto
     public function __construct(?string $id = null, ?string $nombre = null, ?string $precio = null, ?string $descripcion = null, ?string $duracion = null)
     {
         $this->id = $id;
@@ -18,52 +19,62 @@ class Servicio
         $this->duracion = $duracion;
     }
 
+    // devuelvo el valor de id que tiene el objeto
     public function getId(): int
     {
         return $this->id ?? 0;
     }
 
+    // devuelvo el valor de nombre que tiene el objeto
     public function getNombre(): string
     {
         return $this->nombre ?? '';
     }
 
+    // devuelvo el valor de precio que tiene el objeto
     public function getPrecio(): float
     {
         return $this->precio ?? '';
     }
 
+    // devuelvo el valor de descripcion que tiene el objeto
     public function getDescripcion(): string
     {
         return $this->descripcion ?? '';
     }
 
+    // devuelvo el valor de duracion que tiene el objeto
     public function getDuracion(): string
     {
         return $this->duracion ?? '';
     }
 
 
+    // cambio el valor de nombre dentro del objeto
     public function setNombre(string $nombre): void
     {
         $this->nombre = $nombre;
     }
 
+    // cambio el valor de precio dentro del objeto
     public function setPrecio(float $precio): void
     {
         $this->precio = $precio;
     }
 
+    // cambio el valor de descripcion dentro del objeto
     public function setDescripcion(string $descripcion): void
     {
         $this->descripcion = $descripcion;
     }
 
+    // cambio el valor de duracion dentro del objeto
     public function setDuracion(int $duracion): void
     {
         $this->duracion = $duracion;
     }
 
+    // traigo los servicios con su tipo y los filtros de tipo o busqueda
     public static function listadoServicios($estado = null, string $busqueda = ''): array
     {
         try {
@@ -90,7 +101,7 @@ class Servicio
 
             $params = [];
 
-            // Filtro por categoría (select)
+            // filtro por categoría (select)
             if (!empty($estado)) {
                 $tipos = is_array($estado) ? $estado : [$estado];
                 $marcadores = [];
@@ -102,14 +113,16 @@ class Servicio
                 $sql .= " HAVING Tipo IN (" . implode(', ', $marcadores) . ") ";
             }
 
-            // Filtro por texto (Nombre del servicio o Tipo de vacuna si aplica)
+            // filtro por texto (Nombre del servicio o Tipo de vacuna si aplica)
             if ($busqueda !== '') {
                 $sql .= (!empty($estado) ? " AND" : " HAVING") . " (s.Nombre LIKE :busqueda OR v.TipoVacuna LIKE :busqueda)";
                 $params[':busqueda'] = '%' . $busqueda . '%';
             }
 
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute($params);
+            // traigo todas las filas usando los nombres de las columnas como claves
             $servicios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return ['servicios' => $servicios];
@@ -118,13 +131,16 @@ class Servicio
         }
     }
 
+    // guardo los datos comunes del servicio y despues los de su tipo
     public function crearServicio(string $tipo, string $nombre, float $precio, string $descripcion, int $duracion, array $datosEspecificos): bool
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
+            // agrupo los cambios para guardar todo junto o deshacerlo si algo falla
             $conexion->beginTransaction();
 
             $sqlServicio = "INSERT INTO SERVICIO (Nombre, Precio, Descripcion, Duracion) VALUES (:nombre, :precio, :descripcion, :duracion)";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sqlServicio);
             $stmt->execute([
                 ':nombre' => $nombre,
@@ -133,12 +149,15 @@ class Servicio
                 ':duracion' => $duracion
             ]);
 
+            // recupero el id que genero la base para relacionar el registro recien creado
             $idServicio = $conexion->lastInsertId();
 
+            // segun el tipo guardo los campos especificos en su tabla correspondiente
             switch ($tipo) {
                 case 'Consulta':
                     $sql = "INSERT INTO CONSULTA (IdServicio, Anamnesis, Motivo, EsEmergencia, IndicacionesRecetadas)
                         VALUES (:id, :anamnesis, :motivo, :emergencia, :indicaciones)";
+                    // preparo la consulta para pasar los valores por separado al ejecutarla
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([
                         ':id' => $idServicio,
@@ -152,6 +171,7 @@ class Servicio
                 case 'Vacunacion':
                     $sql = "INSERT INTO VACUNACION (IdServicio, LoteVacuna, TipoVacuna, LaboratorioFabricante)
                         VALUES (:id, :lote, :tipoVacuna, :laboratorio)";
+                    // preparo la consulta para pasar los valores por separado al ejecutarla
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([
                         ':id' => $idServicio,
@@ -163,6 +183,7 @@ class Servicio
 
                 case 'Peluqueria':
                     $sql = "INSERT INTO PELUQUERIA (IdServicio, TipoCorte, TipoShampoo) VALUES (:id, :corte, :shampoo)";
+                    // preparo la consulta para pasar los valores por separado al ejecutarla
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([
                         ':id' => $idServicio,
@@ -174,6 +195,7 @@ class Servicio
                 case 'Cirugia':
                     $sql = "INSERT INTO CIRUGIA (IdServicio, TipoAnestesia, RiesgoQuirurgico, AutorizacionFirmada)
                         VALUES (:id, :anestesia, :riesgo, :autorizacion)";
+                    // preparo la consulta para pasar los valores por separado al ejecutarla
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([
                         ':id' => $idServicio,
@@ -187,10 +209,12 @@ class Servicio
                     throw new Exception("Tipo de servicio inválido: $tipo");
             }
 
+            // confirmo todos los cambios porque las operaciones anteriores terminaron bien
             $conexion->commit();
             return true;
         } catch (Exception $e) {
             if (isset($conexion) && $conexion->inTransaction()) {
+                // deshago los cambios de esta operacion si la transaccion sigue abierta
                 $conexion->rollBack();
             }
             return false;
@@ -221,8 +245,10 @@ class Servicio
             LEFT JOIN PELUQUERIA p ON s.IdServicio = p.IdServicio
             LEFT JOIN CIRUGIA q ON s.IdServicio = q.IdServicio
             WHERE s.IdServicio = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute([':id' => $id]);
+            // traigo una sola fila con los nombres de sus columnas como claves
             $servicio = $stmt->fetch(PDO::FETCH_ASSOC);
 
             return $servicio ?: null;
@@ -236,11 +262,13 @@ class Servicio
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
+            // agrupo los cambios para guardar todo junto o deshacerlo si algo falla
             $conexion->beginTransaction();
 
             $sqlServicio = "UPDATE SERVICIO
                 SET Nombre = :nombre, Precio = :precio, Descripcion = :descripcion, Duracion = :duracion
                 WHERE IdServicio = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sqlServicio);
             $stmt->execute([
                 ':nombre' => $nombre,
@@ -250,11 +278,13 @@ class Servicio
                 ':id' => $id
             ]);
 
+            // segun el tipo guardo los campos especificos en su tabla correspondiente
             switch ($tipo) {
                 case 'Consulta':
                     $sql = "UPDATE CONSULTA
                         SET Motivo = :motivo, EsEmergencia = :emergencia, IndicacionesRecetadas = :indicaciones
                         WHERE IdServicio = :id";
+                    // preparo la consulta para pasar los valores por separado al ejecutarla
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([
                         ':motivo' => $datosEspecificos['Motivo'] ?? '',
@@ -268,6 +298,7 @@ class Servicio
                     $sql = "UPDATE VACUNACION
                         SET LoteVacuna = :lote, TipoVacuna = :tipoVacuna, LaboratorioFabricante = :laboratorio
                         WHERE IdServicio = :id";
+                    // preparo la consulta para pasar los valores por separado al ejecutarla
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([
                         ':lote' => $datosEspecificos['LoteVacuna'] ?? '',
@@ -279,6 +310,7 @@ class Servicio
 
                 case 'Peluqueria':
                     $sql = "UPDATE PELUQUERIA SET TipoCorte = :corte, TipoShampoo = :shampoo WHERE IdServicio = :id";
+                    // preparo la consulta para pasar los valores por separado al ejecutarla
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([
                         ':corte' => $datosEspecificos['TipoCorte'] ?? '',
@@ -291,6 +323,7 @@ class Servicio
                     $sql = "UPDATE CIRUGIA
                         SET TipoAnestesia = :anestesia, RiesgoQuirurgico = :riesgo, AutorizacionFirmada = :autorizacion
                         WHERE IdServicio = :id";
+                    // preparo la consulta para pasar los valores por separado al ejecutarla
                     $stmt = $conexion->prepare($sql);
                     $stmt->execute([
                         ':anestesia' => $datosEspecificos['TipoAnestesia'] ?? '',
@@ -301,10 +334,12 @@ class Servicio
                     break;
             }
 
+            // confirmo todos los cambios porque las operaciones anteriores terminaron bien
             $conexion->commit();
             return true;
         } catch (PDOException $e) {
             if (isset($conexion) && $conexion->inTransaction()) {
+                // deshago los cambios de esta operacion si la transaccion sigue abierta
                 $conexion->rollBack();
             }
             return false;
@@ -316,6 +351,7 @@ class Servicio
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
+            // agrupo los cambios para guardar todo junto o deshacerlo si algo falla
             $conexion->beginTransaction();
 
             /* primero el subtipo (solo una de estas tablas tiene la fila) y despues SERVICIO */
@@ -327,11 +363,13 @@ class Servicio
             $stmt = $conexion->prepare("DELETE FROM SERVICIO WHERE IdServicio = :id");
             $stmt->execute([':id' => $id]);
 
+            // confirmo todos los cambios porque las operaciones anteriores terminaron bien
             $conexion->commit();
             return 'eliminado';
         } catch (PDOException $e) {
             /* si falla, se deshace todo y el subtipo vuelve */
             if (isset($conexion) && $conexion->inTransaction()) {
+                // deshago los cambios de esta operacion si la transaccion sigue abierta
                 $conexion->rollBack();
             }
             /* 1451: CITA, BRINDA o ACCEDE usan este servicio */

@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Cajero'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -13,7 +14,7 @@ if (!empty($_GET['categoria'])) {
 if (!empty($_GET['filtro'])) {
   $filtrosListado['filtro'] = $_GET['filtro'];
 }
-// NUEVO: Capturamos la búsqueda si existe
+// conservo la busqueda junto con los otros filtros del listado
 if (!empty($_GET['busqueda'])) {
   $filtrosListado['busqueda'] = $_GET['busqueda'];
 }
@@ -34,6 +35,7 @@ $mensajes = [
   'noexiste' => ['danger', 'El producto no existe.'],
   'error' => ['danger', 'No se pudo completar la operación.']
 ];
+// uso el aviso correspondiente al resultado que llega en la URL
 $mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 
 /* confirmacion: productos.php?eliminar=Id muestra el aviso arriba del listado */
@@ -41,6 +43,7 @@ $productoEliminar = null;
 if (isset($_GET['eliminar'])) {
   $productoEliminar = Producto::buscarPorId((int) $_GET['eliminar']);
   if (!$productoEliminar) {
+    // uso el aviso correspondiente al resultado que llega en la URL
     $mensaje = $mensajes['noexiste'];
   }
 }
@@ -49,7 +52,7 @@ $categoria = $_GET['categoria'] ?? null;
 $filtroEspecial = $_GET['filtro'] ?? null;
 $busqueda = $_GET['busqueda'] ?? null; // NUEVO
 
-// Llamamos al método pasando los tres filtros
+// llamamos al método pasando los tres filtros
 $datosProductos = Producto::listadoProductos($categoria, $filtroEspecial, $busqueda);
 $productos = $datosProductos['productos'];
 
@@ -57,7 +60,9 @@ $conexion = (new Conexion())->establecerConexion();
 
 $error = null;
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  // conservo lo escrito para mostrarlo de nuevo si hay un error
   $datosForm = $_POST;
 
   $nombre = trim($_POST['Nombre'] ?? '');

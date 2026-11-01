@@ -9,6 +9,7 @@ class Proveedor
     private ?int $telefono;
     private ?string $producto;
 
+    // cargo los datos iniciales en las propiedades de este objeto
     public function __construct(?int $id = null, ?string $nombre = null, ?string $empresa = null, ?int $telefono = null, ?string $producto = null)
     {
         $this->id = $id;
@@ -18,52 +19,62 @@ class Proveedor
         $this->producto = $producto;
     }
 
+    // devuelvo el valor de id que tiene el objeto
     public function getId(): int
     {
         return $this->id ?? 0;
     }
 
+    // devuelvo el valor de nombre que tiene el objeto
     public function getNombre(): string
     {
         return $this->nombre ?? '';
     }
 
+    // devuelvo el valor de empresa que tiene el objeto
     public function getEmpresa(): string
     {
         return $this->empresa ?? '';
     }
 
+    // devuelvo el valor de telefono que tiene el objeto
     public function getTelefono(): int
     {
         return $this->telefono ?? 0;
     }
 
+    // devuelvo el valor de producto que tiene el objeto
     public function getProducto(): string
     {
         return $this->producto ?? '';
     }
 
 
+    // cambio el valor de nombre dentro del objeto
     public function setNombre(string $nombre): void
     {
         $this->nombre = $nombre;
     }
 
+    // cambio el valor de empresa dentro del objeto
     public function setEmpresa(string $empresa): void
     {
         $this->empresa = $empresa;
     }
 
+    // cambio el valor de telefono dentro del objeto
     public function setTelefono(int $telefono): void
     {
         $this->telefono = $telefono;
     }
 
+    // cambio el valor de producto dentro del objeto
     public function setProducto(string $producto): void
     {
         $this->producto = $producto;
     }
 
+    // traigo los proveedores con sus telefonos y aplico el texto de busqueda
     public static function listadoProveedor(string $busqueda = ''): array
     {
         try {
@@ -80,7 +91,7 @@ class Proveedor
 
             $params = [];
 
-            // Como usamos GROUP_CONCAT, filtramos con HAVING
+            // como usamos GROUP_CONCAT, filtramos con HAVING
             if ($busqueda !== '') {
                 $sqlProveedor .= " HAVING p.Nombre LIKE :busqueda1 OR p.NombreEmpresa LIKE :busqueda2 OR Productos LIKE :busqueda3";
                 $like = '%' . $busqueda . '%';
@@ -91,8 +102,10 @@ class Proveedor
                 ];
             }
 
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sqlProveedor);
             $stmt->execute($params);
+            // traigo todas las filas usando los nombres de las columnas como claves
             $proveedores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return ['proveedores' => $proveedores];
@@ -102,32 +115,39 @@ class Proveedor
         }
     }
 
+    // guardo el proveedor y su telefono en las tablas que corresponden
     public function crearProveedor(string $nombre, string $empresa, string $telefono): bool
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
+            // agrupo los cambios para guardar todo junto o deshacerlo si algo falla
             $conexion->beginTransaction();
 
             $sqlLogin = "INSERT INTO PROVEEDOR (Nombre, NombreEmpresa) VALUES (:nombre, :empresa)";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmtLogin = $conexion->prepare($sqlLogin);
             $stmtLogin->execute([
                 ':nombre' => $nombre,
                 ':empresa' => $empresa
             ]);
 
+            // recupero el id que genero la base para relacionar el registro recien creado
             $idProveedor = $conexion->lastInsertId();
 
             $sqlTel = "INSERT INTO TELEFONO_PROVEEDOR (IdProveedor, numTelProveedor) VALUES (:idProveedor, :telefono)";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmtTel = $conexion->prepare($sqlTel);
             $stmtTel->execute([
                 ':idProveedor' => $idProveedor,
                 ':telefono' => $telefono
             ]);
 
+            // confirmo todos los cambios porque las operaciones anteriores terminaron bien
             $conexion->commit();
             return true;
         } catch (PDOException $e) {
             if (isset($conexion) && $conexion->inTransaction()) {
+                // deshago los cambios de esta operacion si la transaccion sigue abierta
                 $conexion->rollBack();
             }
             return false;
@@ -141,8 +161,10 @@ class Proveedor
             $conexion = (new Conexion())->establecerConexion();
 
             $sqlProveedor = "SELECT IdProveedor, Nombre, NombreEmpresa FROM PROVEEDOR WHERE IdProveedor = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmtProveedor = $conexion->prepare($sqlProveedor);
             $stmtProveedor->execute([':id' => $id]);
+            // traigo una sola fila con los nombres de sus columnas como claves
             $proveedor = $stmtProveedor->fetch(PDO::FETCH_ASSOC);
 
             if (!$proveedor) {
@@ -150,6 +172,7 @@ class Proveedor
             }
 
             $sqlTel = "SELECT numTelProveedor FROM TELEFONO_PROVEEDOR WHERE IdProveedor = :id ORDER BY numTelProveedor";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmtTel = $conexion->prepare($sqlTel);
             $stmtTel->execute([':id' => $id]);
             $proveedor['telefonos'] = $stmtTel->fetchAll(PDO::FETCH_COLUMN);
@@ -165,9 +188,11 @@ class Proveedor
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
+            // agrupo los cambios para guardar todo junto o deshacerlo si algo falla
             $conexion->beginTransaction();
 
             $sqlProveedor = "UPDATE PROVEEDOR SET Nombre = :nombre, NombreEmpresa = :empresa WHERE IdProveedor = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmtProveedor = $conexion->prepare($sqlProveedor);
             $stmtProveedor->execute([
                 ':nombre' => $nombre,
@@ -175,11 +200,14 @@ class Proveedor
                 ':id' => $id
             ]);
 
+            // borro los telefonos anteriores para reemplazarlos con la lista nueva
             $sqlBorrarTel = "DELETE FROM TELEFONO_PROVEEDOR WHERE IdProveedor = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmtBorrarTel = $conexion->prepare($sqlBorrarTel);
             $stmtBorrarTel->execute([':id' => $id]);
 
             $sqlTel = "INSERT INTO TELEFONO_PROVEEDOR (IdProveedor, numTelProveedor) VALUES (:idProveedor, :telefono)";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmtTel = $conexion->prepare($sqlTel);
             foreach ($telefonos as $telefono) {
                 $stmtTel->execute([
@@ -188,10 +216,12 @@ class Proveedor
                 ]);
             }
 
+            // confirmo todos los cambios porque las operaciones anteriores terminaron bien
             $conexion->commit();
             return true;
         } catch (PDOException $e) {
             if (isset($conexion) && $conexion->inTransaction()) {
+                // deshago los cambios de esta operacion si la transaccion sigue abierta
                 $conexion->rollBack();
             }
             return false;
@@ -203,22 +233,27 @@ class Proveedor
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
+            // agrupo los cambios para guardar todo junto o deshacerlo si algo falla
             $conexion->beginTransaction();
 
             /* primero los telefonos (tabla hija) y despues el proveedor */
             $sqlTel = "DELETE FROM TELEFONO_PROVEEDOR WHERE IdProveedor = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmtTel = $conexion->prepare($sqlTel);
             $stmtTel->execute([':id' => $id]);
 
             $sqlProveedor = "DELETE FROM PROVEEDOR WHERE IdProveedor = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmtProveedor = $conexion->prepare($sqlProveedor);
             $stmtProveedor->execute([':id' => $id]);
 
+            // confirmo todos los cambios porque las operaciones anteriores terminaron bien
             $conexion->commit();
             return 'eliminado';
         } catch (PDOException $e) {
             /* si falla, se deshace todo y los telefonos vuelven */
             if (isset($conexion) && $conexion->inTransaction()) {
+                // deshago los cambios de esta operacion si la transaccion sigue abierta
                 $conexion->rollBack();
             }
             /* 1451: PROVEE usa este proveedor (tiene productos) */

@@ -1,8 +1,10 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Veterinario', 'Cajero', 'Peluquero', 'Cirujano'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 if (session_status() === PHP_SESSION_NONE) {
+    // abro la sesion para poder leer y guardar los datos del usuario
     session_start();
 }
 require_once __DIR__ . '/../clases/Conexion.php';
@@ -27,17 +29,18 @@ $mapaRolTipos = [
 
 $tiposPermitidos = $mapaRolTipos[$rol] ?? [];
 
-// Capturar filtro de tipo si viene por la URL y está permitido para el rol
+// capturar filtro de tipo si viene por la URL y está permitido para el rol
 $filtroTipo = trim($_GET['filtro'] ?? '');
 $tiposConsultaBD = $tiposPermitidos;
 
 if ($filtroTipo !== '') {
-    // Si es cajero (permisos vacíos) o el tipo está dentro de los permitidos del rol
+    // si es cajero (permisos vacíos) o el tipo está dentro de los permitidos del rol
     if (empty($tiposPermitidos) || in_array($filtroTipo, $tiposPermitidos)) {
         $tiposConsultaBD = [$filtroTipo];
     }
 }
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     $nombre = trim($_POST['Nombre']);
     $tipo = trim($_POST['TipoServicio']);

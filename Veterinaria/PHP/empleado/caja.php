@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['admin', 'Cajero'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -11,6 +12,7 @@ require_once __DIR__ . '/../clases/Servicio.php';
 const RUT_CLINICA = '10.10.00.00.10';
 const NOMBRE_CLINICA = 'Clínica Veterinaria Sienra';
 
+// cargo clientes, productos y servicios para armar la venta
 $clientes = Usuario::listadoUsuarios()['clientes'];
 $productos = Producto::listadoProductos()['productos'];
 $servicios = Servicio::listadoServicios()['servicios'];
@@ -18,32 +20,37 @@ $servicios = Servicio::listadoServicios()['servicios'];
 $error = null;
 $idFacturaCreada = null;
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  // si no se eligio un cliente uso null para emitir la venta sin cedula
   $ciTexto = trim($_POST['ci'] ?? '');
   $ci = $ciTexto === '' ? null : (int)$ciTexto;
   $idsProducto = $_POST['idProducto'] ?? [];
   $cantidades = $_POST['cantidad'] ?? [];
 
   $lineas = [];
+  // recorro las filas de la venta usando la cantidad de la misma posicion
   foreach ($idsProducto as $i => $idProducto) {
     $idProducto = trim($idProducto);
     $cantidad = (int)($cantidades[$i] ?? 0);
     if ($idProducto === '' || $cantidad <= 0) {
       continue;
     }
+    // armo los datos que crearFactura necesita para cada producto o servicio
     $lineas[] = [
       'idProducto' => (int)$idProducto,
       'cantidad' => $cantidad,
     ];
   }
 
+  // no emito una factura si no quedo ninguna linea para cobrar
   if (empty($lineas)) {
     $error = 'Agregá al menos un producto con cantidad mayor a 0.';
   } else {
     try {
       $factura = new Factura();
       $idFacturaCreada = $factura->crearFactura($ci, RUT_CLINICA, $lineas, NOMBRE_CLINICA);
-      // Redirige al listado pasando 'nueva_id' para que se abra automáticamente en pestaña nueva
+      // redirige al listado pasando 'nueva_id' para que se abra automáticamente en pestaña nueva
       header("Location: facturas.php?msg=creada&nueva_id=" . $idFacturaCreada);
       exit();
     } catch (Exception $e) {

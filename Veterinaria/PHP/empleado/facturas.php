@@ -2,14 +2,18 @@
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Factura.php';
 
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['Cajero'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
+// relaciono cada resultado con el aviso que se va a mostrar
 $mensajes = [
   'creada' => ['success', 'La factura se emitió correctamente.'],
 ];
+// uso el aviso correspondiente al resultado que llega en la URL
 $mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 
+// leo la busqueda de la URL y quito los espacios de los extremos
 $busqueda = trim($_GET['buscar'] ?? '');
 $facturas = Factura::listadoFactura($busqueda)['facturas'];
 ?>

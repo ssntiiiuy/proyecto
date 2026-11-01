@@ -11,6 +11,7 @@ class Cita
     private ?string $hora;
     private ?string $estado;
 
+    // cargo los datos iniciales en las propiedades de este objeto
     public function __construct(?int $id = null, ?int $ci = null, ?int $idServicio = null, ?int $idMascota = null, ?DateTime $fecha = null, ?string $hora = null, ?string $estado = null)
     {
         $this->id = $id;
@@ -22,57 +23,68 @@ class Cita
         $this->estado = $estado;
     }
 
+    // devuelvo el valor de id que tiene el objeto
     public function getId(): int
     {
         return $this->id ?? 0;
     }
 
+    // devuelvo el valor de ci que tiene el objeto
     public function getCi(): int
     {
         return $this->ci ?? 0;
     }
 
+    // devuelvo el valor de id servicio que tiene el objeto
     public function getIdServicio(): int
     {
         return $this->idServicio ?? 0;
     }
 
+    // devuelvo el valor de id mascota que tiene el objeto
     public function getIdMascota(): int
     {
         return $this->idMascota ?? 0;
     }
 
+    // devuelvo el valor de fecha que tiene el objeto
     public function getFecha(): DateTime
     {
         return $this->fecha ?? new DateTime();
     }
 
+    // devuelvo el valor de hora que tiene el objeto
     public function getHora(): string
     {
         return $this->hora ?? '';
     }
 
+    // devuelvo el valor de estado que tiene el objeto
     public function getEstado(): string
     {
         return $this->estado ?? '';
     }
 
 
+    // cambio el valor de fecha dentro del objeto
     public function setFecha(DateTime $fecha): void
     {
         $this->fecha = $fecha;
     }
 
+    // cambio el valor de hora dentro del objeto
     public function setHora(string $hora): void
     {
         $this->hora = $hora;
     }
 
+    // cambio el valor de estado dentro del objeto
     public function setEstado(string $estado): void
     {
         $this->estado = $estado;
     }
 
+    // traigo las citas con su cliente, mascota y servicio, segun los filtros elegidos
     public static function listadoCita(?string $estado = null, ?string $filtro = null): array
     {
         try {
@@ -102,8 +114,10 @@ class Cita
 
             $sql .= " ORDER BY c.Fecha, c.Hora, u.Nombre, u.CI, m.Nombre, s.Nombre, c.Estado";
 
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute($params);
+            // traigo todas las filas usando los nombres de las columnas como claves
             $citas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return ['citas' => $citas];
@@ -112,6 +126,7 @@ class Cita
         }
     }
 
+    // guardo una cita con el cliente, la mascota, el servicio y el horario
     public function crearCita(?int $ci, ?int $idServicio, ?int $idMascota, string $fecha, string $hora, string $estado,): bool
     {
         try {
@@ -120,6 +135,7 @@ class Cita
             $sql = "INSERT INTO CITA (CI, IdServicio, IdMascota, Fecha, Hora, Estado)
                     VALUES (:ci, :idServicio, :idMascota, :fecha, :hora, :estado)";
 
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute([
                 ':ci' => $ci,
@@ -136,12 +152,14 @@ class Cita
         }
     }
 
+    // compruebo que esa mascota este registrada a nombre de ese cliente
     public static function mascotaPerteneceACliente(int $idMascota, int $ci): bool
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
             $stmt = $conexion->prepare("SELECT 1 FROM MASCOTA WHERE IdMascota = :idMascota AND CI = :ci");
             $stmt->execute([':idMascota' => $idMascota, ':ci' => $ci]);
+            // leo un solo valor del resultado de la consulta
             return (bool)$stmt->fetchColumn();
         } catch (PDOException $e) {
             return false;
@@ -202,9 +220,11 @@ class Cita
 
             $sql .= " ORDER BY c.Fecha, c.Hora";
 
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute($params);
 
+            // traigo todas las filas usando los nombres de las columnas como claves
             return ['citas' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
         } catch (PDOException $e) {
             return ['citas' => [], 'error' => $e->getMessage()];
@@ -248,27 +268,33 @@ class Cita
             ) AS citasTipo
             WHERE Tipo IN (" . implode(', ', $marcadores) . ")";
 
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute($params);
+            // leo un solo valor del resultado de la consulta
             return (int)$stmt->fetchColumn();
         } catch (PDOException $e) {
             return 0;
         }
     }
 
+    // cuento las citas que tienen la fecha de hoy
     public static function contarCitasHoy(): int
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
             $sql = "SELECT COUNT(*) FROM CITA WHERE Fecha = :hoy";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute([':hoy' => date('Y-m-d')]);
+            // leo un solo valor del resultado de la consulta
             return (int)$stmt->fetchColumn();
         } catch (PDOException $e) {
             return 0;
         }
     }
 
+    // busco un registro de cita por su id; si no lo encuentro devuelvo null
     public static function buscarPorId(int $id): ?array
     {
         try {
@@ -280,8 +306,10 @@ class Cita
                 LEFT JOIN USUARIO u ON c.CI = u.CI
                 LEFT JOIN MASCOTA m ON c.IdMascota = m.IdMascota
                 WHERE c.IdCita = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute([':id' => $id]);
+            // traigo una sola fila con los nombres de sus columnas como claves
             $cita = $stmt->fetch(PDO::FETCH_ASSOC);
 
             return $cita ?: null;
@@ -299,6 +327,7 @@ class Cita
             $sql = "UPDATE CITA
                     SET IdServicio = :idServicio, IdMascota = :idMascota, Fecha = :fecha, Hora = :hora, Estado = :estado
                     WHERE IdCita = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute([
                 ':idServicio' => $idServicio,
@@ -315,6 +344,7 @@ class Cita
         }
     }
 
+    // solo cambio citas pendientes; la llegada se confirma el dia de la cita
     public function cambiarEstado(int $id, string $estado, ?int $ci = null): bool
     {
         if (!in_array($estado, ['Confirmada', 'Cancelada'], true) || ($ci !== null && $estado !== 'Cancelada')) {
@@ -326,15 +356,18 @@ class Cita
             $sql = "UPDATE CITA SET Estado = :estado WHERE IdCita = :id AND Estado = 'Pendiente'";
             $parametros = [':estado' => $estado, ':id' => $id];
 
+            // para confirmar la llegada tambien exijo que la cita sea hoy
             if ($estado === 'Confirmada') {
                 $sql .= " AND Fecha = :hoy";
                 $parametros[':hoy'] = (new DateTimeImmutable('now', new DateTimeZone('America/Montevideo')))->format('Y-m-d');
             }
+            // si viene una cedula limito el cambio a las citas de ese cliente
             if ($ci !== null) {
                 $sql .= " AND CI = :ci";
                 $parametros[':ci'] = $ci;
             }
 
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $consulta = $conexion->prepare($sql);
             $consulta->execute($parametros);
             return $consulta->rowCount() === 1;
@@ -350,6 +383,7 @@ class Cita
             $conexion = (new Conexion())->establecerConexion();
 
             $sql = "DELETE FROM CITA WHERE IdCita = :id";
+            // preparo la consulta para pasar los valores por separado al ejecutarla
             $stmt = $conexion->prepare($sql);
             $stmt->execute([':id' => $id]);
 
@@ -359,6 +393,7 @@ class Cita
         }
     }
 
+    // traigo las citas y, si llega una fecha, busco solo las de ese dia
     public static function listadoCitasPorFecha(string $fecha = ''): array
 {
     try {
@@ -367,12 +402,12 @@ class Cita
         $condicion = '';
         $params = [];
         if ($fecha !== '') {
-            // Filtramos por la fecha exacta usando la columna 'Fecha'
+            // filtramos por la fecha exacta usando la columna 'Fecha'
             $condicion = " WHERE c.Fecha = :fecha ";
             $params = [':fecha' => $fecha];
         }
 
-        // Realizamos los JOINs necesarios para obtener los nombres de cliente, mascota y servicio
+        // realizamos los JOINs necesarios para obtener los nombres de cliente, mascota y servicio
         $sql = "SELECT c.*,
                        u.Nombre AS ClienteNombre, u.Apellido AS ClienteApellido,
                        m.Nombre AS MascotaNombre,
@@ -385,8 +420,10 @@ class Cita
                 $condicion
                 ORDER BY c.Fecha ASC, c.Hora ASC";
 
+        // preparo la consulta para pasar los valores por separado al ejecutarla
         $stmt = $conexion->prepare($sql);
         $stmt->execute($params);
+        // traigo todas las filas usando los nombres de las columnas como claves
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     } catch (PDOException $e) {

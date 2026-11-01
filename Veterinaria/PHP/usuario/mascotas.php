@@ -1,4 +1,5 @@
 <?php
+// abro la sesion para poder leer y guardar los datos del usuario
 session_start();
 require_once __DIR__ . '/includes/carrito.php';
 require_once __DIR__ . '/../clases/Conexion.php';
@@ -6,6 +7,7 @@ require_once __DIR__ . '/../clases/Mascota.php';
 
 $conexion = (new Conexion())->establecerConexion();
 
+// obtengo la cedula del usuario a partir del correo guardado en la sesion
 $sqlUsuario = "SELECT u.CI, u.Nombre FROM USUARIO u INNER JOIN HACE h ON u.CI = h.CI WHERE h.Correo = :correo";
 $stmt = $conexion->prepare($sqlUsuario);
 $stmt->execute([':correo' => $_SESSION['correo']]);

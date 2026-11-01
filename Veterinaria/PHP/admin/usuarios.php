@@ -1,4 +1,5 @@
 <?php
+// defino que roles pueden entrar antes de comprobar la sesion
 $rolesPermitidos = ['admin'];
 require_once __DIR__ . '/../includes/verificar_sesion.php';
 
@@ -7,6 +8,7 @@ require_once __DIR__ . '/../clases/Usuario.php';
 
 /* se necesita la sesion para saber quien esta logueado (no se puede eliminar a si mismo) */
 if (session_status() === PHP_SESSION_NONE) {
+  // abro la sesion para poder leer y guardar los datos del usuario
   session_start();
 }
 
@@ -46,6 +48,7 @@ $mensajes = [
   'noexiste' => ['danger', 'El usuario no existe.'],
   'error' => ['danger', 'No se pudo completar la operación.']
 ];
+// uso el aviso correspondiente al resultado que llega en la URL
 $mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 
 /* confirmacion: usuarios.php?eliminar=CI muestra el aviso arriba del listado */
@@ -53,13 +56,16 @@ $usuarioEliminar = null;
 if (isset($_GET['eliminar'])) {
   $usuarioEliminar = Usuario::buscarPorCi((int) $_GET['eliminar']);
   if (!$usuarioEliminar) {
+    // uso el aviso correspondiente al resultado que llega en la URL
     $mensaje = $mensajes['noexiste'];
   } elseif ($usuarioEliminar['Correo'] === ($_SESSION['correo'] ?? '')) {
+    // uso el aviso correspondiente al resultado que llega en la URL
     $mensaje = $mensajes['propio'];
     $usuarioEliminar = null;
   }
 }
 
+// leo la busqueda de la URL y quito los espacios de los extremos
 $busqueda = trim($_GET['busqueda'] ?? '');
 $datosUsuarios = Usuario::listadoUsuarios($busqueda);
 $clientes = $datosUsuarios['clientes'];
@@ -69,6 +75,7 @@ $error = null;
 $datosForm = []; /* se guardan los datos del formulario para repoblarlo en caso de error */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  // conservo lo escrito para mostrarlo de nuevo si hay un error
   $datosForm = $_POST;
 
   $ci = trim($_POST['ci'] ?? '');

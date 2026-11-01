@@ -1,4 +1,5 @@
 <?php
+// abro la sesion para poder leer y guardar los datos del usuario
 session_start();
 
 require_once __DIR__ . '/clases/Conexion.php';
@@ -10,13 +11,16 @@ $error = "";
 $aviso = $_SESSION['aviso_codigo'] ?? "";
 unset($_SESSION['aviso_codigo']);
 
+// este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $codigo     = trim($_POST['codigo'] ?? '');
     $contraseña = $_POST['password'] ?? '';
     $confirmar  = $_POST['confirm_password'] ?? '';
 
+    // recupero el codigo y su vencimiento desde la sesion
     $datos = $_SESSION['recuperar'] ?? null;
 
+    // reviso el formato del codigo y los datos de la contraseña nueva
     if (!preg_match('/^[0-9]{6}$/', $codigo)) {
         $error = "El código tiene que tener 6 números.";
     } elseif ($contraseña === '') {
@@ -30,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         unset($_SESSION['recuperar']);
         $error = "El código venció (dura 15 minutos). Pedí uno nuevo.";
     } elseif (!hash_equals($datos['codigo'], $codigo)) {
+        // cuento cada codigo incorrecto para limitar los intentos
         $_SESSION['recuperar']['intentos']++;
 
         if ($_SESSION['recuperar']['intentos'] >= 3) {
@@ -41,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } else {
         $login = new Login();
+        // si el codigo coincide guardo la contraseña nueva y doy de baja el codigo
         if ($login->cambiarContrasena($datos['correo'], $contraseña)) {
             unset($_SESSION['recuperar']);
             $_SESSION['aviso'] = "Tu contraseña se cambió. Ya podés iniciar sesión.";
