@@ -144,6 +144,81 @@ class Mascota
         }
     }
 
+    // guardo una mascota nueva con su foto opcional
+    public function crearMascotaConFoto(string $nombre, string $especie, string $raza, ?string $fechaNacimiento, string $ciDueño, ?string $foto): bool
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $sql = "INSERT INTO MASCOTA (Nombre, Raza, FechaNacimiento, Especie, CI, Foto)
+                VALUES (:nombre, :raza, :fechaNacimiento, :especie, :ci, :foto)";
+            $stmt = $conexion->prepare($sql);
+            return $stmt->execute([
+                ':nombre' => $nombre,
+                ':raza' => $raza,
+                ':fechaNacimiento' => $fechaNacimiento,
+                ':especie' => $especie,
+                ':ci' => $ciDueño,
+                ':foto' => $foto
+            ]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // acepto solo imagenes pequeñas y guardo un nombre nuevo para cada archivo
+    public static function subirFoto(array $archivo): ?string
+    {
+        if (($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK ||
+            ($archivo['size'] ?? 0) > 5 * 1024 * 1024 ||
+            !is_uploaded_file($archivo['tmp_name'] ?? '')) {
+            return null;
+        }
+
+        // reviso el contenido del archivo, no solo su nombre
+        $tipos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $tipo = (new finfo(FILEINFO_MIME_TYPE))->file($archivo['tmp_name']);
+        if (!isset($tipos[$tipo]) || getimagesize($archivo['tmp_name']) === false) {
+            return null;
+        }
+
+        $directorio = __DIR__ . '/../../img/mascotas';
+        if (!is_dir($directorio) && !mkdir($directorio, 0755, true)) {
+            return null;
+        }
+
+        // uso un nombre nuevo para no reemplazar otra foto
+        $nombre = bin2hex(random_bytes(16)) . '.' . $tipos[$tipo];
+        if (!move_uploaded_file($archivo['tmp_name'], $directorio . '/' . $nombre)) {
+            return null;
+        }
+
+        return 'mascotas/' . $nombre;
+    }
+
+    // borro solo archivos que esta pagina guardo en la carpeta de mascotas
+    public static function borrarFoto(string $foto): void
+    {
+        if (preg_match('/^mascotas\/[a-f0-9]{32}\.(jpg|png|webp)$/', $foto)) {
+            $archivo = __DIR__ . '/../../img/' . $foto;
+            if (is_file($archivo)) {
+                unlink($archivo);
+            }
+        }
+    }
+
+    // el dueño puede cambiar la foto de una mascota que le pertenece
+    public static function actualizarFoto(int $id, int $ci, string $foto): bool
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $stmt = $conexion->prepare('UPDATE MASCOTA SET Foto = :foto WHERE IdMascota = :id AND CI = :ci');
+            $stmt->execute([':foto' => $foto, ':id' => $id, ':ci' => $ci]);
+            return $stmt->rowCount() === 1;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
     // busco un registro de mascota por su id; si no lo encuentro devuelvo null
     public static function buscarPorId(int $id): ?array
     {
@@ -224,7 +299,7 @@ class Mascota
 
         try {
             $conexion = (new Conexion())->establecerConexion();
-            $sql = "SELECT IdMascota, Nombre, Raza, FechaNacimiento, Especie
+            $sql = "SELECT IdMascota, Nombre, Raza, FechaNacimiento, Especie, Foto
                 FROM MASCOTA
                 WHERE CI = :ci
                 ORDER BY $orden $dir";

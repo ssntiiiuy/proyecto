@@ -563,7 +563,7 @@ body {
   color: var(--sienra-text);
 }
 
-.mascotas-encabezado h1 i { color: #B8B4FF; }
+.mascotas-encabezado h1 span { color: #B8B4FF; }
 .mascotas-encabezado p { color: var(--sienra-text-muted); }
 
 /* Opciones para elegir el campo y el sentido del orden. */
@@ -596,6 +596,8 @@ body {
 
 .mascotas-orden-opcion:hover { color: var(--sienra-text); border-color: #B8B4FF; }
 .mascotas-orden-opcion.activa { background: #B8B4FF; border-color: #B8B4FF; color: #182134; font-weight: 600; }
+.mascotas-orden-animales { display: inline-flex; gap: 0.1rem; }
+.mascotas-orden-animales svg { width: 1.2rem; height: 1.2rem; }
 
 /* Tarjetas con espacio reservado para la foto de cada mascota. */
 .mascota-tarjeta {
@@ -605,7 +607,11 @@ body {
   border: 1px solid var(--sienra-border-strong, rgba(255, 255, 255, 0.2));
   border-radius: 1.4rem;
   background: var(--sienra-panel);
+  transition: transform 0.2s ease;
 }
+
+/* La tarjeta crece un poco al pasar el cursor. */
+.mascota-tarjeta:hover { transform: scale(1.03); z-index: 1; }
 
 .mascota-numero {
   position: absolute;
@@ -621,11 +627,13 @@ body {
 
 .mascota-marca { position: absolute; top: 0.9rem; right: 1.2rem; color: #B8B4FF; opacity: 0.5; font-size: 1.4rem; }
 .mascota-contenido { display: flex; align-items: center; gap: 1.5rem; }
+.mascota-foto-form { position: relative; flex: 0 0 9rem; width: 9rem; height: 9rem; }
 
 .mascota-foto {
+  position: relative;
   display: grid;
   place-items: center;
-  flex: 0 0 9rem;
+  overflow: hidden;
   width: 9rem;
   height: 9rem;
   border: 3px solid #B8B4FF;
@@ -633,6 +641,18 @@ body {
   background: var(--sienra-panel-2);
   color: #B8B4FF;
   font-size: 3.5rem;
+  cursor: pointer;
+}
+.mascota-foto img { width: 100%; height: 100%; object-fit: cover; }
+/* Muestro la acción sobre el círculo y el guardado después de elegir archivo. */
+.mascota-foto-accion { position: absolute; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(24, 33, 52, 0.8); color: #fff; font-size: 0.9rem; font-weight: 600; text-align: center; opacity: 0; transition: opacity 0.2s ease; }
+.mascota-foto:hover .mascota-foto-accion, .mascota-foto-input:focus-visible + .mascota-foto .mascota-foto-accion { opacity: 1; }
+.mascota-foto-input:focus-visible + .mascota-foto { outline: 2px solid #B8B4FF; outline-offset: 3px; }
+.mascota-foto-guardar { display: none; position: absolute; inset: 0; width: 100%; border: 0; border-radius: 50%; background: rgba(24, 33, 52, 0.85); color: #fff; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.mascota-foto-input:valid ~ .mascota-foto-guardar { display: block; }
+
+@media (hover: none) {
+  .mascota-foto-accion { opacity: 1; }
 }
 
 .mascota-informacion { min-width: 0; flex: 1; }
@@ -640,14 +660,14 @@ body {
 .mascota-informacion dl { margin: 0; }
 .mascota-informacion dl div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.35rem 0; border-top: 1px solid var(--sienra-border-strong, rgba(255, 255, 255, 0.15)); }
 .mascota-informacion dt { font-weight: 400; color: var(--sienra-text-muted); }
-.mascota-informacion dt i { margin-right: 0.4rem; color: #B8B4FF; }
+.mascota-informacion dt i, .mascota-informacion dt span { margin-right: 0.4rem; color: #B8B4FF; }
 .mascota-informacion dd { margin: 0; text-align: right; font-weight: 600; }
 .mascotas-sin-datos { padding: 3rem; border-radius: 1rem; background: var(--sienra-panel); }
 
 @media (max-width: 575.98px) {
   .mascotas-orden-direccion { border-left: 0; padding-left: 0; }
   .mascota-contenido { flex-direction: column; text-align: center; }
-  .mascota-foto { flex-basis: auto; }
+  .mascota-foto-form { flex-basis: auto; }
   .mascota-informacion { width: 100%; }
   .mascota-informacion dl div { text-align: left; }
 }

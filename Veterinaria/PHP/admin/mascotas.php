@@ -68,6 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $raza = trim($_POST['Raza'] ?? '');
   $fechaNacimiento = trim($_POST['FechaNacimiento'] ?? '');
   $ciDueño = trim($_POST['CI'] ?? '');
+  // si no eligen foto, se guarda la mascota sin imagen
+  $foto = null;
 
   $sqlCheck = $conexion->prepare("SELECT 1 FROM CLIENTE WHERE CI = :ci");
   $sqlCheck->execute([':ci' => $ciDueño]);
@@ -83,6 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     $error = "La fecha de nacimiento no es válida.";
   } elseif (!empty($fechaNacimiento) && $fechaNacimiento > date('Y-m-d')) {
     $error = "La fecha de nacimiento no puede ser posterior a hoy.";
+  } elseif (isset($_FILES['Foto']) && $_FILES['Foto']['error'] !== UPLOAD_ERR_NO_FILE && ($foto = Mascota::subirFoto($_FILES['Foto'])) === null) {
+    $error = "La foto debe ser JPG, PNG o WebP y pesar hasta 5 MB.";
   } else {
     if ($fechaNacimiento === '') {
       $fechaNacimiento = null;
@@ -90,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
     try {
       $mascota = new Mascota();
-      $resultado = $mascota->crearMascota($nombre, $especie, $raza, $fechaNacimiento, $ciDueño);
+      $resultado = $mascota->crearMascotaConFoto($nombre, $especie, $raza, $fechaNacimiento, $ciDueño, $foto);
     } catch (Throwable $e) {
       $resultado = false;
     }
@@ -99,6 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
       header("Location: mascotas.php");
       exit();
     } else {
+      // si falla el alta, borro el archivo que ya se subió
+      if ($foto !== null) {
+        Mascota::borrarFoto($foto);
+      }
       $error = "No se pudo guardar la mascota. Revisá los datos.";
     }
   }
@@ -259,7 +267,7 @@ $modalAbierto = isset($_GET['ci']);
         <?php else: ?>
 
           <!-- datos de la mascota -->
-          <form method="post" action="mascotas.php">
+          <form method="post" action="mascotas.php?ci=<?= urlencode($clienteEncontrado['CI']) ?>" enctype="multipart/form-data">
             <div class="modal-body">
               <input type="hidden" name="CI" value="<?= htmlspecialchars($clienteEncontrado['CI']) ?>">
 
@@ -294,6 +302,10 @@ $modalAbierto = isset($_GET['ci']);
                 <div class="col-sm-12">
                   <label class="form-label" for="FechaNacimiento">Fecha de nacimiento</label>
                   <input class="form-control" type="date" id="FechaNacimiento" name="FechaNacimiento" max="<?= date('Y-m-d') ?>">
+                </div>
+                <div class="col-sm-12">
+                  <label class="form-label" for="Foto">Foto (opcional)</label>
+                  <input class="form-control" type="file" id="Foto" name="Foto" accept="image/jpeg,image/png,image/webp">
                 </div>
               </div>
             </div>
