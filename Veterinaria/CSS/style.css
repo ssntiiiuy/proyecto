@@ -556,53 +556,100 @@ body {
   min-height: calc(100vh - 72px);
 }
 
-.mascotas-tabla-wrap {
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-.mascotas-tabla {
-  --bs-table-bg: transparent;
-  --bs-table-color: var(--sienra-text);
-  text-align: center;
-  white-space: nowrap;
-}
-
-.mascotas-tabla thead th {
-  background-color: #1A1D22;
-  color: #ffffff;
+.mascotas-encabezado h1 {
   font-family: 'Poppins', sans-serif;
-  font-weight: 500;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--sienra-text);
 }
 
-.mascotas-tabla thead .mascotas-titulo {
-  font-weight: 600;
-  font-size: 1.2rem;
+.mascotas-encabezado h1 i { color: #B8B4FF; }
+.mascotas-encabezado p { color: var(--sienra-text-muted); }
+
+/* Opciones para elegir el campo y el sentido del orden. */
+.mascotas-orden {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid var(--sienra-border-strong, rgba(255, 255, 255, 0.2));
+  border-radius: 1rem;
+  background: var(--sienra-panel);
 }
 
-.mascotas-tabla tbody td {
-  border: none;
-  padding: 1rem 0.9rem;
+.mascotas-orden-grupo { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.mascotas-orden-direccion { border-left: 1px solid var(--sienra-border-strong, rgba(255, 255, 255, 0.2)); padding-left: 1rem; }
+
+.mascotas-orden-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--sienra-border-strong, rgba(255, 255, 255, 0.2));
+  border-radius: 0.65rem;
+  color: var(--sienra-text);
+  text-decoration: none;
+  font-size: 0.85rem;
 }
 
-.mascotas-tabla tbody tr:hover td {
-  background-color: #4A5866;
-  color: #ffffff;
+.mascotas-orden-opcion:hover { color: var(--sienra-text); border-color: #B8B4FF; }
+.mascotas-orden-opcion.activa { background: #B8B4FF; border-color: #B8B4FF; color: #182134; font-weight: 600; }
+
+/* Tarjetas con espacio reservado para la foto de cada mascota. */
+.mascota-tarjeta {
+  position: relative;
+  overflow: hidden;
+  padding: 2rem 1.5rem 1.5rem;
+  border: 1px solid var(--sienra-border-strong, rgba(255, 255, 255, 0.2));
+  border-radius: 1.4rem;
+  background: var(--sienra-panel);
 }
 
-/* en el celu achicamos la tabla para que entre sin scroll */
-@media (max-width: 576px) {
-  .mascotas-tabla {
-    white-space: normal;
-    font-size: 0.85rem;
-  }
+.mascota-numero {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.3rem 1.1rem;
+  border-radius: 0 0 0.8rem 0;
+  background: #B8B4FF;
+  color: #182134;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+}
 
-  .mascotas-tabla thead th,
-  .mascotas-tabla tbody td {
-    padding: 0.5rem 0.4rem;
-  }
+.mascota-marca { position: absolute; top: 0.9rem; right: 1.2rem; color: #B8B4FF; opacity: 0.5; font-size: 1.4rem; }
+.mascota-contenido { display: flex; align-items: center; gap: 1.5rem; }
+
+.mascota-foto {
+  display: grid;
+  place-items: center;
+  flex: 0 0 9rem;
+  width: 9rem;
+  height: 9rem;
+  border: 3px solid #B8B4FF;
+  border-radius: 50%;
+  background: var(--sienra-panel-2);
+  color: #B8B4FF;
+  font-size: 3.5rem;
+}
+
+.mascota-informacion { min-width: 0; flex: 1; }
+.mascota-informacion h2 { margin-bottom: 0.7rem; color: var(--sienra-text); font: 700 1.5rem 'Poppins', sans-serif; }
+.mascota-informacion dl { margin: 0; }
+.mascota-informacion dl div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.35rem 0; border-top: 1px solid var(--sienra-border-strong, rgba(255, 255, 255, 0.15)); }
+.mascota-informacion dt { font-weight: 400; color: var(--sienra-text-muted); }
+.mascota-informacion dt i { margin-right: 0.4rem; color: #B8B4FF; }
+.mascota-informacion dd { margin: 0; text-align: right; font-weight: 600; }
+.mascotas-sin-datos { padding: 3rem; border-radius: 1rem; background: var(--sienra-panel); }
+
+@media (max-width: 575.98px) {
+  .mascotas-orden-direccion { border-left: 0; padding-left: 0; }
+  .mascota-contenido { flex-direction: column; text-align: center; }
+  .mascota-foto { flex-basis: auto; }
+  .mascota-informacion { width: 100%; }
+  .mascota-informacion dl div { text-align: left; }
 }
 
 /* Nosotros */
@@ -829,15 +876,4 @@ html[data-theme="dark"] .auth-body .alert-success {
 
 [data-theme="light"] .producto-card {
   border: 1px solid var(--sienra-border);
-}
-
-[data-theme="light"] .mascotas-tabla thead th {
-  background-color: var(--sienra-panel-2);
-  color: var(--sienra-heading);
-  border-color: var(--sienra-border);
-}
-
-[data-theme="light"] .mascotas-tabla tbody tr:hover td {
-  background-color: var(--sienra-panel-2);
-  color: var(--sienra-heading);
 }
