@@ -225,7 +225,7 @@ class Mascota
         try {
             $conexion = (new Conexion())->establecerConexion();
 
-            $sqlMascota = "SELECT IdMascota, Nombre, Raza, FechaNacimiento, Especie, CI
+            $sqlMascota = "SELECT IdMascota, Nombre, Raza, FechaNacimiento, Especie, CI, Foto
                    FROM MASCOTA
                    WHERE IdMascota = :id";
             // preparo la consulta para pasar los valores por separado al ejecutarla
@@ -261,6 +261,30 @@ class Mascota
             ]);
 
             return true;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // edito los datos y la foto juntos cuando se eligio una imagen nueva
+    public function editarMascotaConFoto(int $id, string $nombre, string $especie, string $raza, ?string $fechaNacimiento, string $ciDueño, string $foto): bool
+    {
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $sql = "UPDATE MASCOTA
+                SET Nombre = :nombre, Raza = :raza, FechaNacimiento = :fechaNacimiento,
+                    Especie = :especie, CI = :ci, Foto = :foto
+                WHERE IdMascota = :id";
+            $stmt = $conexion->prepare($sql);
+            return $stmt->execute([
+                ':nombre' => $nombre,
+                ':raza' => $raza,
+                ':fechaNacimiento' => $fechaNacimiento,
+                ':especie' => $especie,
+                ':ci' => $ciDueño,
+                ':foto' => $foto,
+                ':id' => $id
+            ]);
         } catch (PDOException $e) {
             return false;
         }

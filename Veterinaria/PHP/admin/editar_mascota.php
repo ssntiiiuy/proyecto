@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $raza = trim($_POST['Raza'] ?? '');
   $fechaNacimiento = trim($_POST['FechaNacimiento'] ?? '');
   $ciDueño = trim($_POST['CI'] ?? '');
+  $foto = null;
 
   /* se valida antes de guardar */
   if ($nombre === '') {
@@ -41,6 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     $error = "La fecha de nacimiento no es válida.";
   } elseif (!empty($fechaNacimiento) && $fechaNacimiento > date('Y-m-d')) {
     $error = "La fecha de nacimiento no puede ser posterior a hoy.";
+  } elseif (isset($_FILES['Foto']) && $_FILES['Foto']['error'] !== UPLOAD_ERR_NO_FILE && ($foto = Mascota::subirFoto($_FILES['Foto'])) === null) {
+    $error = "La foto debe ser JPG, PNG o WebP y pesar hasta 5 MB.";
   } else {
     /* si la fecha queda vacia se guarda NULL */
     if ($fechaNacimiento === '') {
@@ -48,15 +51,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     }
 
     try {
-      $resultado = (new Mascota())->editarMascota($id, $nombre, $especie, $raza, $fechaNacimiento, $ciDueño);
+      $edicion = new Mascota();
+      // si no se sube otra foto, conservo la que ya tiene
+      $resultado = $foto === null
+        ? $edicion->editarMascota($id, $nombre, $especie, $raza, $fechaNacimiento, $ciDueño)
+        : $edicion->editarMascotaConFoto($id, $nombre, $especie, $raza, $fechaNacimiento, $ciDueño, $foto);
     } catch (Throwable $e) {
       $resultado = false;
     }
 
     if ($resultado) {
+      if ($foto !== null && !empty($mascota['Foto'])) {
+        Mascota::borrarFoto($mascota['Foto']);
+      }
       header("Location: mascotas.php?msg=editado");
       exit();
     } else {
+      if ($foto !== null) {
+        Mascota::borrarFoto($foto);
+      }
       $error = "No se pudieron guardar los cambios. Revisá los datos.";
     }
   }
@@ -107,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
             <a class="admin-card-link" href="mascotas.php"><i class="bi bi-arrow-left"></i> Volver al listado</a>
           </div>
 
-          <form class="p-3 p-lg-4" action="editar_mascota.php?id=<?= $id ?>" method="post">
+          <form class="p-3 p-lg-4" action="editar_mascota.php?id=<?= $id ?>" method="post" enctype="multipart/form-data">
             <div class="row g-3">
               <div class="col-sm-12">
                 <label class="form-label" for="Nombre">Nombre</label>
@@ -145,6 +158,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
                     </option>
                   <?php } ?>
                 </select>
+              </div>
+              <div class="col-sm-12">
+                <label class="form-label" for="Foto"><?= empty($mascota['Foto']) ? 'Añadir foto' : 'Cambiar foto' ?></label>
+                <?php if (!empty($mascota['Foto'])) { ?>
+                  <img src="../../img/mascotas/<?= htmlspecialchars(basename($mascota['Foto'])) ?>" alt="Foto actual de <?= htmlspecialchars($mascota['Nombre']) ?>" width="96" height="96" class="d-block mb-2 rounded-circle object-fit-cover">
+                <?php } ?>
+                <input class="form-control" type="file" id="Foto" name="Foto" accept="image/jpeg,image/png,image/webp">
+                <div class="form-text">JPG, PNG o WebP.</div>
               </div>
             </div>
 
