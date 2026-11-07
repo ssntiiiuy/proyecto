@@ -416,6 +416,50 @@
   vertical-align: middle;
 }
 
+/* ficha de mascota: foto, datos y registros */
+.ficha-pagina .admin-topbar-titulo { visibility: hidden; }
+.ficha-mascota { max-width: 1460px; margin-inline: auto; }
+.ficha-titulo { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.1rem; }
+.ficha-titulo a { color: var(--sienra-text-muted); font-size: 1.5rem; line-height: 1; }
+.ficha-titulo a:hover { color: var(--sienra-text); }
+.ficha-titulo h2 { margin: 0; color: var(--sienra-heading, var(--sienra-text)); font: 600 1.5rem 'Poppins', sans-serif; }
+
+.ficha-resumen { display: flex; align-items: center; gap: 2rem; min-height: 180px; padding: 1.25rem 1.5rem; border: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.1)); background: linear-gradient(120deg, var(--sienra-panel), var(--sienra-panel-2)); }
+.ficha-resumen-foto { display: grid; place-items: center; flex: 0 0 140px; width: 140px; height: 140px; overflow: hidden; border-radius: 50%; background: var(--sienra-panel-2); color: #B8B4FF; font-size: 3.5rem; }
+.ficha-resumen-foto img { width: 100%; height: 100%; object-fit: cover; }
+.ficha-resumen-datos h3 { margin: 0 0 0.7rem; color: var(--sienra-heading, var(--sienra-text)); font: 600 1.7rem 'Poppins', sans-serif; }
+.ficha-resumen-detalles { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; color: var(--sienra-text); }
+.ficha-resumen-detalles span + span { padding-left: 1.25rem; border-left: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.18)); }
+.ficha-resumen-detalles i, .ficha-resumen-fecha > i { margin-right: 0.4rem; color: var(--sienra-text-muted); }
+.ficha-resumen-fecha { display: flex; align-items: flex-start; gap: 0.45rem; margin-top: 1rem; }
+.ficha-resumen-fecha div { display: flex; flex-direction: column; gap: 0.15rem; }
+.ficha-resumen-fecha span { color: var(--sienra-text-muted); font-size: 0.85rem; }
+.ficha-resumen-fecha strong { color: var(--sienra-text); font-weight: 500; }
+
+.ficha-seccion { border: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.1)); }
+.ficha-seccion-header { padding: 1.1rem 1.25rem; border-bottom: 0; }
+.ficha-seccion-header h2 { display: flex; align-items: center; gap: 0.75rem; font-size: 1.15rem; }
+.ficha-seccion-header h2 i { color: var(--sienra-text-muted); font-size: 1.45rem; }
+.ficha-seccion-header .admin-btn-agregar { padding: 0.4rem 0.9rem; }
+.ficha-tabla-contenedor { padding: 0 1.25rem 1.25rem; }
+.ficha-tabla { min-width: 850px; border-collapse: separate; border-spacing: 0 0.35rem; border-top: 1px solid var(--sienra-border, rgba(255, 255, 255, 0.12)); white-space: normal; }
+.ficha-tabla thead th { padding: 1rem 0.8rem 0.65rem; border: 0; }
+.ficha-tabla tbody { --bs-table-bg: var(--sienra-panel-2); }
+.ficha-tabla tbody td { padding: 0.9rem 0.8rem; border: 0; font-size: 0.86rem; }
+.ficha-tabla tbody td:first-child { border-radius: 8px 0 0 8px; }
+.ficha-tabla tbody td:last-child { border-radius: 0 8px 8px 0; }
+.ficha-vacio { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.45rem; min-height: 140px; text-align: center; }
+.ficha-vacio i { color: var(--sienra-text-muted); font-size: 2.3rem; }
+.ficha-vacio strong { color: var(--sienra-heading, var(--sienra-text)); font-weight: 600; }
+.ficha-vacio span { color: var(--sienra-text-muted); font-size: 0.8rem; }
+
+@media (max-width: 575.98px) {
+  .ficha-titulo h2 { font-size: 1.2rem; }
+  .ficha-resumen { flex-direction: column; text-align: center; gap: 1rem; }
+  .ficha-resumen-foto { flex-basis: auto; }
+  .ficha-resumen-detalles, .ficha-resumen-fecha { justify-content: center; }
+}
+
 /* botones y modal que se repiten en las pantallas de gestión */
 .admin-filtro {
   width: auto;

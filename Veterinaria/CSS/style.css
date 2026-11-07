@@ -350,68 +350,122 @@ body {
 /* Catálogo */
 .catalogo {
   min-height: calc(100vh - 72px);
+  position: relative;
+  overflow: hidden;
+  color: #DCEAFF;
+  background-color: #1F2937;
+  background-image:
+    radial-gradient(ellipse 360px 130px at 0% 100%, rgba(220, 234, 255, 0.1) 0 70%, transparent 71%),
+    radial-gradient(ellipse 330px 120px at 100% 100%, rgba(220, 234, 255, 0.07) 0 70%, transparent 71%);
+}
+
+/* huella decorativa detrás del contenido */
+.catalogo::before {
+  content: '';
+  position: absolute;
+  right: 2rem;
+  bottom: 3rem;
+  width: 180px;
+  height: 180px;
+  opacity: 0.1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 53px 43px at 50% 75%, #DCEAFF 98%, transparent 100%),
+    radial-gradient(ellipse 17px 24px at 20% 37%, #DCEAFF 98%, transparent 100%),
+    radial-gradient(ellipse 17px 24px at 40% 20%, #DCEAFF 98%, transparent 100%),
+    radial-gradient(ellipse 17px 24px at 63% 20%, #DCEAFF 98%, transparent 100%),
+    radial-gradient(ellipse 17px 24px at 83% 37%, #DCEAFF 98%, transparent 100%);
+}
+
+.catalogo > .container-fluid {
+  position: relative;
+  z-index: 1;
+}
+
+.catalogo .row-cols-xl-4 {
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 1.5rem;
 }
 
 .filtros-card {
-  background-color: var(--sienra-panel-2);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1.5rem;
-  padding: 1.75rem 1.5rem;
+  background-color: #1F2937;
+  border: 1px solid rgba(197, 195, 195, 0.4);
+  border-radius: 14px;
+  padding: 1.5rem;
 }
 
 .btn-filtros-limpiar {
   background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  color: #ffffff;
+  border: 1px solid #C5C3C3;
+  color: #DCEAFF;
   font-family: 'Poppins', sans-serif;
   font-weight: 500;
-  border-radius: 4px;
-  padding: 0.35rem 1rem;
+  border-radius: 9px;
+  padding: 0.6rem 1rem;
 }
 
 .btn-filtros-limpiar:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background-color: rgba(220, 234, 255, 0.1);
+  color: #DCEAFF;
 }
 
 .filtros-titulo {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
   font-size: 1.05rem;
-  color: #ffffff;
-  margin: 1.75rem 0 0.75rem;
+  color: #DCEAFF;
+  margin: 1.6rem 0 0.85rem;
 }
 
 .filtros-opcion {
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.2rem;
+  padding: 0.45rem 0.5rem 0.45rem 1.9rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.filtros-opcion:hover {
+  background-color: rgba(220, 234, 255, 0.08);
 }
 
 .filtros-opcion .form-check-input {
-  background-color: var(--sienra-bg);
-  border-color: rgba(255, 255, 255, 0.35);
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  background-color: #1F2937;
+  border-color: #C5C3C3;
 }
 
 .filtros-opcion .form-check-input:checked {
-  background-color: #2E8B4F;
-  border-color: #2E8B4F;
+  background-color: #DCEAFF;
+  border-color: #DCEAFF;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%231F2937' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m2 8 4 4 8-8'/%3e%3c/svg%3e");
 }
 
 .filtros-opcion .form-check-label {
-  font-size: 0.92rem;
-  color: var(--sienra-text);
+  font-size: 0.95rem;
+  color: #C5C3C3;
 }
 
 .catalogo-orden {
   width: auto;
   max-width: 100%;
-  background-color: var(--sienra-panel-2);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: var(--sienra-text);
+  min-height: 2.9rem;
+  padding: 0.55rem 2.8rem 0.55rem 1rem;
+  background-color: #1F2937;
+  border: 1px solid rgba(197, 195, 195, 0.65);
+  border-radius: 9px;
+  color: #DCEAFF;
 }
 
 .catalogo-orden:focus {
-  border-color: var(--sienra-sage, #8FAF9F);
+  border-color: #DCEAFF;
   box-shadow: none;
+}
+
+.catalogo-orden option {
+  background-color: #1F2937;
+  color: #DCEAFF;
 }
 
 .producto-card {
@@ -420,66 +474,83 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background-color: #ffffff;
-  color: var(--sienra-ink);
-  border-radius: 10px;
-  padding: 1rem;
+  background-color: #1F2937;
+  color: #DCEAFF;
+  border: 1px solid rgba(197, 195, 195, 0.42);
+  border-radius: 14px;
+  padding: 1.1rem;
 }
 
-/* franja compacta para identificar el tipo de producto */
+/* muestra la foto sin deformarla dentro de la tarjeta */
+.producto-imagen {
+  width: 100%;
+  height: 11rem;
+  display: block;
+  object-fit: contain;
+  padding: 0.8rem;
+  background-color: #DCEAFF;
+  border-radius: 10px;
+  margin-bottom: 0.9rem;
+}
+
+/* muestra la categoría como etiqueta o reemplazo de la foto */
 .producto-categoria {
   width: 100%;
-  min-height: 4.25rem;
+  min-height: 11rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  border-radius: 8px;
+  border-radius: 10px;
   font-family: 'Poppins', sans-serif;
   font-size: 0.9rem;
   font-weight: 600;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+/* reduce la categoria cuando la tarjeta tiene foto */
+.producto-categoria-con-imagen {
+  width: auto;
+  min-height: 0;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
 }
 
 .producto-categoria i {
   font-size: 1.35rem;
 }
 
-.producto-categoria-accesorios {
-  background-color: #E8EFFC;
-  color: #37598B;
-}
-
-.producto-categoria-alimentos {
-  background-color: #E5F3E9;
-  color: #27653E;
-}
-
-.producto-categoria-farmacia {
-  background-color: #F0EAFE;
-  color: #6743A5;
-}
-
-.producto-categoria-higiene {
-  background-color: #FFF0DF;
-  color: #8A4B1B;
-}
-
+.producto-categoria-accesorios,
+.producto-categoria-alimentos,
+.producto-categoria-farmacia,
+.producto-categoria-higiene,
 .producto-categoria-general {
-  background-color: #EEF0F3;
-  color: #667085;
+  background-color: #DCEAFF;
+  color: #1F2937;
+}
+
+.catalogo-creditos a {
+  color: #C5C3C3;
 }
 
 .producto-nombre {
-  font-size: 0.95rem;
-  margin-bottom: 0.4rem;
+  min-height: 2.9em;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.45;
+  margin-bottom: 0.55rem;
 }
 
 .producto-precio {
   font-family: 'Poppins', sans-serif;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.9rem;
   margin-top: auto;
+}
+
+.producto-card form {
+  width: 100%;
 }
 
 .btn-carrito {
@@ -495,6 +566,24 @@ body {
 .btn-carrito:hover {
   background-color: #257a42;
   color: #ffffff;
+}
+
+.catalogo .btn-carrito {
+  min-height: 2.7rem;
+  background-color: #DCEAFF;
+  border-radius: 9px;
+  color: #1F2937;
+}
+
+.catalogo .btn-carrito:hover {
+  background-color: rgba(220, 234, 255, 0.85);
+  color: #1F2937;
+}
+
+.catalogo .btn-carrito:disabled {
+  background-color: transparent;
+  color: #C5C3C3;
+  opacity: 1;
 }
 
 /* Carrito lateral */
@@ -672,39 +761,48 @@ body {
   .mascota-informacion dl div { text-align: left; }
 }
 
-/* Nosotros */
+/* nosotros: título y tarjetas con los colores del sitio */
 .nosotros {
   min-height: calc(100vh - 72px);
 }
 
+.nosotros-hero { padding: 3rem 0 2rem; }
 .nosotros-titulo {
   font-family: 'Poppins', sans-serif;
-  font-weight: 600;
-  font-size: 1.9rem;
+  font-weight: 700;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.1;
   color: #ffffff;
-  text-align: center;
-  margin-bottom: 1.75rem;
+  max-width: 600px;
+  margin: 0;
 }
+.nosotros-titulo span { display: block; color: inherit; }
 
 .nosotros-card {
   background-color: var(--sienra-panel-2);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1.5rem;
+  border-radius: 1.25rem;
   padding: 1.5rem 1.6rem;
   color: var(--sienra-text);
 }
 
 .nosotros-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
   font-size: 1.4rem;
   color: #ffffff;
   margin-bottom: 1rem;
 }
+.nosotros-card p { line-height: 1.55; }
 
 .nosotros-horario {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
+  line-height: 2;
 }
+.nosotros-horario u { font-weight: 600; text-decoration: none; }
 
 .nosotros-link {
   color: var(--sienra-text);
@@ -717,12 +815,28 @@ body {
 }
 
 .nosotros-icono {
+  display: grid;
+  place-items: center;
+  flex: 0 0 3rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.9rem;
+  background: var(--sienra-panel);
   color: #6FA8DC;
+  font-size: 1.35rem;
 }
 
+.nosotros-contacto p { display: flex; align-items: center; gap: 0.8rem; }
+.nosotros-contacto p + p { margin-top: 0.85rem; }
+.nosotros-ubicacion p > i { margin-right: 0.35rem; }
+.nosotros-mapa { overflow: hidden; border-radius: 0.75rem; }
 .nosotros-mapa iframe {
   border: 0;
-  border-radius: 8px;
+}
+
+@media (max-width: 767.98px) {
+  .nosotros-hero { padding: 2rem 0 1.5rem; }
+  .nosotros-card { padding: 1.25rem; }
 }
 
 /* ===== Botón de tema (sol/luna) ===== */
@@ -762,7 +876,7 @@ html[data-theme="dark"] .alert {
 }
 
 .form-select.catalogo-orden {
-  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23DCEAFF' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
 
 html[data-theme="dark"] .auth-body .alert-danger {
@@ -896,4 +1010,29 @@ html[data-theme="dark"] .auth-body .alert-success {
 
 [data-theme="light"] .producto-card {
   border: 1px solid var(--sienra-border);
+}
+
+/* mantiene los colores del catálogo también en el tema claro */
+[data-theme="light"] .catalogo .filtros-card,
+[data-theme="light"] .catalogo .producto-card {
+  border-color: rgba(197, 195, 195, 0.42);
+}
+
+[data-theme="light"] .catalogo .filtros-titulo,
+[data-theme="light"] .catalogo .btn-filtros-limpiar {
+  color: #DCEAFF;
+}
+
+[data-theme="light"] .catalogo .btn-filtros-limpiar {
+  border-color: #C5C3C3;
+}
+
+[data-theme="light"] .catalogo .btn-filtros-limpiar:hover {
+  background-color: rgba(220, 234, 255, 0.1);
+  color: #DCEAFF;
+}
+
+[data-theme="light"] .catalogo .catalogo-orden,
+[data-theme="light"] .catalogo .filtros-opcion .form-check-input:not(:checked) {
+  border-color: #C5C3C3;
 }

@@ -19,7 +19,7 @@ $ordenesValidos = [
 $ordenGet = $_GET['orden'] ?? 'ultimos';
 $orderBy = $ordenesValidos[$ordenGet] ?? $ordenesValidos['ultimos'];
 
-$sql = "SELECT IdProducto, Nombre, Categoria, Precio, Stock FROM PRODUCTO";
+$sql = "SELECT IdProducto, Nombre, Categoria, Precio, Stock, Imagen FROM PRODUCTO";
 $params = [];
 
 if (!empty($categoriasSeleccionadas)) {
@@ -54,7 +54,7 @@ $categoriasVisuales = [
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="../../CSS/style.css">
+  <link rel="stylesheet" href="../../CSS/style.css?v=20261107b">
   <script src="../../JS/tema.js"></script>
 </head>
 
@@ -100,7 +100,10 @@ $categoriasVisuales = [
                 <div class="col">
                   <div class="producto-card">
                     <?php $visual = $categoriasVisuales[$p['Categoria']] ?? ['icono' => 'bi-box-seam', 'clase' => 'general']; ?>
-                    <div class="producto-categoria producto-categoria-<?= $visual['clase'] ?>">
+                    <?php if (!empty($p['Imagen'])) { ?>
+                      <img class="producto-imagen" src="../../img/productos/<?= htmlspecialchars(basename($p['Imagen'])) ?>" alt="Imagen ilustrativa de <?= htmlspecialchars($p['Nombre']) ?>">
+                    <?php } ?>
+                    <div class="producto-categoria producto-categoria-<?= $visual['clase'] ?><?= !empty($p['Imagen']) ? ' producto-categoria-con-imagen' : '' ?>">
                       <i class="bi <?= $visual['icono'] ?>" aria-hidden="true"></i>
                       <span><?= htmlspecialchars($p['Categoria']) ?></span>
                     </div>
@@ -116,6 +119,7 @@ $categoriasVisuales = [
             <?php endforeach;
             endif; ?>
           </div>
+          <p class="catalogo-creditos text-end mt-3 mb-0"><a href="../../img/productos/creditos.txt">Créditos de imágenes</a></p>
         </section>
       </div>
     </div>

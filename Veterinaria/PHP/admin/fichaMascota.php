@@ -131,7 +131,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../CSS/style.css">
-    <link rel="stylesheet" href="../../CSS/admin.css">
+    <link rel="stylesheet" href="../../CSS/admin.css?v=<?= filemtime(__DIR__ . '/../../CSS/admin.css') ?>">
     <script src="../../JS/tema.js"></script>
 </head>
 
@@ -139,47 +139,53 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
     <div class="admin-wrapper">
         <?php $paginaActiva = 'mascotas';
         include __DIR__ . '/includes/sidebar.php'; ?>
-        <div class="admin-contenido">
+        <div class="admin-contenido ficha-pagina">
             <?php $tituloPagina = 'Ficha de mascota';
             include __DIR__ . '/includes/topbar.php'; ?>
-            <main class="container-fluid px-3 px-lg-4 py-4">
+            <main class="container-fluid px-3 px-lg-4 py-4 ficha-mascota">
 
                 <?php if ($mensaje) { ?>
                     <div class="alert alert-<?= $mensaje[0] ?>" role="alert"><?= htmlspecialchars($mensaje[1]) ?></div>
                 <?php } ?>
 
-                <div class="admin-card mb-3">
-                    <div class="admin-card-header flex-wrap">
-                        <h2><?= htmlspecialchars($mascota['Nombre']) ?></h2>
-                        <a class="admin-card-link" href="mascotas.php"><i class="bi bi-arrow-left"></i> Volver al listado</a>
+                <div class="ficha-titulo">
+                    <a href="mascotas.php" aria-label="Volver al listado de mascotas"><i class="bi bi-arrow-left"></i></a>
+                    <h2>Ficha de mascota</h2>
+                </div>
+
+                <!-- datos principales de la mascota -->
+                <div class="admin-card ficha-resumen mb-4">
+                    <div class="ficha-resumen-foto">
+                        <?php if (!empty($mascota['Foto'])) { ?>
+                            <img src="../../img/mascotas/<?= htmlspecialchars(basename($mascota['Foto'])) ?>" alt="Foto de <?= htmlspecialchars($mascota['Nombre']) ?>" width="140" height="140">
+                        <?php } else { ?>
+                            <span aria-hidden="true">🐾</span>
+                        <?php } ?>
                     </div>
-                    <div class="row g-3 p-3 p-lg-4">
-                        <div class="col-sm-3">
-                            <p class="admin-dato-label">Especie</p>
-                            <p class="admin-dato-valor"><?= htmlspecialchars($mascota['Especie']) ?></p>
+                    <div class="ficha-resumen-datos">
+                        <h3><?= htmlspecialchars($mascota['Nombre']) ?></h3>
+                        <div class="ficha-resumen-detalles">
+                            <span><i class="bi bi-heart-pulse" aria-hidden="true"></i> <?= htmlspecialchars($mascota['Especie']) ?></span>
+                            <span><i class="bi bi-tags" aria-hidden="true"></i> <?= htmlspecialchars($mascota['Raza']) ?></span>
                         </div>
-                        <div class="col-sm-3">
-                            <p class="admin-dato-label">Raza</p>
-                            <p class="admin-dato-valor"><?= htmlspecialchars($mascota['Raza']) ?></p>
-                        </div>
-                        <div class="col-sm-3">
-                            <p class="admin-dato-label">Fecha de nacimiento</p>
-                            <p class="admin-dato-valor"><?= $mascota['FechaNacimiento'] ? date('d/m/Y', strtotime($mascota['FechaNacimiento'])) : '—' ?></p>
+                        <div class="ficha-resumen-fecha">
+                            <i class="bi bi-calendar3" aria-hidden="true"></i>
+                            <div><span>Fecha de nacimiento</span><strong><?= $mascota['FechaNacimiento'] ? date('d/m/Y', strtotime($mascota['FechaNacimiento'])) : '—' ?></strong></div>
                         </div>
                     </div>
                 </div>
 
-                <!--  HISTORIAL CLINICO  -->
-                <div class="admin-card mb-3">
-                    <div class="admin-card-header flex-wrap">
-                        <h2>Historial clínico</h2>
+                <!-- historial clínico de la mascota -->
+                <div class="admin-card ficha-seccion mb-4">
+                    <div class="admin-card-header ficha-seccion-header flex-wrap">
+                        <h2><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i> Historial clínico</h2>
                         <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalHistorial"
                             onclick="nuevoHistorial()">
                             <i class="bi bi-plus-lg"></i> Agregar
                         </button>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table admin-tabla mb-0">
+                    <div class="table-responsive ficha-tabla-contenedor">
+                        <table class="table admin-tabla ficha-tabla mb-0">
                             <thead>
                                 <tr>
                                     <th scope="col">Fecha</th>
@@ -194,7 +200,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                             <tbody>
                                 <?php if (empty($historiales)): ?>
                                     <tr>
-                                        <td colspan="7" class="text-center">Sin registros.</td>
+                                        <td colspan="7"><div class="ficha-vacio"><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i><strong>Sin registros clínicos</strong><span>No hay consultas registradas para esta mascota.</span></div></td>
                                     </tr>
                                     <?php else: foreach ($historiales as $h): ?>
                                         <tr>
@@ -222,17 +228,17 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                     </div>
                 </div>
 
-                <!-- CARNET DE VACUNACION-->
-                <div class="admin-card">
-                    <div class="admin-card-header flex-wrap">
-                        <h2>Carnet de vacunación</h2>
+                <!-- carnet de vacunación de la mascota -->
+                <div class="admin-card ficha-seccion mb-4">
+                    <div class="admin-card-header ficha-seccion-header flex-wrap">
+                        <h2><i class="bi bi-shield-plus" aria-hidden="true"></i> Carnet de vacunación</h2>
                         <button class="btn btn-sm admin-btn-agregar" type="button" data-bs-toggle="modal" data-bs-target="#modalCarnet"
                             onclick="nuevoCarnet()">
                             <i class="bi bi-plus-lg"></i> Agregar
                         </button>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table admin-tabla mb-0">
+                    <div class="table-responsive ficha-tabla-contenedor">
+                        <table class="table admin-tabla ficha-tabla mb-0">
                             <thead>
                                 <tr>
                                     <th scope="col">Tipo vacuna</th>
@@ -245,7 +251,7 @@ $carnet = CarnetVacunacion::listadoPorIdMascota($id);
                             <tbody>
                                 <?php if (empty($carnet)): ?>
                                     <tr>
-                                        <td colspan="5" class="text-center">Sin registros.</td>
+                                        <td colspan="5"><div class="ficha-vacio"><i class="bi bi-shield-check" aria-hidden="true"></i><strong>Sin registros de vacunación</strong><span>No hay vacunas registradas para esta mascota.</span></div></td>
                                     </tr>
                                     <?php else: foreach ($carnet as $c): ?>
                                         <tr>
