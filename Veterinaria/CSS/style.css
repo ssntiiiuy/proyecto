@@ -1036,3 +1036,155 @@ html[data-theme="dark"] .auth-body .alert-success {
 [data-theme="light"] .catalogo .filtros-opcion .form-check-input:not(:checked) {
   border-color: #C5C3C3;
 }
+
+/* panel de inicio del cliente */
+.dashboard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 85% 0%, rgba(220, 234, 255, 0.09), transparent 34%),
+    radial-gradient(ellipse at 8% 100%, rgba(220, 234, 255, 0.12), transparent 28%),
+    #1F2937;
+  color: #DCEAFF;
+}
+
+.dashboard::before {
+  content: '🐾';
+  position: absolute;
+  top: 1.5rem;
+  right: 5%;
+  font-size: 8rem;
+  line-height: 1;
+  filter: grayscale(1);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.dashboard::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: -10%;
+  bottom: -13rem;
+  width: 75%;
+  height: 17rem;
+  border: 2px solid rgba(220, 234, 255, 0.2);
+  border-radius: 50%;
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+.dashboard .greeting-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 0.7rem 0 2rem;
+}
+
+.dashboard .greeting-icon,
+.dashboard .panel-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  background: rgba(220, 234, 255, 0.14);
+  color: #DCEAFF;
+  border-radius: 0.8rem;
+}
+
+.dashboard .greeting-icon { width: 4.2rem; height: 4.2rem; font-size: 2rem; }
+.dashboard .panel-icon { width: 2.5rem; height: 2.5rem; font-size: 1.2rem; }
+
+.dashboard .greeting-card h1 {
+  color: #DCEAFF;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  margin: 0 0 0.25rem;
+}
+
+.dashboard .greeting-card h1 span { font-weight: 700; }
+.dashboard .greeting-card p { color: #C5C3C3; margin: 0; max-width: 37rem; }
+
+.dashboard .panel-card {
+  background: linear-gradient(145deg, rgba(220, 234, 255, 0.08), rgba(220, 234, 255, 0.02));
+  border: 1px solid rgba(197, 195, 195, 0.35);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.2);
+}
+
+.dashboard .panel-header {
+  margin: -1.5rem -1.5rem 0.5rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(197, 195, 195, 0.2);
+  gap: 1rem;
+}
+
+.dashboard .panel-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: #DCEAFF;
+  font-size: 1.2rem;
+}
+
+.dashboard .badge-info {
+  background: rgba(220, 234, 255, 0.16);
+  color: #DCEAFF;
+  border-radius: 999px;
+}
+
+.dashboard .pet-row { padding: 0.7rem 0; }
+.dashboard .pet-details { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.dashboard .pet-photo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 4.25rem;
+  width: 4.25rem;
+  height: 4.25rem;
+  overflow: hidden;
+  border-radius: 0.8rem;
+  background: rgba(220, 234, 255, 0.12);
+  font-size: 2rem;
+}
+
+.dashboard .pet-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.dashboard .pet-name { color: #DCEAFF; font-size: 1.05rem; }
+.dashboard .pet-meta { color: #C5C3C3; font-size: 0.9rem; }
+.dashboard .group-label { color: #DCEAFF; margin: 0; }
+.dashboard .divider { border-color: rgba(197, 195, 195, 0.22); margin: 0; }
+.dashboard .carnet-mascota { display: flex; align-items: center; gap: 1rem; padding-top: 0.8rem; }
+.dashboard .carnet-mascota .pet-photo { flex-basis: 3.5rem; width: 3.5rem; height: 3.5rem; font-size: 1.6rem; }
+.dashboard .carnet-mascota + .pet-row { padding-left: 4.5rem; }
+.dashboard .badge-success,
+.dashboard .badge-danger { border-radius: 999px; white-space: normal; }
+
+.dashboard .turnos-vacio {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.65rem;
+  min-height: 9rem;
+  text-align: center;
+}
+
+.dashboard .turnos-vacio i { color: #C5C3C3; font-size: 2rem; }
+.dashboard .btn-cta {
+  background: #DCEAFF;
+  color: #1F2937;
+  border-radius: 0.85rem;
+  min-height: 3.5rem;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.dashboard .btn-cta:hover,
+.dashboard .btn-cta:focus-visible { background: #C5C3C3; color: #1F2937; transform: translateY(-2px); }
+.dashboard .btn-cta i { margin-right: 0.5rem; }
+
+@media (max-width: 575.98px) {
+  .dashboard .greeting-card { align-items: flex-start; gap: 0.9rem; }
+  .dashboard .greeting-icon { width: 3.5rem; height: 3.5rem; font-size: 1.6rem; }
+  .dashboard .panel-card { padding: 1.1rem; }
+  .dashboard .panel-header { margin: -1.1rem -1.1rem 0.5rem; padding: 0.9rem 1.1rem; }
+  .dashboard .pet-row { flex-wrap: wrap; }
+  .dashboard .carnet-mascota + .pet-row { padding-left: 0; }
+}

@@ -145,7 +145,11 @@ $mostrarCarrito = true;
     <div class="container-lg py-4">
 
       <div class="greeting-card">
-        <h1>Hola, <?= htmlspecialchars($nombreUsuario) ?>!</h1>
+        <span class="greeting-icon" aria-hidden="true">🐾</span>
+        <div>
+          <h1>Hola, <span><?= htmlspecialchars($nombreUsuario) ?>!</span></h1>
+          <p>Gestioná la información de tus mascotas, sus vacunas y turnos desde un solo lugar.</p>
+        </div>
       </div>
 
       <?php if ($proximaVacuna): ?>
@@ -175,16 +179,23 @@ $mostrarCarrito = true;
 
           <div class="panel-card">
             <div class="panel-header">
-              <h2>Mis mascotas</h2>
+              <h2><span class="panel-icon" aria-hidden="true">🐾</span> Mis mascotas</h2>
               <span class="badge badge-info"><?= count($mascotas) ?> total</span>
             </div>
             <?php foreach ($mascotas as $i => $m): ?>
               <?php if ($i > 0): ?>
                 <hr class="divider"><?php endif; ?>
               <div class="pet-row">
-                <div>
+                <div class="pet-details">
+                  <div class="pet-photo">
+                    <?php if (!empty($m['Foto'])) { ?>
+                      <img src="../../img/mascotas/<?= htmlspecialchars(basename($m['Foto'])) ?>" alt="Foto de <?= htmlspecialchars($m['Nombre']) ?>">
+                    <?php } ?>
+                  </div>
+                  <div>
                   <p class="pet-name"><?= htmlspecialchars($m['Nombre']) ?></p>
                   <p class="pet-meta"><?= htmlspecialchars($m['Raza']) ?> - <?= htmlspecialchars($m['Especie']) ?></p>
+                  </div>
                 </div>
               </div>
             <?php endforeach; ?>
@@ -192,7 +203,7 @@ $mostrarCarrito = true;
 
           <div class="panel-card">
             <div class="panel-header">
-              <h2>Mis turnos</h2>
+              <h2><span class="panel-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></span> Mis turnos</h2>
             </div>
             <?php foreach ($turnos as $proximoTurno) { ?>
               <div class="pet-row">
@@ -214,7 +225,7 @@ $mostrarCarrito = true;
               </div>
             <?php } ?>
             <?php if (empty($turnos)) { ?>
-              <p class="pet-meta">No tenés turnos próximos.</p>
+              <div class="turnos-vacio"><i class="bi bi-calendar3" aria-hidden="true"></i><p class="pet-meta">No tenés turnos próximos.</p></div>
             <?php } ?>
           </div>
 
@@ -224,7 +235,7 @@ $mostrarCarrito = true;
 
           <div class="panel-card flex-grow-1 d-flex flex-column">
             <div class="panel-header">
-              <h2>Carnet de vacunas</h2>
+              <h2><span class="panel-icon" aria-hidden="true"><i class="bi bi-capsule"></i></span> Carnet de vacunas</h2>
             </div>
 
             <?php
@@ -235,7 +246,19 @@ $mostrarCarrito = true;
               foreach ($carnet as $vacuna) {
                 if ($mascotaActual !== $vacuna['NombreMascota']) {
                   $mascotaActual = $vacuna['NombreMascota'];
-                  echo '<p class="group-label mt-3">' . htmlspecialchars($mascotaActual) . '</p>';
+                  // uso la foto ya cargada de la mascota, sin hacer otra consulta
+                  $fotoCarnet = null;
+                  foreach ($mascotas as $m) {
+                    if ($m['Nombre'] === $mascotaActual) {
+                      $fotoCarnet = $m['Foto'];
+                      break;
+                    }
+                  }
+                  echo '<div class="carnet-mascota"><div class="pet-photo">';
+                  if (!empty($fotoCarnet)) {
+                    echo '<img src="../../img/mascotas/' . htmlspecialchars(basename($fotoCarnet)) . '" alt="Foto de ' . htmlspecialchars($mascotaActual) . '">';
+                  }
+                  echo '</div><p class="group-label">' . htmlspecialchars($mascotaActual) . '</p></div>';
                 } else {
                   echo '<hr class="divider">';
                 }
@@ -255,7 +278,7 @@ $mostrarCarrito = true;
             }
             ?>
 
-            <button class="btn btn-cta mt-auto" type="button" data-bs-toggle="modal" data-bs-target="#modalSolicitarCita">Solicitar nuevo turno</button>
+            <button class="btn btn-cta mt-auto" type="button" data-bs-toggle="modal" data-bs-target="#modalSolicitarCita"><i class="bi bi-calendar-plus" aria-hidden="true"></i> Solicitar nuevo turno</button>
           </div>
 
         </div>
