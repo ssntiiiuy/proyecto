@@ -67,7 +67,7 @@ $nombreUsuario = $nombreUsuario ?? ($_SESSION['nombre'] ?? 'Usuario');
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                 <li><span class="dropdown-item-text text-muted small"><?= htmlspecialchars($nombreUsuario) ?></span></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#">Mi perfil</a></li>
+                <li><a class="dropdown-item" href="../usuario/perfil.php">Mi perfil</a></li>
                 <li>
                   <a class="dropdown-item" href="../cerrar_sesion.php" data-bs-toggle="modal" data-bs-target="#modalCerrarSesion">
                     Cerrar sesión
