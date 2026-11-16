@@ -6,6 +6,21 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../../clases/Conexion.php';
 
+$esCliente = !empty($_SESSION['correo']) && ($_SESSION['rol'] ?? null) === 'cliente';
+if (!$esCliente) {
+  // Si llega un formulario sin una cuenta de cliente, mando al login antes de cambiar el carrito.
+  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accionCarrito'])) {
+    $rutaCompra = '../LoginHTML.php?accion=compra';
+    $producto = filter_var($_POST['IdProducto'] ?? null, FILTER_VALIDATE_INT);
+    if ($_POST['accionCarrito'] === 'agregar' && $producto > 0) {
+      $rutaCompra .= '&producto=' . $producto;
+    }
+    header('Location: ' . $rutaCompra, true, 303);
+    exit();
+  }
+  return;
+}
+
 $correoCarrito = $_SESSION['correo'] ?? '';
 // si cambio la cuenta borro el carrito anterior para no mezclar las compras
 if (!empty($_SESSION['carritoCorreo']) && $_SESSION['carritoCorreo'] !== $correoCarrito) {

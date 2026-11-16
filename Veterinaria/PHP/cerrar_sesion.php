@@ -4,5 +4,5 @@ session_start();
 // borro la sesion del servidor para cerrar el acceso del usuario
 session_destroy();
 
-header('Location: LoginHTML.php');
+header('Location: ../index.php');
 exit();

@@ -1,7 +1,7 @@
 <?php
-/* $rolesPermitidos = ['Cliente'];
-require_once __DIR__ . '/../../includes/verificar_sesion.php'; // hay que agregarlo pero todavia no anda */
-session_start();
+$rolesPermitidos = ['cliente'];
+$rutaLogin = '../LoginHTML.php?accion=cita';
+require_once __DIR__ . '/../includes/verificar_sesion.php';
 require_once __DIR__ . '/includes/carrito.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
@@ -343,6 +343,12 @@ $mostrarCarrito = true;
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <?php if (isset($_GET['agendar'])) { ?>
+    <script>
+      const modalCita = document.getElementById('modalSolicitarCita');
+      bootstrap.Modal.getOrCreateInstance(modalCita).show();
+    </script>
+  <?php } ?>
   <!-- chatbot -->
   <script src="https://cdn.botpress.cloud/webchat/v5.0/inject.js"></script>
   <script src="https://files.bpcontent.cloud/2026/10/27/11/20261027111945-MM3FDTVD.js" defer></script>

@@ -1,7 +1,7 @@
 <?php
-require_once "clases/Conexion.php";
-require_once "clases/Login.php";
-require_once "clases/Usuario.php";
+require_once __DIR__ . '/clases/Conexion.php';
+require_once __DIR__ . '/clases/Login.php';
+require_once __DIR__ . '/includes/destino_cliente.php';
 
 // abro la sesion para poder leer y guardar los datos del usuario
 session_start();
@@ -15,10 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = new Login();
     // solo guardo los datos en la sesion si las credenciales coinciden
     if ($login->validar($correo, $pass)) {
-
-        // guardo el correo y el rol para identificar la cuenta en las otras paginas
-        $_SESSION['correo'] = $correo;
-        $_SESSION['rol'] = Usuario::obtenerRolPorCorreo($correo);
 
         $conexion = new Conexion();
 
@@ -34,34 +30,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // cada tipo de cuenta entra al panel que le corresponde
-        if ($usuario['tipoUsuario'] === 'admin') {
-            $_SESSION['rol'] = 'admin';
-            header("Location: ../PHP/admin/index.php");
-            exit();
-        } elseif ($usuario['tipoUsuario'] === 'empleado') {
-            // para los empleados el destino depende de su trabajo en la clinica
-            switch ($usuario['rol']) {
-                case 'Veterinario':
-                    header("Location: ../PHP/empleado/veterinario/index.php");
-                    exit();
-                    break;
-                case 'Cajero':
-                    header("Location: ../PHP/empleado/cajero/index.php");
-                    exit();
-                    break;
-                case 'Peluquero':
-                    header("Location: ../PHP/empleado/peluquero/index.php");
-                    exit();
-                    break;
-                case 'Cirujano':
-                    header("Location: ../PHP/empleado/cirujano/index.php");
-                    exit();
-                    break;
-            }
-        } else {
-            header("Location: ../PHP/usuario/index.php");
+        $tipoUsuario = strtolower($usuario['tipoUsuario'] ?? '');
+        $rol = $usuario['rol'] ?? '';
+        $destino = '';
+        $destinosEmpleado = [
+            'Veterinario' => 'empleado/veterinario/index.php',
+            'Cajero' => 'empleado/cajero/index.php',
+            'Peluquero' => 'empleado/peluquero/index.php',
+            'Cirujano' => 'empleado/cirujano/index.php',
+        ];
+
+        if ($tipoUsuario === 'admin') {
+            $rol = 'admin';
+            $destino = 'admin/index.php';
+        } elseif ($tipoUsuario === 'empleado') {
+            $destino = $destinosEmpleado[$rol] ?? '';
+        } elseif ($tipoUsuario === 'cliente') {
+            $rol = 'cliente';
+            $destino = $destinoCliente;
+        }
+
+        if ($destino !== '') {
+            session_regenerate_id(true);
+            $_SESSION['correo'] = $correo;
+            $_SESSION['rol'] = $rol;
+            header('Location: ' . $destino);
             exit();
         }
+
+        $error = 'No se pudo identificar el tipo de cuenta.';
     } else {
         $error = "Correo o contraseña incorrectos.";
     }
@@ -94,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
                 </div>
 
-                <a class="nav-link icon-badge icon-badge-user" href="LoginHTML.php" aria-label="Cuenta">
+                <a class="nav-link icon-badge icon-badge-user" href="LoginHTML.php<?= htmlspecialchars($consultaAccion) ?>" aria-label="Cuenta">
                     <i class="bi bi-person-fill"></i>
                 </a>
             </div>
@@ -102,8 +99,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </header>
 
     <main class="auth-main d-flex align-items-center justify-content-center">
-        <form class="auth-form" action="LoginHTML.php" method="post">
+        <form class="auth-form" action="LoginHTML.php<?= htmlspecialchars($consultaAccion) ?>" method="post">
             <h1 class="auth-title">Iniciar sesión</h1>
+
+            <?php if ($motivoCliente !== '') { ?>
+                <p class="text-center">Iniciá sesión <?= htmlspecialchars($motivoCliente) ?>.</p>
+            <?php } ?>
 
             <?php if (!empty($_SESSION['aviso'])) { ?>
                 <div class="alert alert-success py-2 text-center" role="alert">
@@ -141,7 +142,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn btn-cta auth-submit">Ingresar</button>
 
             <p class="auth-footer-text">
-                ¿No tenés cuenta? <a href="RegistroHTML.php" class="auth-link">Registrate</a>
+                ¿No tenés cuenta? <a href="RegistroHTML.php<?= htmlspecialchars($consultaAccion) ?>" class="auth-link">Registrate</a><br>
+                <a href="../index.php" class="auth-link">Volver al inicio</a>
             </p>
         </form>
     </main>

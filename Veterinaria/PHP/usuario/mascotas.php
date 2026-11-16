@@ -1,15 +1,10 @@
 <?php
-// abro la sesion para poder leer y guardar los datos del usuario
-session_start();
+$rolesPermitidos = ['cliente'];
+$rutaLogin = '../LoginHTML.php?accion=mascotas';
+require_once __DIR__ . '/../includes/verificar_sesion.php';
 require_once __DIR__ . '/includes/carrito.php';
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Mascota.php';
-
-// sin una cuenta iniciada no se puede ver ni cambiar la foto
-if (empty($_SESSION['correo'])) {
-  header('Location: ../LoginHTML.php');
-  exit();
-}
 
 $conexion = (new Conexion())->establecerConexion();
 

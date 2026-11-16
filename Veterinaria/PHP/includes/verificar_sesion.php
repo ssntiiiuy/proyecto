@@ -7,9 +7,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
 /* si la pagina esta en empleado/<rol>/ el login queda dos carpetas arriba */
 if (basename(dirname($_SERVER['SCRIPT_FILENAME'], 2)) === 'empleado') {
-  $rutaLogin = '../../LoginHTML.php';
+  $rutaLogin = $rutaLogin ?? '../../LoginHTML.php';
 } else {
-  $rutaLogin = '../LoginHTML.php';
+  $rutaLogin = $rutaLogin ?? '../LoginHTML.php';
 }
 
 // si no hay una cuenta con un rol permitido mando al login y corto la pagina

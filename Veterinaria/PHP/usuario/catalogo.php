@@ -1,14 +1,15 @@
 <?php
-// abro la sesion para poder leer y guardar los datos del usuario
-session_start();
 require_once __DIR__ . '/includes/carrito.php';
-require_once __DIR__ . '/../clases/Conexion.php';
-$conexion = (new Conexion())->establecerConexion();
 
 // leo las categorias elegidas para filtrar los productos
-$categoriasSeleccionadas = $_GET['categoria'] ?? [];
+$categoriasEnUrl = $_GET['categoria'] ?? [];
 $categoriasValidas = ['accesorios', 'alimentos', 'farmacia', 'higiene'];
-$categoriasSeleccionadas = array_intersect($categoriasSeleccionadas, $categoriasValidas); // filtra cualquier valor
+$categoriasSeleccionadas = [];
+foreach ($categoriasValidas as $cat) {
+  if (is_array($categoriasEnUrl) && in_array($cat, $categoriasEnUrl, true)) {
+    $categoriasSeleccionadas[] = $cat;
+  }
+}
 
 // solo permito estos ordenes para no poner texto libre de la URL en la consulta
 $ordenesValidos = [
@@ -17,7 +18,8 @@ $ordenesValidos = [
   'precio_desc' => 'Precio DESC',
 ];
 $ordenGet = $_GET['orden'] ?? 'ultimos';
-$orderBy = $ordenesValidos[$ordenGet] ?? $ordenesValidos['ultimos'];
+$ordenGet = is_string($ordenGet) && isset($ordenesValidos[$ordenGet]) ? $ordenGet : 'ultimos';
+$orderBy = $ordenesValidos[$ordenGet];
 
 $sql = "SELECT IdProducto, Nombre, Categoria, Precio, Stock, Imagen FROM PRODUCTO";
 $params = [];
@@ -30,10 +32,17 @@ if (!empty($categoriasSeleccionadas)) {
 }
 $sql .= " ORDER BY $orderBy";
 
-$stmt = $conexion->prepare($sql);
-// ejecuto la consulta con las categorias elegidas y traigo los productos
-$stmt->execute($params);
-$productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$productos = [];
+$errorCatalogo = false;
+try {
+  $conexion = (new Conexion())->establecerConexion();
+  $stmt = $conexion->prepare($sql);
+  // ejecuto la consulta con las categorias elegidas y traigo los productos
+  $stmt->execute($params);
+  $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+  $errorCatalogo = true;
+}
 $categoriasVisuales = [
   'Accesorios' => ['icono' => 'bi-bag-heart', 'clase' => 'accesorios'],
   'Alimentos' => ['icono' => 'bi-basket2-fill', 'clase' => 'alimentos'],
@@ -94,11 +103,13 @@ $categoriasVisuales = [
           </form>
 
           <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3">
-            <?php if (empty($productos)): ?>
+            <?php if ($errorCatalogo): ?>
+              <p class="alert alert-warning w-100" role="alert">El catálogo no está disponible por el momento. Volvé a intentar más tarde.</p>
+            <?php elseif (empty($productos)): ?>
               <p class="text-center">No hay productos para esos filtros.</p>
               <?php else: foreach ($productos as $p): ?>
                 <div class="col">
-                  <div class="producto-card">
+                  <div class="producto-card" id="producto-<?= (int) $p['IdProducto'] ?>">
                     <?php $visual = $categoriasVisuales[$p['Categoria']] ?? ['icono' => 'bi-box-seam', 'clase' => 'general']; ?>
                     <?php if (!empty($p['Imagen'])) { ?>
                       <img class="producto-imagen" src="../../img/productos/<?= htmlspecialchars(basename($p['Imagen'])) ?>" alt="Imagen ilustrativa de <?= htmlspecialchars($p['Nombre']) ?>">
@@ -109,11 +120,17 @@ $categoriasVisuales = [
                     </div>
                     <p class="producto-nombre"><?= htmlspecialchars($p['Nombre']) ?></p>
                     <p class="producto-precio">$<?= number_format($p['Precio'], 2, ',', '.') ?></p>
-                    <form method="post">
-                      <input type="hidden" name="tokenCarrito" value="<?= htmlspecialchars($_SESSION['tokenCarrito']) ?>">
-                      <input type="hidden" name="IdProducto" value="<?= (int) $p['IdProducto'] ?>">
-                      <button class="btn btn-carrito" name="accionCarrito" value="agregar" <?= (int) $p['Stock'] <= 0 ? 'disabled' : '' ?>><?= (int) $p['Stock'] > 0 ? 'Añadir al carrito' : 'Sin stock' ?></button>
-                    </form>
+                    <?php if ((int) $p['Stock'] <= 0) { ?>
+                      <button class="btn btn-carrito" type="button" disabled>Sin stock</button>
+                    <?php } elseif ($esCliente) { ?>
+                      <form method="post">
+                        <input type="hidden" name="tokenCarrito" value="<?= htmlspecialchars($_SESSION['tokenCarrito']) ?>">
+                        <input type="hidden" name="IdProducto" value="<?= (int) $p['IdProducto'] ?>">
+                        <button class="btn btn-carrito" name="accionCarrito" value="agregar">Añadir al carrito</button>
+                      </form>
+                    <?php } else { ?>
+                      <a class="btn btn-carrito" href="../LoginHTML.php?accion=compra&amp;producto=<?= (int) $p['IdProducto'] ?>">Comprar</a>
+                    <?php } ?>
                   </div>
                 </div>
             <?php endforeach;

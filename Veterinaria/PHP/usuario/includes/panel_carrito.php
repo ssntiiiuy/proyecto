@@ -56,15 +56,11 @@
       </div>
       <p class="carrito-detalle mb-3">IVA incluido</p>
       <a class="btn btn-outline-secondary w-100 mb-2" href="catalogo.php">Seguir comprando</a>
-      <?php if (empty($_SESSION['correo'])) { ?>
-        <a class="btn btn-carrito" href="../LoginHTML.php">Iniciar sesión para comprar</a>
-      <?php } else { ?>
-        <form method="post">
-          <input type="hidden" name="tokenCarrito" value="<?= htmlspecialchars($_SESSION['tokenCarrito']) ?>">
-          <button class="btn btn-carrito" name="accionCarrito" value="comprar" <?= !$carritoDisponible ? 'disabled' : '' ?>>Finalizar compra</button>
-        </form>
-        <p class="carrito-detalle small mt-2 mb-0">Al finalizar se registra la venta y se genera tu factura.</p>
-      <?php } ?>
+      <form method="post">
+        <input type="hidden" name="tokenCarrito" value="<?= htmlspecialchars($_SESSION['tokenCarrito']) ?>">
+        <button class="btn btn-carrito" name="accionCarrito" value="comprar" <?= !$carritoDisponible ? 'disabled' : '' ?>>Finalizar compra</button>
+      </form>
+      <p class="carrito-detalle small mt-2 mb-0">Al finalizar se registra la venta y se genera tu factura.</p>
     </div>
   <?php } ?>
 </aside>

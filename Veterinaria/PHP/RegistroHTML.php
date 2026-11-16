@@ -9,6 +9,7 @@ session_start();
 require_once __DIR__ . '/clases/Conexion.php';
 require_once __DIR__ . '/clases/Login.php';
 require_once __DIR__ . '/clases/Usuario.php';
+require_once __DIR__ . '/includes/destino_cliente.php';
 
 $error = "";
 
@@ -38,8 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $resultado = $usuario->registrar($ci, $nombre, $apellido, $correo, $telefono, $direccion, $contraseña, $tipoUsuario, 'null');
 
         if ($resultado) {
-            $_SESSION["correo"] = $correo;
-            header("Location: LoginHTML.php");
+            session_regenerate_id(true);
+            $_SESSION['correo'] = $correo;
+            $_SESSION['rol'] = 'cliente';
+            header('Location: ' . $destinoCliente);
             exit();
         } else {
             $error = "No se pudo completar el registro. El correo o la C.I. ya existen.";
@@ -90,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <span class="brand-text brand-text-light">Clínica<br>Veterinaria<br>SIENRA</span>
                 </div>
 
-                <a class="nav-link icon-badge icon-badge-user" href="LoginHTML.php" aria-label="Cuenta">
+                <a class="nav-link icon-badge icon-badge-user" href="LoginHTML.php<?= htmlspecialchars($consultaAccion) ?>" aria-label="Cuenta">
                     <i class="bi bi-person-fill"></i>
                 </a>
             </div>
@@ -98,8 +101,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </header>
 
     <main class="auth-main d-flex align-items-center justify-content-center py-3">
-        <form class="auth-form auth-form-wide" action="RegistroHTML.php" method="post">
+        <form class="auth-form auth-form-wide" action="RegistroHTML.php<?= htmlspecialchars($consultaAccion) ?>" method="post">
             <h1 class="auth-title mb-3 text-center">Crear cuenta</h1>
+
+            <?php if ($motivoCliente !== '') { ?>
+                <p class="text-center">Creá una cuenta <?= htmlspecialchars($motivoCliente) ?>.</p>
+            <?php } ?>
 
             <?php if (!empty($error)): ?>
                 <div class="alert alert-danger py-2 text-center" role="alert">
@@ -168,8 +175,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="submit" name="boton" class="btn btn-cta auth-submit mt-2">Crear cuenta</button>
 
                 <p class="auth-footer-text mt-3 mb-0">
-                    ¿Ya tenés cuenta? <a href="LoginHTML.php" class="auth-link">Iniciá sesión</a>
+                    ¿Ya tenés cuenta? <a href="LoginHTML.php<?= htmlspecialchars($consultaAccion) ?>" class="auth-link">Iniciá sesión</a><br>
+                    <a href="../index.php" class="auth-link">Volver al inicio</a>
                 </p>
+            </div>
         </form>
     </main>
 
