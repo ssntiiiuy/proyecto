@@ -12,8 +12,7 @@ $enlacesNav = [
 if ($sesionCliente) {
   $enlacesNav['mascotas'] = ['../usuario/mascotas.php', 'Mascotas'];
 }
-$rutaCitas = $sesionCliente ? '../usuario/index.php' : '../usuario/index.php?agendar=1';
-$enlacesNav['citas'] = [$rutaCitas, 'Citas'];
+$enlacesNav['citas'] = ['../usuario/index.php', 'Citas'];
 $enlacesNav['nosotros'] = ['../usuario/nosotros.php', 'Nosotros'];
 
 $nombreUsuario = $nombreUsuario ?? ($_SESSION['nombre'] ?? 'Usuario');

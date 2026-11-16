@@ -1,7 +1,9 @@
 <?php
-$rolesPermitidos = ['cliente'];
-$rutaLogin = '../LoginHTML.php?accion=cita';
-require_once __DIR__ . '/../includes/verificar_sesion.php';
+// esta página se puede ver sin iniciar sesión; solo pedir un turno requiere login
+if (session_status() === PHP_SESSION_NONE) {
+  // abro la sesion para poder leer y guardar los datos del usuario
+  session_start();
+}
 require_once __DIR__ . '/includes/carrito.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
@@ -12,107 +14,118 @@ require_once __DIR__ . '/../clases/Servicio.php';
 $nombreUsuario = "Usuario";
 $errorAgenda = null;
 $avisoAgenda = isset($_GET['agendada']);
-// guardo un codigo aleatorio para comprobar los formularios de citas
-$_SESSION['tokenCitas'] = $_SESSION['tokenCitas'] ?? bin2hex(random_bytes(32));
+$mascotas = [];
+$turnos = [];
+$carnet = [];
+$servicios = [];
+$proximaVacuna = null;
 
-try {
-  $conexion = (new Conexion())->establecerConexion();
+// $esCliente ya lo calcula includes/carrito.php a partir de la sesión
+if ($esCliente) {
+  // guardo un codigo aleatorio para comprobar los formularios de citas
+  $_SESSION['tokenCitas'] = $_SESSION['tokenCitas'] ?? bin2hex(random_bytes(32));
 
-  // busco al usuario que corresponde al correo de la sesion
-  $sql = "SELECT usuario.CI, usuario.Nombre FROM USUARIO INNER JOIN HACE ON usuario.CI = hace.CI WHERE hace.Correo = :correo";
-  $stmt = $conexion->prepare($sql);
-  $stmt->execute([':correo' => $_SESSION['correo']]);
-  $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+  try {
+    $conexion = (new Conexion())->establecerConexion();
 
-  if (!$usuario) {
-    header('Location: ../LoginHTML.php');
-    exit();
-  }
+    // busco al usuario que corresponde al correo de la sesion
+    $sql = "SELECT usuario.CI, usuario.Nombre FROM USUARIO INNER JOIN HACE ON usuario.CI = hace.CI WHERE hace.Correo = :correo";
+    $stmt = $conexion->prepare($sql);
+    $stmt->execute([':correo' => $_SESSION['correo']]);
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-  $nombreUsuario = $usuario['Nombre'];
-  $ci = (int) $usuario['CI'];
-
-  // este bloque se ejecuta cuando se envia el formulario
-  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancelarCita'])) {
-    if (hash_equals($_SESSION['tokenCitas'], (string) ($_POST['tokenCitas'] ?? ''))
-        && (new Cita())->cambiarEstado((int) ($_POST['IdCita'] ?? 0), 'Cancelada', $ci)) {
-      header('Location: index.php?cancelada=1');
+    if (!$usuario) {
+      header('Location: ../LoginHTML.php');
       exit();
     }
-    $errorAgenda = 'No se pudo cancelar la cita. Solo podés cancelar tus propias citas pendientes.';
-  }
 
-  // cargo las mascotas del cliente y los servicios que puede elegir para un turno
-  $mascotas = Mascota::listadoMascotasPorCliente($ci);
-  $servicios = Servicio::listadoServicios()['servicios'];
+    $nombreUsuario = $usuario['Nombre'];
+    $ci = (int) $usuario['CI'];
 
-  // traigo sus citas de hoy en adelante, dejando afuera las canceladas
-  $sqlTurno = "SELECT c.IdCita, c.Fecha, c.Hora, c.Estado, s.Nombre AS NombreServicio, m.Nombre AS NombreMascota
-             FROM CITA c
-             INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
-             INNER JOIN MASCOTA m ON c.IdMascota = m.IdMascota
-             WHERE c.CI = :ci AND c.Fecha >= CURDATE() AND c.Estado IN ('Pendiente', 'Confirmada')
-             ORDER BY c.Fecha ASC, c.Hora ASC";
-  $stmtTurno = $conexion->prepare($sqlTurno);
-  $stmtTurno->execute([':ci' => $ci]);
-  $turnos = $stmtTurno->fetchAll(PDO::FETCH_ASSOC);
+    // este bloque se ejecuta cuando se envia el formulario
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancelarCita'])) {
+      if (hash_equals($_SESSION['tokenCitas'], (string) ($_POST['tokenCitas'] ?? ''))
+          && (new Cita())->cambiarEstado((int) ($_POST['IdCita'] ?? 0), 'Cancelada', $ci)) {
+        header('Location: index.php?cancelada=1');
+        exit();
+      }
+      $errorAgenda = 'No se pudo cancelar la cita. Solo podés cancelar tus propias citas pendientes.';
+    }
 
-  // busco las vacunas de sus mascotas con la fecha de la proxima dosis
-  $sqlCarnet = "SELECT cv.TipoVacunacion, cv.FechaProximaVacunacion, m.Nombre AS NombreMascota
-              FROM CARNET_VACUNACION cv
-              INNER JOIN MASCOTA m ON cv.IdMascota = m.IdMascota
-              WHERE m.CI = :ci
-              ORDER BY m.Nombre, cv.FechaProximaVacunacion";
-  $stmtCarnet = $conexion->prepare($sqlCarnet);
-  $stmtCarnet->execute([':ci' => $ci]);
-  $carnet = $stmtCarnet->fetchAll(PDO::FETCH_ASSOC);
+    // cargo las mascotas del cliente y los servicios que puede elegir para un turno
+    $mascotas = Mascota::listadoMascotasPorCliente($ci);
+    $servicios = Servicio::listadoServicios()['servicios'];
 
-  // de las vacunas que vencen hasta dentro de un mes elijo la fecha mas cercana
-  $proximaVacuna = null;
-  $limiteAlerta = (new DateTime())->modify('+1 month');
+    // traigo sus citas de hoy en adelante, dejando afuera las canceladas
+    $sqlTurno = "SELECT c.IdCita, c.Fecha, c.Hora, c.Estado, s.Nombre AS NombreServicio, m.Nombre AS NombreMascota
+               FROM CITA c
+               INNER JOIN SERVICIO s ON c.IdServicio = s.IdServicio
+               INNER JOIN MASCOTA m ON c.IdMascota = m.IdMascota
+               WHERE c.CI = :ci AND c.Fecha >= CURDATE() AND c.Estado IN ('Pendiente', 'Confirmada')
+               ORDER BY c.Fecha ASC, c.Hora ASC";
+    $stmtTurno = $conexion->prepare($sqlTurno);
+    $stmtTurno->execute([':ci' => $ci]);
+    $turnos = $stmtTurno->fetchAll(PDO::FETCH_ASSOC);
 
-  foreach ($carnet as $v) {
-    if (!empty($v['FechaProximaVacunacion'])) {
-      $fechaVenc = new DateTime($v['FechaProximaVacunacion']);
-      if ($fechaVenc <= $limiteAlerta) {
-        if (!$proximaVacuna || $fechaVenc < new DateTime($proximaVacuna['FechaProximaVacunacion'])) {
-          $proximaVacuna = $v;
+    // busco las vacunas de sus mascotas con la fecha de la proxima dosis
+    $sqlCarnet = "SELECT cv.TipoVacunacion, cv.FechaProximaVacunacion, m.Nombre AS NombreMascota
+                FROM CARNET_VACUNACION cv
+                INNER JOIN MASCOTA m ON cv.IdMascota = m.IdMascota
+                WHERE m.CI = :ci
+                ORDER BY m.Nombre, cv.FechaProximaVacunacion";
+    $stmtCarnet = $conexion->prepare($sqlCarnet);
+    $stmtCarnet->execute([':ci' => $ci]);
+    $carnet = $stmtCarnet->fetchAll(PDO::FETCH_ASSOC);
+
+    // de las vacunas que vencen hasta dentro de un mes elijo la fecha mas cercana
+    $limiteAlerta = (new DateTime())->modify('+1 month');
+
+    foreach ($carnet as $v) {
+      if (!empty($v['FechaProximaVacunacion'])) {
+        $fechaVenc = new DateTime($v['FechaProximaVacunacion']);
+        if ($fechaVenc <= $limiteAlerta) {
+          if (!$proximaVacuna || $fechaVenc < new DateTime($proximaVacuna['FechaProximaVacunacion'])) {
+            $proximaVacuna = $v;
+          }
         }
       }
     }
+  } catch (PDOException $e) {
+    echo "<div style='color:red; background:#fee; padding:10px; border:1px solid red; margin:10px;'>";
+    echo "<b>Error SQL en index.php:</b> " . $e->getMessage();
+    echo "</div>";
   }
-} catch (PDOException $e) {
-  echo "<div style='color:red; background:#fee; padding:10px; border:1px solid red; margin:10px;'>";
-  echo "<b>Error SQL en index.php:</b> " . $e->getMessage();
-  echo "</div>";
-}
 
-// este bloque se ejecuta cuando se envia el formulario
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($ci) && !isset($_POST['cancelarCita'])) {
-  $idMascota = (int)($_POST['IdMascota'] ?? 0);
-  $idServicio = (int)($_POST['IdServicio'] ?? 0);
-  $fecha = trim($_POST['Fecha'] ?? '');
-  $hora = trim($_POST['Hora'] ?? '');
-  $fechaValida = DateTime::createFromFormat('!Y-m-d', $fecha);
+  // este bloque se ejecuta cuando se envia el formulario
+  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($ci) && !isset($_POST['cancelarCita'])) {
+    $idMascota = (int)($_POST['IdMascota'] ?? 0);
+    $idServicio = (int)($_POST['IdServicio'] ?? 0);
+    $fecha = trim($_POST['Fecha'] ?? '');
+    $hora = trim($_POST['Hora'] ?? '');
+    $fechaValida = DateTime::createFromFormat('!Y-m-d', $fecha);
 
-  // compruebo dueño, servicio, fecha y hora antes de solicitar el turno
-  if (!$idMascota || !Cita::mascotaPerteneceACliente($idMascota, $ci)) {
-    $errorAgenda = 'Elegí una de tus mascotas.';
-  } elseif (!in_array($idServicio, array_map('intval', array_column($servicios, 'IdServicio')), true)) {
-    $errorAgenda = 'Elegí un servicio disponible.';
-  } elseif (!$fechaValida || $fechaValida->format('Y-m-d') !== $fecha || $fecha < date('Y-m-d')) {
-    $errorAgenda = 'La fecha debe ser hoy o posterior.';
-  } elseif (!preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $hora)) {
-    $errorAgenda = 'Ingresá una hora válida.';
-  } else {
-    // guardo la cita como pendiente y redirijo para no reenviar el formulario al recargar
-    $cita = new Cita();
-    if ($cita->crearCita($ci, $idServicio, $idMascota, $fecha, $hora, 'Pendiente')) {
-      header('Location: index.php?agendada=1');
-      exit();
+    // compruebo dueño, servicio, fecha y hora antes de solicitar el turno
+    if (!$idMascota || !Cita::mascotaPerteneceACliente($idMascota, $ci)) {
+      $errorAgenda = 'Elegí una de tus mascotas.';
+    } elseif (!in_array($idServicio, array_map('intval', array_column($servicios, 'IdServicio')), true)) {
+      $errorAgenda = 'Elegí un servicio disponible.';
+    } elseif (!$fechaValida || $fechaValida->format('Y-m-d') !== $fecha || $fecha < date('Y-m-d')) {
+      $errorAgenda = 'La fecha debe ser hoy o posterior.';
+    } elseif (!preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $hora)) {
+      $errorAgenda = 'Ingresá una hora válida.';
+    } else {
+      // guardo la cita como pendiente y redirijo para no reenviar el formulario al recargar
+      $cita = new Cita();
+      if ($cita->crearCita($ci, $idServicio, $idMascota, $fecha, $hora, 'Pendiente')) {
+        header('Location: index.php?agendada=1');
+        exit();
+      }
+      $errorAgenda = 'No se pudo solicitar el turno. Intentá nuevamente.';
     }
-    $errorAgenda = 'No se pudo solicitar el turno. Intentá nuevamente.';
   }
+} else {
+  // visitante sin sesión: solo necesito la lista de servicios para mostrarla
+  $servicios = Servicio::listadoServicios()['servicios'];
 }
 
 // variables que necesita header.php
@@ -144,206 +157,260 @@ $mostrarCarrito = true;
   <main class="dashboard">
     <div class="container-lg py-4">
 
-      <div class="greeting-card">
-        <span class="greeting-icon" aria-hidden="true">🐾</span>
-        <div>
-          <h1>Hola, <span><?= htmlspecialchars($nombreUsuario) ?>!</span></h1>
-          <p>Gestioná la información de tus mascotas, sus vacunas y turnos desde un solo lugar.</p>
-        </div>
-      </div>
+      <?php if ($esCliente) { ?>
 
-      <?php if ($proximaVacuna): ?>
-        <div class="alert-banner d-flex align-items-center justify-content-between flex-wrap gap-3">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-exclamation-circle"></i>
-            <span><strong>Vacuna <?= htmlspecialchars($proximaVacuna['TipoVacunacion']) ?> de <?= htmlspecialchars($proximaVacuna['NombreMascota']) ?></strong>
-              vence <?= date('d/m/Y', strtotime($proximaVacuna['FechaProximaVacunacion'])) ?></span>
+        <div class="greeting-card">
+          <span class="greeting-icon" aria-hidden="true">🐾</span>
+          <div>
+            <h1>Hola, <span><?= htmlspecialchars($nombreUsuario) ?>!</span></h1>
+            <p>Gestioná la información de tus mascotas, sus vacunas y turnos desde un solo lugar.</p>
           </div>
-          <button class="btn btn-outline-light btn-sm px-3" type="button" data-bs-toggle="modal" data-bs-target="#modalSolicitarCita">Pedir cita</button>
         </div>
-      <?php endif; ?>
 
-      <div class="row g-3 mt-1">
-
-        <?php if ($avisoAgenda) { ?>
-          <div class="col-12"><div class="alert alert-success mb-0">Tu turno quedó pendiente. El personal confirmará tu llegada el día de la cita.</div></div>
-        <?php } ?>
-        <?php if (isset($_GET['cancelada'])) { ?>
-          <div class="col-12"><div class="alert alert-success mb-0">Tu cita se canceló.</div></div>
-        <?php } ?>
-        <?php if ($errorAgenda) { ?>
-          <div class="col-12"><div class="alert alert-danger mb-0"><?= htmlspecialchars($errorAgenda) ?></div></div>
-        <?php } ?>
-
-        <div class="col-lg-6 d-flex flex-column gap-3">
-
-          <div class="panel-card">
-            <div class="panel-header">
-              <h2><span class="panel-icon" aria-hidden="true">🐾</span> Mis mascotas</h2>
-              <span class="badge badge-info"><?= count($mascotas) ?> total</span>
+        <?php if ($proximaVacuna): ?>
+          <div class="alert-banner d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-exclamation-circle"></i>
+              <span><strong>Vacuna <?= htmlspecialchars($proximaVacuna['TipoVacunacion']) ?> de <?= htmlspecialchars($proximaVacuna['NombreMascota']) ?></strong>
+                vence <?= date('d/m/Y', strtotime($proximaVacuna['FechaProximaVacunacion'])) ?></span>
             </div>
-            <?php foreach ($mascotas as $i => $m): ?>
-              <?php if ($i > 0): ?>
-                <hr class="divider"><?php endif; ?>
-              <div class="pet-row">
-                <div class="pet-details">
-                  <div class="pet-photo">
-                    <?php if (!empty($m['Foto'])) { ?>
-                      <img src="../../img/mascotas/<?= htmlspecialchars(basename($m['Foto'])) ?>" alt="Foto de <?= htmlspecialchars($m['Nombre']) ?>">
+            <button class="btn btn-outline-light btn-sm px-3" type="button" data-bs-toggle="modal" data-bs-target="#modalSolicitarCita">Pedir cita</button>
+          </div>
+        <?php endif; ?>
+
+        <div class="row g-3 mt-1">
+
+          <?php if ($avisoAgenda) { ?>
+            <div class="col-12"><div class="alert alert-success mb-0">Tu turno quedó pendiente. El personal confirmará tu llegada el día de la cita.</div></div>
+          <?php } ?>
+          <?php if (isset($_GET['cancelada'])) { ?>
+            <div class="col-12"><div class="alert alert-success mb-0">Tu cita se canceló.</div></div>
+          <?php } ?>
+          <?php if ($errorAgenda) { ?>
+            <div class="col-12"><div class="alert alert-danger mb-0"><?= htmlspecialchars($errorAgenda) ?></div></div>
+          <?php } ?>
+
+          <div class="col-lg-6 d-flex flex-column gap-3">
+
+            <div class="panel-card">
+              <div class="panel-header">
+                <h2><span class="panel-icon" aria-hidden="true">🐾</span> Mis mascotas</h2>
+                <span class="badge badge-info"><?= count($mascotas) ?> total</span>
+              </div>
+              <?php foreach ($mascotas as $i => $m): ?>
+                <?php if ($i > 0): ?>
+                  <hr class="divider"><?php endif; ?>
+                <div class="pet-row">
+                  <div class="pet-details">
+                    <div class="pet-photo">
+                      <?php if (!empty($m['Foto'])) { ?>
+                        <img src="../../img/mascotas/<?= htmlspecialchars(basename($m['Foto'])) ?>" alt="Foto de <?= htmlspecialchars($m['Nombre']) ?>">
+                      <?php } ?>
+                    </div>
+                    <div>
+                    <p class="pet-name"><?= htmlspecialchars($m['Nombre']) ?></p>
+                    <p class="pet-meta"><?= htmlspecialchars($m['Raza']) ?> - <?= htmlspecialchars($m['Especie']) ?></p>
+                    </div>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </div>
+
+            <div class="panel-card">
+              <div class="panel-header">
+                <h2><span class="panel-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></span> Mis turnos</h2>
+              </div>
+              <?php foreach ($turnos as $proximoTurno) { ?>
+                <div class="pet-row">
+                  <div>
+                    <p class="pet-name"><?= htmlspecialchars($proximoTurno['NombreMascota']) ?></p>
+                    <p class="pet-meta"><?= htmlspecialchars($proximoTurno['NombreServicio']) ?> -
+                      <?= date('d/m/Y', strtotime($proximoTurno['Fecha'])) ?> - <?= substr($proximoTurno['Hora'], 0, 5) ?></p>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge <?= $proximoTurno['Estado'] === 'Confirmada' ? 'badge-success' : 'badge-info' ?>"><?= htmlspecialchars($proximoTurno['Estado']) ?></span>
+                    <?php if ($proximoTurno['Estado'] === 'Pendiente') { ?>
+                      <form method="post" action="index.php">
+                        <input type="hidden" name="IdCita" value="<?= (int) $proximoTurno['IdCita'] ?>">
+                        <input type="hidden" name="tokenCitas" value="<?= htmlspecialchars($_SESSION['tokenCitas']) ?>">
+                        <button class="btn btn-sm btn-outline-danger" name="cancelarCita" value="1">Cancelar cita</button>
+                      </form>
                     <?php } ?>
                   </div>
-                  <div>
-                  <p class="pet-name"><?= htmlspecialchars($m['Nombre']) ?></p>
-                  <p class="pet-meta"><?= htmlspecialchars($m['Raza']) ?> - <?= htmlspecialchars($m['Especie']) ?></p>
-                  </div>
                 </div>
-              </div>
-            <?php endforeach; ?>
-          </div>
-
-          <div class="panel-card">
-            <div class="panel-header">
-              <h2><span class="panel-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></span> Mis turnos</h2>
-            </div>
-            <?php foreach ($turnos as $proximoTurno) { ?>
-              <div class="pet-row">
-                <div>
-                  <p class="pet-name"><?= htmlspecialchars($proximoTurno['NombreMascota']) ?></p>
-                  <p class="pet-meta"><?= htmlspecialchars($proximoTurno['NombreServicio']) ?> -
-                    <?= date('d/m/Y', strtotime($proximoTurno['Fecha'])) ?> - <?= substr($proximoTurno['Hora'], 0, 5) ?></p>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge <?= $proximoTurno['Estado'] === 'Confirmada' ? 'badge-success' : 'badge-info' ?>"><?= htmlspecialchars($proximoTurno['Estado']) ?></span>
-                  <?php if ($proximoTurno['Estado'] === 'Pendiente') { ?>
-                    <form method="post" action="index.php">
-                      <input type="hidden" name="IdCita" value="<?= (int) $proximoTurno['IdCita'] ?>">
-                      <input type="hidden" name="tokenCitas" value="<?= htmlspecialchars($_SESSION['tokenCitas']) ?>">
-                      <button class="btn btn-sm btn-outline-danger" name="cancelarCita" value="1">Cancelar cita</button>
-                    </form>
-                  <?php } ?>
-                </div>
-              </div>
-            <?php } ?>
-            <?php if (empty($turnos)) { ?>
-              <div class="turnos-vacio"><i class="bi bi-calendar3" aria-hidden="true"></i><p class="pet-meta">No tenés turnos próximos.</p></div>
-            <?php } ?>
-          </div>
-
-        </div>
-
-        <div class="col-lg-6 d-flex flex-column gap-3">
-
-          <div class="panel-card flex-grow-1 d-flex flex-column">
-            <div class="panel-header">
-              <h2><span class="panel-icon" aria-hidden="true"><i class="bi bi-capsule"></i></span> Carnet de vacunas</h2>
+              <?php } ?>
+              <?php if (empty($turnos)) { ?>
+                <div class="turnos-vacio"><i class="bi bi-calendar3" aria-hidden="true"></i><p class="pet-meta">No tenés turnos próximos.</p></div>
+              <?php } ?>
             </div>
 
-            <?php
-            $mascotaActual = null;
-            if (empty($carnet)) {
-              echo '<p class="pet-meta text-muted p-3">No hay registros de vacunación.</p>';
-            } else {
-              foreach ($carnet as $vacuna) {
-                if ($mascotaActual !== $vacuna['NombreMascota']) {
-                  $mascotaActual = $vacuna['NombreMascota'];
-                  // uso la foto ya cargada de la mascota, sin hacer otra consulta
-                  $fotoCarnet = null;
-                  foreach ($mascotas as $m) {
-                    if ($m['Nombre'] === $mascotaActual) {
-                      $fotoCarnet = $m['Foto'];
-                      break;
+          </div>
+
+          <div class="col-lg-6 d-flex flex-column gap-3">
+
+            <div class="panel-card flex-grow-1 d-flex flex-column">
+              <div class="panel-header">
+                <h2><span class="panel-icon" aria-hidden="true"><i class="bi bi-capsule"></i></span> Carnet de vacunas</h2>
+              </div>
+
+              <?php
+              $mascotaActual = null;
+              if (empty($carnet)) {
+                echo '<p class="pet-meta text-muted p-3">No hay registros de vacunación.</p>';
+              } else {
+                foreach ($carnet as $vacuna) {
+                  if ($mascotaActual !== $vacuna['NombreMascota']) {
+                    $mascotaActual = $vacuna['NombreMascota'];
+                    // uso la foto ya cargada de la mascota, sin hacer otra consulta
+                    $fotoCarnet = null;
+                    foreach ($mascotas as $m) {
+                      if ($m['Nombre'] === $mascotaActual) {
+                        $fotoCarnet = $m['Foto'];
+                        break;
+                      }
                     }
+                    echo '<div class="carnet-mascota"><div class="pet-photo">';
+                    if (!empty($fotoCarnet)) {
+                      echo '<img src="../../img/mascotas/' . htmlspecialchars(basename($fotoCarnet)) . '" alt="Foto de ' . htmlspecialchars($mascotaActual) . '">';
+                    }
+                    echo '</div><p class="group-label">' . htmlspecialchars($mascotaActual) . '</p></div>';
+                  } else {
+                    echo '<hr class="divider">';
                   }
-                  echo '<div class="carnet-mascota"><div class="pet-photo">';
-                  if (!empty($fotoCarnet)) {
-                    echo '<img src="../../img/mascotas/' . htmlspecialchars(basename($fotoCarnet)) . '" alt="Foto de ' . htmlspecialchars($mascotaActual) . '">';
-                  }
-                  echo '</div><p class="group-label">' . htmlspecialchars($mascotaActual) . '</p></div>';
-                } else {
-                  echo '<hr class="divider">';
+
+                  $fechaVenc = $vacuna['FechaProximaVacunacion'];
+                  $fechaFormateada = $fechaVenc ? date('d/m/Y', strtotime($fechaVenc)) : 'Sin fecha';
+
+                  $vencida = $fechaVenc && $fechaVenc < date('Y-m-d');
+                  $claseBadge = $vencida ? 'badge badge-danger' : 'badge badge-success';
+              ?>
+                  <div class="pet-row">
+                    <span class="pet-meta"><?= htmlspecialchars($vacuna['TipoVacunacion']) ?></span>
+                    <span class="<?= $claseBadge ?>">Vence: <?= $fechaFormateada ?></span>
+                  </div>
+              <?php
                 }
-
-                $fechaVenc = $vacuna['FechaProximaVacunacion'];
-                $fechaFormateada = $fechaVenc ? date('d/m/Y', strtotime($fechaVenc)) : 'Sin fecha';
-
-                $vencida = $fechaVenc && $fechaVenc < date('Y-m-d');
-                $claseBadge = $vencida ? 'badge badge-danger' : 'badge badge-success';
-            ?>
-                <div class="pet-row">
-                  <span class="pet-meta"><?= htmlspecialchars($vacuna['TipoVacunacion']) ?></span>
-                  <span class="<?= $claseBadge ?>">Vence: <?= $fechaFormateada ?></span>
-                </div>
-            <?php
               }
-            }
-            ?>
+              ?>
 
-            <button class="btn btn-cta mt-auto" type="button" data-bs-toggle="modal" data-bs-target="#modalSolicitarCita"><i class="bi bi-calendar-plus" aria-hidden="true"></i> Solicitar nuevo turno</button>
+              <button class="btn btn-cta mt-auto" type="button" data-bs-toggle="modal" data-bs-target="#modalSolicitarCita"><i class="bi bi-calendar-plus" aria-hidden="true"></i> Solicitar nuevo turno</button>
+            </div>
+
+          </div>
+        </div>
+
+      <?php } else { ?>
+
+        <!-- Visitante sin sesión: muestro los servicios y lo mando a loguearse recién cuando quiera pedir el turno -->
+        <div class="greeting-card">
+          <span class="greeting-icon" aria-hidden="true"><i class="bi bi-calendar-heart"></i></span>
+          <div>
+            <h1>Pedí un <span>turno</span></h1>
+            <p>Elegí el servicio que necesita tu mascota. Para confirmar el turno te vamos a pedir que inicies sesión.</p>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-lg-8">
+            <div class="panel-card">
+              <div class="panel-header">
+                <h2><span class="panel-icon" aria-hidden="true"><i class="bi bi-list-check"></i></span> Servicios disponibles</h2>
+              </div>
+              <?php if (empty($servicios)) { ?>
+                <p class="pet-meta text-muted p-3">No hay servicios para mostrar por el momento.</p>
+              <?php } else { ?>
+                <?php foreach ($servicios as $i => $s) { ?>
+                  <?php if ($i > 0) { ?><hr class="divider"><?php } ?>
+                  <div class="pet-row">
+                    <div>
+                      <p class="pet-name"><?= htmlspecialchars($s['Nombre']) ?></p>
+                      <p class="pet-meta">
+                        <?= htmlspecialchars($s['Tipo']) ?>
+                        <?php if (!empty($s['Duracion'])) { ?> · <?= (int) $s['Duracion'] ?> min<?php } ?>
+                      </p>
+                    </div>
+                    <?php if (isset($s['Precio']) && $s['Precio'] !== null) { ?>
+                      <span class="pet-name">$<?= number_format((float) $s['Precio'], 2, ',', '.') ?></span>
+                    <?php } ?>
+                  </div>
+                <?php } ?>
+              <?php } ?>
+            </div>
           </div>
 
+          <div class="col-lg-4">
+            <div class="panel-card h-100 d-flex flex-column justify-content-center text-center">
+              <p class="group-label mb-2">¿Ya elegiste el servicio?</p>
+              <p class="pet-meta mb-3">Iniciá sesión o creá tu cuenta para solicitar el turno.</p>
+              <a class="btn btn-cta" href="../LoginHTML.php?accion=cita"><i class="bi bi-calendar-plus" aria-hidden="true"></i> Pedir turno</a>
+            </div>
+          </div>
         </div>
-      </div>
+
+      <?php } ?>
     </div>
   </main>
 
-  <div class="modal fade" id="modalSolicitarCita" tabindex="-1" aria-labelledby="modalSolicitarCitaTitulo" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <form method="post" action="index.php">
-          <div class="modal-header">
-            <h2 class="modal-title fs-5" id="modalSolicitarCitaTitulo">Solicitar un turno</h2>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <?php if (empty($mascotas)) { ?>
-              <p>Primero necesitás registrar una mascota para solicitar un turno.</p>
-            <?php } elseif (empty($servicios)) { ?>
-              <p>No hay servicios disponibles para seleccionar.</p>
-            <?php } else { ?>
-              <div class="mb-3">
-                <label class="form-label" for="IdMascota">Mascota</label>
-                <select class="form-select" id="IdMascota" name="IdMascota" required>
-                  <option value="" selected disabled>Elegí una mascota</option>
-                  <?php foreach ($mascotas as $mascota) { ?>
-                    <option value="<?= (int)$mascota['IdMascota'] ?>"><?= htmlspecialchars($mascota['Nombre']) ?></option>
-                  <?php } ?>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label" for="IdServicio">Servicio</label>
-                <select class="form-select" id="IdServicio" name="IdServicio" required>
-                  <option value="" selected disabled>Elegí un servicio</option>
-                  <?php foreach ($servicios as $servicio) { ?>
-                    <option value="<?= (int)$servicio['IdServicio'] ?>"><?= htmlspecialchars($servicio['Nombre']) ?></option>
-                  <?php } ?>
-                </select>
-              </div>
-              <div class="row g-3">
-                <div class="col-sm-6">
-                  <label class="form-label" for="Fecha">Fecha</label>
-                  <input class="form-control" type="date" id="Fecha" name="Fecha" min="<?= date('Y-m-d') ?>" required>
+  <?php if ($esCliente) { ?>
+    <div class="modal fade" id="modalSolicitarCita" tabindex="-1" aria-labelledby="modalSolicitarCitaTitulo" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form method="post" action="index.php">
+            <div class="modal-header">
+              <h2 class="modal-title fs-5" id="modalSolicitarCitaTitulo">Solicitar un turno</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <?php if (empty($mascotas)) { ?>
+                <p>Primero necesitás registrar una mascota para solicitar un turno.</p>
+              <?php } elseif (empty($servicios)) { ?>
+                <p>No hay servicios disponibles para seleccionar.</p>
+              <?php } else { ?>
+                <div class="mb-3">
+                  <label class="form-label" for="IdMascota">Mascota</label>
+                  <select class="form-select" id="IdMascota" name="IdMascota" required>
+                    <option value="" selected disabled>Elegí una mascota</option>
+                    <?php foreach ($mascotas as $mascota) { ?>
+                      <option value="<?= (int)$mascota['IdMascota'] ?>"><?= htmlspecialchars($mascota['Nombre']) ?></option>
+                    <?php } ?>
+                  </select>
                 </div>
-                <div class="col-sm-6">
-                  <label class="form-label" for="Hora">Hora</label>
-                  <input class="form-control" type="time" id="Hora" name="Hora" required>
+                <div class="mb-3">
+                  <label class="form-label" for="IdServicio">Servicio</label>
+                  <select class="form-select" id="IdServicio" name="IdServicio" required>
+                    <option value="" selected disabled>Elegí un servicio</option>
+                    <?php foreach ($servicios as $servicio) { ?>
+                      <option value="<?= (int)$servicio['IdServicio'] ?>"><?= htmlspecialchars($servicio['Nombre']) ?></option>
+                    <?php } ?>
+                  </select>
                 </div>
-              </div>
-              <p class="form-text mb-0 mt-3">El turno quedará pendiente. El personal confirmará tu llegada el día de la cita.</p>
-            <?php } ?>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <?php if (!empty($mascotas) && !empty($servicios)) { ?>
-              <button class="btn btn-cta" type="submit">Enviar solicitud</button>
-            <?php } ?>
-          </div>
-        </form>
+                <div class="row g-3">
+                  <div class="col-sm-6">
+                    <label class="form-label" for="Fecha">Fecha</label>
+                    <input class="form-control" type="date" id="Fecha" name="Fecha" min="<?= date('Y-m-d') ?>" required>
+                  </div>
+                  <div class="col-sm-6">
+                    <label class="form-label" for="Hora">Hora</label>
+                    <input class="form-control" type="time" id="Hora" name="Hora" required>
+                  </div>
+                </div>
+                <p class="form-text mb-0 mt-3">El turno quedará pendiente. El personal confirmará tu llegada el día de la cita.</p>
+              <?php } ?>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <?php if (!empty($mascotas) && !empty($servicios)) { ?>
+                <button class="btn btn-cta" type="submit">Enviar solicitud</button>
+              <?php } ?>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
+  <?php } ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <?php if (isset($_GET['agendar'])) { ?>
+  <?php if ($esCliente && isset($_GET['agendar'])) { ?>
     <script>
       const modalCita = document.getElementById('modalSolicitarCita');
       bootstrap.Modal.getOrCreateInstance(modalCita).show();
