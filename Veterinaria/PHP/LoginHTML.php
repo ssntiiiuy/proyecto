@@ -99,53 +99,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </header>
 
     <main class="auth-main d-flex align-items-center justify-content-center">
-        <form class="auth-form" action="LoginHTML.php<?= htmlspecialchars($consultaAccion) ?>" method="post">
-            <h1 class="auth-title">Iniciar sesión</h1>
+        <div class="auth-card">
+            <form class="auth-form" action="LoginHTML.php<?= htmlspecialchars($consultaAccion) ?>" method="post">
+                <h1 class="auth-title">Iniciar sesión</h1>
 
-            <?php if ($motivoCliente !== '') { ?>
-                <p class="text-center">Iniciá sesión <?= htmlspecialchars($motivoCliente) ?>.</p>
-            <?php } ?>
+                <?php if ($motivoCliente !== '') { ?>
+                    <p class="text-center">Iniciá sesión <?= htmlspecialchars($motivoCliente) ?>.</p>
+                <?php } ?>
 
-            <?php if (!empty($_SESSION['aviso'])) { ?>
-                <div class="alert alert-success py-2 text-center" role="alert">
-                    <?= htmlspecialchars($_SESSION['aviso']) ?>
+                <?php if (!empty($_SESSION['aviso'])) { ?>
+                    <div class="alert alert-success py-2 text-center" role="alert">
+                        <?= htmlspecialchars($_SESSION['aviso']) ?>
+                    </div>
+                <?php unset($_SESSION['aviso']);
+                } ?>
+
+                <?php if (!empty($error)): ?>
+                    <div class="alert alert-danger py-2 text-center" role="alert">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php endif; ?>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Correo electrónico</label>
+                    <input type="email" class="form-control auth-input" id="email" name="email" placeholder="nombre@correo.com" required>
                 </div>
-            <?php unset($_SESSION['aviso']); } ?>
 
-            <?php if (!empty($error)): ?>
-                <div class="alert alert-danger py-2 text-center" role="alert">
-                    <?= htmlspecialchars($error) ?>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <div class="input-group">
+                        <input type="checkbox" id="togglePassword" class="d-none toggle-check">
+                        <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
+                        <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
+                            <i class="bi bi-eye icon-eye"></i>
+                            <i class="bi bi-eye-slash icon-eye-slash"></i>
+                        </label>
+                    </div>
                 </div>
-            <?php endif; ?>
 
-            <div class="mb-3">
-                <label for="email" class="form-label">Correo electrónico</label>
-                <input type="email" class="form-control auth-input" id="email" name="email" placeholder="nombre@correo.com" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="password" class="form-label">Contraseña</label>
-                <div class="input-group">
-                    <input type="checkbox" id="togglePassword" class="d-none toggle-check">
-                    <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
-                    <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
-                        <i class="bi bi-eye icon-eye"></i>
-                        <i class="bi bi-eye-slash icon-eye-slash"></i>
-                    </label>
+                <div class="mb-4">
+                    <a href="RecuperarHTML.php" class="auth-link">¿Olvidaste tu contraseña?</a>
                 </div>
-            </div>
 
-            <div class="mb-4">
-                <a href="RecuperarHTML.php" class="auth-link">¿Olvidaste tu contraseña?</a>
-            </div>
+                <button type="submit" class="btn btn-cta auth-submit">Ingresar</button>
 
-            <button type="submit" class="btn btn-cta auth-submit">Ingresar</button>
-
-            <p class="auth-footer-text">
-                ¿No tenés cuenta? <a href="RegistroHTML.php<?= htmlspecialchars($consultaAccion) ?>" class="auth-link">Registrate</a><br>
-                <a href="../index.php" class="auth-link">Volver al inicio</a>
-            </p>
-        </form>
+                <p class="auth-footer-text">
+                    ¿No tenés cuenta? <a href="RegistroHTML.php<?= htmlspecialchars($consultaAccion) ?>" class="auth-link">Registrate</a><br>
+                    <a href="../index.php" class="auth-link">Volver al inicio</a>
+                </p>
+            </form>
+        </div>
     </main>
 
 </body>

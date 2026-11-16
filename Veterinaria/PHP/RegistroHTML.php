@@ -101,85 +101,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </header>
 
     <main class="auth-main d-flex align-items-center justify-content-center py-3">
-        <form class="auth-form auth-form-wide" action="RegistroHTML.php<?= htmlspecialchars($consultaAccion) ?>" method="post">
-            <h1 class="auth-title mb-3 text-center">Crear cuenta</h1>
+        <div class="auth-card auth-card-wide">
+            <form class="auth-form auth-form-wide" action="RegistroHTML.php<?= htmlspecialchars($consultaAccion) ?>" method="post">
+                <h1 class="auth-title mb-3 text-center">Crear cuenta</h1>
 
-            <?php if ($motivoCliente !== '') { ?>
-                <p class="text-center">Creá una cuenta <?= htmlspecialchars($motivoCliente) ?>.</p>
-            <?php } ?>
+                <?php if ($motivoCliente !== '') { ?>
+                    <p class="text-center">Creá una cuenta <?= htmlspecialchars($motivoCliente) ?>.</p>
+                <?php } ?>
 
-            <?php if (!empty($error)): ?>
-                <div class="alert alert-danger py-2 text-center" role="alert">
-                    <?= htmlspecialchars($error) ?>
-                </div>
-            <?php endif; ?>
-
-            <div class="row g-2">
-
-                <div class="col-6 mb-2">
-                    <label for="ci" class="form-label">C.I.</label>
-                    <input type="text" class="form-control auth-input" id="ci" name="ci" placeholder="1.234.567-8" pattern="[0-9]{8}" value="<?= htmlspecialchars($_POST['ci'] ?? '') ?>" required>
-                </div>
-                <div class="col-6 mb-2">
-                    <label for="telefono" class="form-label">Teléfono</label>
-                    <input type="tel" class="form-control auth-input" id="telefono" name="telefono" placeholder="097 654 321" pattern="[0-9]{9}" value="<?= htmlspecialchars($_POST['telefono'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-6 mb-2">
-                    <label for="nombre" class="form-label">Nombre</label>
-                    <input type="text" class="form-control auth-input" id="nombre" name="nombre" placeholder="Jorge" value="<?= htmlspecialchars($_POST['nombre'] ?? '') ?>" required>
-                </div>
-                <div class="col-6 mb-2">
-                    <label for="apellido" class="form-label">Apellido</label>
-                    <input type="text" class="form-control auth-input" id="apellido" name="apellido" placeholder="Pérez" value="<?= htmlspecialchars($_POST['apellido'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-6 mb-2">
-                    <label for="calle1" class="form-label">Calle 1</label>
-                    <input type="text" class="form-control auth-input" id="calle1" name="calle1" placeholder="18 de Julio" value="<?= htmlspecialchars($_POST['calle1'] ?? '') ?>" required>
-                </div>
-                <div class="col-6 mb-2">
-                    <label for="calle2" class="form-label">Calle 2</label>
-                    <input type="text" class="form-control auth-input" id="calle2" name="calle2" placeholder="Arturo Santana" value="<?= htmlspecialchars($_POST['calle2'] ?? '') ?>">
-                </div>
-
-                <div class="col-12 mb-2">
-                    <label for="correo" class="form-label">Correo electrónico</label>
-                    <input type="email" class="form-control auth-input" id="correo" name="correo" placeholder="jorgeperez@gmail.com" value="<?= htmlspecialchars($_POST['correo'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-6 mb-2">
-                    <label for="password" class="form-label">Contraseña</label>
-                    <div class="input-group">
-                        <input type="checkbox" id="togglePassword" class="d-none toggle-check">
-                        <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
-                        <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
-                            <i class="bi bi-eye icon-eye"></i>
-                            <i class="bi bi-eye-slash icon-eye-slash"></i>
-                        </label>
+                <?php if (!empty($error)): ?>
+                    <div class="alert alert-danger py-2 text-center" role="alert">
+                        <?= htmlspecialchars($error) ?>
                     </div>
-                </div>
+                <?php endif; ?>
 
-                <div class="col-6 mb-2">
-                    <label for="confirm_password" class="form-label">Repetir contraseña</label>
-                    <div class="input-group">
-                        <input type="checkbox" id="toggleConfirmPassword" class="d-none toggle-check">
-                        <input type="text" class="form-control auth-input input-password" id="confirm_password" name="confirm_password" placeholder="******" required>
-                        <label for="toggleConfirmPassword" class="btn auth-eye-btn d-flex align-items-center">
-                            <i class="bi bi-eye icon-eye"></i>
-                            <i class="bi bi-eye-slash icon-eye-slash"></i>
-                        </label>
+                <div class="row g-2">
+
+                    <div class="col-6 mb-2">
+                        <label for="ci" class="form-label">C.I.</label>
+                        <input type="text" class="form-control auth-input" id="ci" name="ci" placeholder="1.234.567-8" pattern="[0-9]{8}" value="<?= htmlspecialchars($_POST['ci'] ?? '') ?>" required>
                     </div>
+                    <div class="col-6 mb-2">
+                        <label for="telefono" class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control auth-input" id="telefono" name="telefono" placeholder="097 654 321" pattern="[0-9]{9}" value="<?= htmlspecialchars($_POST['telefono'] ?? '') ?>" required>
+                    </div>
+
+                    <div class="col-6 mb-2">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control auth-input" id="nombre" name="nombre" placeholder="Jorge" value="<?= htmlspecialchars($_POST['nombre'] ?? '') ?>" required>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label for="apellido" class="form-label">Apellido</label>
+                        <input type="text" class="form-control auth-input" id="apellido" name="apellido" placeholder="Pérez" value="<?= htmlspecialchars($_POST['apellido'] ?? '') ?>" required>
+                    </div>
+
+                    <div class="col-6 mb-2">
+                        <label for="calle1" class="form-label">Calle 1</label>
+                        <input type="text" class="form-control auth-input" id="calle1" name="calle1" placeholder="18 de Julio" value="<?= htmlspecialchars($_POST['calle1'] ?? '') ?>" required>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label for="calle2" class="form-label">Calle 2</label>
+                        <input type="text" class="form-control auth-input" id="calle2" name="calle2" placeholder="Arturo Santana" value="<?= htmlspecialchars($_POST['calle2'] ?? '') ?>">
+                    </div>
+
+                    <div class="col-12 mb-2">
+                        <label for="correo" class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control auth-input" id="correo" name="correo" placeholder="jorgeperez@gmail.com" value="<?= htmlspecialchars($_POST['correo'] ?? '') ?>" required>
+                    </div>
+
+                    <div class="col-6 mb-2">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <div class="input-group">
+                            <input type="checkbox" id="togglePassword" class="d-none toggle-check">
+                            <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
+                            <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
+                                <i class="bi bi-eye icon-eye"></i>
+                                <i class="bi bi-eye-slash icon-eye-slash"></i>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-6 mb-2">
+                        <label for="confirm_password" class="form-label">Repetir contraseña</label>
+                        <div class="input-group">
+                            <input type="checkbox" id="toggleConfirmPassword" class="d-none toggle-check">
+                            <input type="text" class="form-control auth-input input-password" id="confirm_password" name="confirm_password" placeholder="******" required>
+                            <label for="toggleConfirmPassword" class="btn auth-eye-btn d-flex align-items-center">
+                                <i class="bi bi-eye icon-eye"></i>
+                                <i class="bi bi-eye-slash icon-eye-slash"></i>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" name="boton" class="btn btn-cta auth-submit mt-2">Crear cuenta</button>
+
+                    <p class="auth-footer-text mt-3 mb-0">
+                        ¿Ya tenés cuenta? <a href="LoginHTML.php<?= htmlspecialchars($consultaAccion) ?>" class="auth-link">Iniciá sesión</a><br>
+                        <a href="../index.php" class="auth-link">Volver al inicio</a>
+                    </p>
                 </div>
-
-                <button type="submit" name="boton" class="btn btn-cta auth-submit mt-2">Crear cuenta</button>
-
-                <p class="auth-footer-text mt-3 mb-0">
-                    ¿Ya tenés cuenta? <a href="LoginHTML.php<?= htmlspecialchars($consultaAccion) ?>" class="auth-link">Iniciá sesión</a><br>
-                    <a href="../index.php" class="auth-link">Volver al inicio</a>
-                </p>
-            </div>
-        </form>
+            </form>
+        </div>
     </main>
 
 </body>

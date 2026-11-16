@@ -93,58 +93,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </header>
 
     <main class="auth-main d-flex align-items-center justify-content-center">
-        <form class="auth-form" action="VerificarCodigoHTML.php" method="post">
-            <h1 class="auth-title">Cambiar contraseña</h1>
+        <div class="auth-card">
+            <form class="auth-form" action="VerificarCodigoHTML.php" method="post">
+                <h1 class="auth-title">Cambiar contraseña</h1>
 
-            <?php if (!empty($aviso)) { ?>
-                <div class="alert alert-success py-2 text-center" role="alert">
-                    <?= htmlspecialchars($aviso) ?>
+                <?php if (!empty($aviso)) { ?>
+                    <div class="alert alert-success py-2 text-center" role="alert">
+                        <?= htmlspecialchars($aviso) ?>
+                    </div>
+                <?php } ?>
+
+                <?php if (!empty($error)) { ?>
+                    <div class="alert alert-danger py-2 text-center" role="alert">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php } ?>
+
+                <div class="mb-3">
+                    <label for="codigo" class="form-label">Código</label>
+                    <input type="text" class="form-control auth-input" id="codigo" name="codigo" placeholder="123456" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required>
                 </div>
-            <?php } ?>
 
-            <?php if (!empty($error)) { ?>
-                <div class="alert alert-danger py-2 text-center" role="alert">
-                    <?= htmlspecialchars($error) ?>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña nueva</label>
+                    <div class="input-group">
+                        <input type="checkbox" id="togglePassword" class="d-none toggle-check">
+                        <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
+                        <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
+                            <i class="bi bi-eye icon-eye"></i>
+                            <i class="bi bi-eye-slash icon-eye-slash"></i>
+                        </label>
+                    </div>
                 </div>
-            <?php } ?>
 
-            <div class="mb-3">
-                <label for="codigo" class="form-label">Código</label>
-                <input type="text" class="form-control auth-input" id="codigo" name="codigo" placeholder="123456" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="password" class="form-label">Contraseña nueva</label>
-                <div class="input-group">
-                    <input type="checkbox" id="togglePassword" class="d-none toggle-check">
-                    <input type="text" class="form-control auth-input input-password" id="password" name="password" placeholder="******" required>
-                    <label for="togglePassword" class="btn auth-eye-btn d-flex align-items-center">
-                        <i class="bi bi-eye icon-eye"></i>
-                        <i class="bi bi-eye-slash icon-eye-slash"></i>
-                    </label>
+                <div class="mb-4">
+                    <label for="confirm_password" class="form-label">Repetir contraseña nueva</label>
+                    <div class="input-group">
+                        <input type="checkbox" id="toggleConfirmPassword" class="d-none toggle-check">
+                        <input type="text" class="form-control auth-input input-password" id="confirm_password" name="confirm_password" placeholder="******" required>
+                        <label for="toggleConfirmPassword" class="btn auth-eye-btn d-flex align-items-center">
+                            <i class="bi bi-eye icon-eye"></i>
+                            <i class="bi bi-eye-slash icon-eye-slash"></i>
+                        </label>
+                    </div>
                 </div>
-            </div>
 
-            <div class="mb-4">
-                <label for="confirm_password" class="form-label">Repetir contraseña nueva</label>
-                <div class="input-group">
-                    <input type="checkbox" id="toggleConfirmPassword" class="d-none toggle-check">
-                    <input type="text" class="form-control auth-input input-password" id="confirm_password" name="confirm_password" placeholder="******" required>
-                    <label for="toggleConfirmPassword" class="btn auth-eye-btn d-flex align-items-center">
-                        <i class="bi bi-eye icon-eye"></i>
-                        <i class="bi bi-eye-slash icon-eye-slash"></i>
-                    </label>
-                </div>
-            </div>
+                <button type="submit" class="btn btn-cta auth-submit">Cambiar contraseña</button>
 
-            <button type="submit" class="btn btn-cta auth-submit">Cambiar contraseña</button>
-
-            <p class="auth-footer-text">
-                <a href="RecuperarHTML.php" class="auth-link">Pedir un código nuevo</a>
-                ·
-                <a href="LoginHTML.php" class="auth-link">Volver a iniciar sesión</a>
-            </p>
-        </form>
+                <p class="auth-footer-text">
+                    <a href="RecuperarHTML.php" class="auth-link">Pedir un código nuevo</a>
+                    ·
+                    <a href="LoginHTML.php" class="auth-link">Volver a iniciar sesión</a>
+                </p>
+            </form>
+        </div>
     </main>
 
 </body>

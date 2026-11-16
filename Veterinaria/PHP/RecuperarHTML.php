@@ -120,32 +120,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </header>
 
     <main class="auth-main d-flex align-items-center justify-content-center">
-        <form class="auth-form" action="RecuperarHTML.php" method="post">
-            <h1 class="auth-title">Recuperar contraseña</h1>
+        <div class="auth-card">
+            <form class="auth-form" action="RecuperarHTML.php" method="post">
+                <h1 class="auth-title">Recuperar contraseña</h1>
 
-            <?php if (!empty($error)) { ?>
-                <div class="alert alert-danger py-2 text-center" role="alert">
-                    <?= htmlspecialchars($error) ?>
+                <?php if (!empty($error)) { ?>
+                    <div class="alert alert-danger py-2 text-center" role="alert">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php } ?>
+
+                <p class="auth-footer-text mt-0 mb-3">
+                    Escribí el correo de tu cuenta y te enviamos un código de 6 dígitos para cambiar la contraseña.
+                </p>
+
+                <div class="mb-4">
+                    <label for="email" class="form-label">Correo electrónico</label>
+                    <input type="email" class="form-control auth-input" id="email" name="email" placeholder="nombre@correo.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
                 </div>
-            <?php } ?>
 
-            <p class="auth-footer-text mt-0 mb-3">
-                Escribí el correo de tu cuenta y te enviamos un código de 6 dígitos para cambiar la contraseña.
-            </p>
+                <button type="submit" class="btn btn-cta auth-submit">Enviar código</button>
 
-            <div class="mb-4">
-                <label for="email" class="form-label">Correo electrónico</label>
-                <input type="email" class="form-control auth-input" id="email" name="email" placeholder="nombre@correo.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
-            </div>
-
-            <button type="submit" class="btn btn-cta auth-submit">Enviar código</button>
-
-            <p class="auth-footer-text">
-                <a href="VerificarCodigoHTML.php" class="auth-link">Ya tengo un código</a>
-                ·
-                <a href="LoginHTML.php" class="auth-link">Volver a iniciar sesión</a>
-            </p>
-        </form>
+                <p class="auth-footer-text">
+                    <a href="VerificarCodigoHTML.php" class="auth-link">Ya tengo un código</a>
+                    ·
+                    <a href="LoginHTML.php" class="auth-link">Volver a iniciar sesión</a>
+                </p>
+            </form>
+        </div>
     </main>
 
 </body>
