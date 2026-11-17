@@ -38,6 +38,9 @@ if ($rol === 'Cajero') {
       'facturas'  => ["{$rutaEmpleado}facturas.php", 'bi-receipt', 'Facturas'],
       'productos'  => ["{$rutaEmpleado}productos.php", 'bi-box-seam', 'Productos'],
     ],
+    'Gestión' => [
+      'citas' => ["{$rutaEmpleado}citas.php", 'bi-calendar2-week', 'Citas'],
+    ],
     'Clientes' => [
       'usuarios'  => ["{$rutaEmpleado}usuarios.php", 'bi-people', 'Clientes'],
       'mascotas'  => ["{$rutaEmpleado}mascotas.php", 'bi-heart-pulse', 'Mascotas'],
@@ -50,7 +53,8 @@ if ($rol === 'Cajero') {
       'dashboard' => ["{$baseRol}/index.php", 'bi-speedometer2', 'Dashboard'],
     ],
     'Mi trabajo' => [
-      'agenda'    => ["{$rutaEmpleado}citas.php", 'bi-calendar-check', 'Mi agenda'],
+      'agenda'    => ["{$rutaEmpleado}agenda.php", 'bi-calendar-check', 'Mi agenda'],
+      'citas'     => ["{$rutaEmpleado}citas.php", 'bi-list-ul', 'Citas'],
       'mascotas'  => ["{$rutaEmpleado}mascotas.php", 'bi-heart-pulse', 'Mascotas'],
       'servicios' => ["{$rutaEmpleado}servicios.php", 'bi-clipboard2-pulse', 'Servicios'],
     ],

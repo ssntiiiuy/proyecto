@@ -5,28 +5,18 @@ require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
+require_once __DIR__ . '/../includes/horarios_citas.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-  // abro la sesion para poder leer y guardar los datos del usuario
-  session_start();
-}
-
-$rol = $_SESSION['rol'] ?? null;
-
-/* que tipo(s) de servicio le corresponden a cada rol clinico */
+$horariosPorDia = horariosClinicaPorDia();
+$hoyMontevideo = fechaActualMontevideo();
+$rol = $_SESSION['rol'] ?? '';
 $tiposPorRol = [
   'Veterinario' => ['Consulta', 'Vacunacion'],
-  'Cirujano'    => ['Cirugia'],
-  'Peluquero'   => ['Peluqueria'],
-  'Cajero'      => [],
+  'Cirujano' => ['Cirugia'],
+  'Peluquero' => ['Peluqueria'],
+  'Cajero' => [],
 ];
-
-if (!isset($tiposPorRol[$rol])) {
-  header('Location: ../LoginHTML.php');
-  exit();
-}
-
-$tipos = $tiposPorRol[$rol];
+$tipos = $tiposPorRol[$rol] ?? [];
 
 // uso la fecha de Uruguay para comparar con el dia de la cita
 $hoyAgenda = (new DateTimeImmutable('now', new DateTimeZone('America/Montevideo')))->format('Y-m-d');
@@ -36,65 +26,122 @@ $_SESSION['tokenCitas'] = $_SESSION['tokenCitas'] ?? bin2hex(random_bytes(32));
 // este bloque se ejecuta cuando se envia el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accionEstado'])) {
   $resultado = false;
-  $idCita = (int) ($_POST['IdCita'] ?? 0);
   // traduzco la accion del formulario a un estado valido de la cita
   $nuevoEstado = ['confirmar' => 'Confirmada', 'cancelar' => 'Cancelada'][$_POST['accionEstado']] ?? null;
   if ($nuevoEstado && hash_equals($_SESSION['tokenCitas'], (string) ($_POST['tokenCitas'] ?? ''))) {
-    // la autorización depende del rol, no del empleado que inició sesión.
-    $agendaRol = Cita::listadoCitaPorTipo($tipos)['citas'];
-    if (in_array($idCita, array_map('intval', array_column($agendaRol, 'IdCita')), true)) {
-      $resultado = (new Cita())->cambiarEstado($idCita, $nuevoEstado);
+    $idCita = (int) ($_POST['IdCita'] ?? 0);
+    $citasDelRol = Cita::listadoCitaPorTipo($tipos)['citas'];
+    foreach ($citasDelRol as $citaDelRol) {
+      if ((int) $citaDelRol['IdCita'] === $idCita && $citaDelRol['Estado'] === 'Pendiente'
+        && ($_POST['accionEstado'] !== 'confirmar' || $citaDelRol['Fecha'] === $hoyAgenda)) {
+        $resultado = (new Cita())->cambiarEstado($idCita, $nuevoEstado);
+        break;
+      }
     }
   }
-  header('Location: citas.php?' . http_build_query([
-    'mes' => $_GET['mes'] ?? date('Y-m'),
-    'estado' => $_GET['estado'] ?? '',
-    'filtro' => $_GET['filtro'] ?? '',
-    'msg' => $resultado ? 'estado' : 'estado_error'
-  ]));
+  $parametros = array_filter(['fecha' => $_GET['fecha'] ?? '', 'estado' => $_GET['estado'] ?? ''], static fn($valor) => $valor !== '');
+  $parametros['msg'] = $resultado ? 'estado' : 'estado_error';
+  header('Location: citas.php?' . http_build_query($parametros));
   exit();
 }
 
-$mensajesEstado = [
+$mensajes = [
   'estado' => ['success', 'El estado de la cita se actualizó.'],
-  'estado_error' => ['danger', 'No se pudo cambiar el estado. Solo se pueden cancelar citas pendientes de tu agenda o confirmar su llegada el día de la cita.']
+  'estado_error' => ['danger', 'No se pudo cambiar el estado. Solo se pueden cancelar citas pendientes o confirmar su llegada el día de la cita.'],
 ];
-$mensajeEstado = $mensajesEstado[$_GET['msg'] ?? ''] ?? null;
+$mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 
-$estado = $_GET['estado'] ?? '';
-$filtro = $_GET['filtro'] ?? null;
+$estado = trim($_GET['estado'] ?? '');
+$estado = in_array($estado, ['', 'Pendiente', 'Confirmada', 'Cancelada'], true) ? $estado : '';
+$fechaFiltro = trim($_GET['fecha'] ?? '');
 
-$datosCitas = Cita::listadoCitaPorTipo($tipos, $estado !== '' ? $estado : null, $filtro);
+$datosCitas = Cita::listadoCitaPorTipo($tipos, $estado !== '' ? $estado : null, null, $fechaFiltro !== '' ? $fechaFiltro : null);
 $citas = $datosCitas['citas'];
 
-// leo el mes solicitado o uso el actual si no se eligio otro
-$mesSolicitado = $_GET['mes'] ?? date('Y-m');
-$fechaMes = DateTime::createFromFormat('!Y-m', $mesSolicitado);
-if (!$fechaMes || $fechaMes->format('Y-m') !== $mesSolicitado) {
-  $fechaMes = new DateTime('first day of this month');
-}
-// calculo cuantos dias tiene el mes y donde empieza en la semana
-$diasEnMes = (int) $fechaMes->format('t');
-$espaciosIniciales = (int) $fechaMes->format('N') - 1;
-// uso una copia de la fecha para calcular otros meses sin cambiar el elegido
-$mesAnterior = (clone $fechaMes)->modify('-1 month')->format('Y-m');
-$mesSiguiente = (clone $fechaMes)->modify('+1 month')->format('Y-m');
-$nombresMeses = [1 => 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
-// agrupo las citas por dia y cuento las que caen dentro del mes elegido
-$citasPorDia = [];
-$totalCitasMes = 0;
-foreach ($citas as $cita) {
-  if (substr($cita['Fecha'], 0, 7) === $fechaMes->format('Y-m')) {
-    $citasPorDia[(int) date('j', strtotime($cita['Fecha']))][] = $cita;
-    $totalCitasMes++;
+$conexion = (new Conexion())->establecerConexion();
+
+// cargo los servicios disponibles ordenados por nombre
+$sqlServicios = $conexion->query("SELECT IdServicio, Nombre FROM SERVICIO ORDER BY Nombre");
+$servicios = $sqlServicios->fetchAll(PDO::FETCH_ASSOC);
+
+$clienteEncontrado = null;
+$mascotasCliente = [];
+$errorCedula = null;
+
+/* se pide la cedula primero */
+if (isset($_GET['ci']) && trim($_GET['ci']) !== '') {
+  $ciBuscada = trim($_GET['ci']);
+
+  // busco al cliente por cedula para obtener sus datos
+  $sqlCliente = $conexion->prepare("SELECT u.CI, u.Nombre, u.Apellido FROM CLIENTE c INNER JOIN USUARIO u ON c.CI = u.CI WHERE c.CI = :ci");
+  $sqlCliente->execute([':ci' => $ciBuscada]);
+  $clienteEncontrado = $sqlCliente->fetch(PDO::FETCH_ASSOC);
+
+  if (!$clienteEncontrado) {
+    $errorCedula = "No existe un cliente con esa cédula.";
+  } else {
+    // cargo las mascotas del cliente para elegir una de ellas
+    $sqlMascotas = $conexion->prepare("SELECT IdMascota, Nombre FROM MASCOTA WHERE CI = :ci ORDER BY Nombre");
+    $sqlMascotas->execute([':ci' => $ciBuscada]);
+    $mascotasCliente = $sqlMascotas->fetchAll(PDO::FETCH_ASSOC);
   }
 }
 
-$parametrosFiltro = array_filter([
-  'estado' => $estado
-], function ($valor) {
-  return $valor !== null && $valor !== '';
-});
+/* formulario como antes */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
+  $ci = trim($_POST['CI'] ?? '');
+  $idMascota = trim($_POST['IdMascota'] ?? '');
+  $idServicio = trim($_POST['IdServicio'] ?? '');
+  $fecha = trim($_POST['Fecha'] ?? '');
+  $hora = trim($_POST['Hora'] ?? '');
+  $fechaFormulario = $fecha;
+  $horaFormulario = $hora;
+
+  $sqlCheck = $conexion->prepare("SELECT 1 FROM CLIENTE WHERE CI = :ci");
+  $sqlCheck->execute([':ci' => $ci]);
+
+  /* la mascota tiene que ser del cliente */
+  $sqlCheckMascota = $conexion->prepare("SELECT 1 FROM MASCOTA WHERE IdMascota = :idMascota AND CI = :ci");
+  $sqlCheckMascota->execute([':idMascota' => $idMascota, ':ci' => $ci]);
+  $mascotaDelCliente = $sqlCheckMascota->fetch();
+
+  /* se valida antes de guardar */
+  if (!$sqlCheck->fetch()) {
+    $error = "La cédula no corresponde a ningún cliente.";
+  } elseif ($idMascota === '') {
+    $error = "Elegí la mascota de la cita.";
+  } elseif (!$mascotaDelCliente) {
+    $error = "La mascota elegida no es de este cliente.";
+  } elseif ($idServicio === '') {
+    $error = "Elegí el servicio de la cita.";
+  } elseif ($fecha === '') {
+    $error = "Falta la fecha de la cita.";
+  } elseif (!fechaClinicaValida($fecha)) {
+    $error = "La fecha de la cita no es válida.";
+  } elseif ($fecha < $hoyMontevideo) {
+    $error = "La fecha no puede ser anterior a hoy.";
+  } elseif (!horaClinicaPermitida($fecha, $hora)) {
+    $error = "Elegí un horario dentro de la atención de la veterinaria.";
+  } else {
+    try {
+      $cita = new Cita();
+      $resultado = $cita->crearCita((int)$ci, (int)$idServicio, (int)$idMascota, $fecha, $hora, 'Pendiente');
+    } catch (Throwable $e) {
+      $resultado = false;
+    }
+
+    if ($resultado) {
+      header("Location: citas.php");
+      exit();
+    } else {
+      $error = "No se pudo guardar la cita. Revisá los datos.";
+    }
+  }
+}
+
+/*  el modal se abre solo si venimos de buscar una cédula (sin importar si encontro o no) */
+/* si al guardar hay un error, se muestra el aviso arriba del listado */
+$modalAbierto = isset($_GET['ci']);
 ?>
 
 <!DOCTYPE html>
@@ -103,7 +150,7 @@ $parametrosFiltro = array_filter([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agenda de citas - Panel Sienra</title>
+  <title>Citas - Panel Sienra</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -117,95 +164,249 @@ $parametrosFiltro = array_filter([
 
 <body>
 
-  <div class="admin-wrapper" data-bs-theme="light">
+  <div class="admin-wrapper">
     <?php
-    $paginaActiva = 'agenda';
+    $paginaActiva = 'citas';
     include __DIR__ . '/includes/sidebar.php';
     ?>
 
     <div class="admin-contenido">
       <?php
-      $tituloPagina = 'Agenda de citas';
+      $tituloPagina = 'Citas';
       include __DIR__ . '/includes/topbar.php';
       ?>
 
       <main class="container-fluid px-3 px-lg-4 py-4">
 
-        <?php if ($mensajeEstado) { ?>
-          <div class="alert alert-<?= $mensajeEstado[0] ?>"><?= htmlspecialchars($mensajeEstado[1]) ?></div>
+        <?php if ($mensaje) { ?>
+          <div class="alert alert-<?= $mensaje[0] ?>" role="alert"><?= htmlspecialchars($mensaje[1]) ?></div>
         <?php } ?>
 
-        <section class="admin-card admin-calendario">
-          <div class="admin-card-header admin-calendario-encabezado">
-            <div>
-              <h2>Agenda de citas</h2>
-              <p><?= $totalCitasMes ?> <?= $totalCitasMes === 1 ? 'cita' : 'citas' ?> este mes</p>
-            </div>
-            <form class="d-flex align-items-center gap-2" action="citas.php" method="get">
-              <input type="hidden" name="mes" value="<?= $fechaMes->format('Y-m') ?>">
-              <?php if ($filtro === 'hoy') { ?>
-                <input type="hidden" name="filtro" value="hoy">
-              <?php } ?>
-              <label class="visually-hidden" for="filtroEstado">Filtrar por estado</label>
-              <select class="form-select form-select-sm admin-filtro" id="filtroEstado" name="estado">
-                <option value="" <?= $estado === '' ? 'selected' : '' ?>>Todos los estados</option>
-                <option value="Pendiente" <?= $estado === 'Pendiente' ? 'selected' : '' ?>>Pendiente</option>
-                <option value="Confirmada" <?= $estado === 'Confirmada' ? 'selected' : '' ?>>Confirmada</option>
-                <option value="Cancelada" <?= $estado === 'Cancelada' ? 'selected' : '' ?>>Cancelada</option>
-              </select>
-              <button type="submit" class="btn btn-sm admin-btn-filtrar">Filtrar</button>
-            </form>
-          </div>
+        <?php if (!empty($error)) { ?>
+          <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
+        <?php } ?>
 
-          <div class="admin-calendario-controles">
-            <a class="btn admin-calendario-flecha" href="?<?= htmlspecialchars(http_build_query(['mes' => $mesAnterior] + $parametrosFiltro)) ?>" aria-label="Mes anterior"><i class="bi bi-chevron-left"></i></a>
-            <h3><span><?= ucfirst($nombresMeses[(int) $fechaMes->format('n')]) ?></span> <?= $fechaMes->format('Y') ?></h3>
-            <a class="btn admin-calendario-flecha" href="?<?= htmlspecialchars(http_build_query(['mes' => $mesSiguiente] + $parametrosFiltro)) ?>" aria-label="Mes siguiente"><i class="bi bi-chevron-right"></i></a>
-            <a class="admin-calendario-hoy" href="?<?= htmlspecialchars(http_build_query(['mes' => date('Y-m')] + $parametrosFiltro)) ?>">Este mes</a>
-          </div>
-
-          <div class="admin-calendario-scroll">
-            <div class="admin-calendario-grid">
-              <?php foreach (['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as $diaSemana) { ?>
-                <div class="admin-calendario-dia-semana"><?= $diaSemana ?></div>
-              <?php } ?>
-              <?php for ($espacio = 0; $espacio < $espaciosIniciales; $espacio++) { ?>
-                <div class="admin-calendario-dia admin-calendario-vacio"></div>
-              <?php } ?>
-              <?php for ($dia = 1; $dia <= $diasEnMes; $dia++) { ?>
-                <?php $fechaDia = $fechaMes->format('Y-m') . '-' . str_pad((string) $dia, 2, '0', STR_PAD_LEFT); ?>
-                <div class="admin-calendario-dia <?= $fechaDia === date('Y-m-d') ? 'admin-calendario-dia-hoy' : '' ?>">
-                  <span class="admin-calendario-numero"><?= $fechaDia === date('Y-m-d') ? '<span class="admin-calendario-etiqueta-hoy">Hoy</span>' : '' ?><span><?= $dia ?></span></span>
-                  <?php if (!empty($citasPorDia[$dia])) { ?>
-                    <?php foreach ($citasPorDia[$dia] as $cita) { ?>
-                      <?php $estadoCita = match ($cita['Estado']) { 'Confirmada' => 'confirmada', 'Pendiente' => 'pendiente', 'Cancelada' => 'cancelada', default => 'otra' }; ?>
-                      <div class="admin-calendario-cita estado-<?= $estadoCita ?>" title="<?= htmlspecialchars($cita['ClienteNombre'] . ' ' . $cita['ClienteApellido'] . ' · ' . $cita['MascotaNombre'] . ' · ' . $cita['ServicioNombre']) ?>">
-                        <span class="admin-calendario-hora"><?= htmlspecialchars(substr($cita['Hora'], 0, 5)) ?></span>
-                        <span><?= htmlspecialchars($cita['MascotaNombre']) ?></span>
-                      </div>
-                      <?php if ($cita['Estado'] === 'Pendiente') { ?>
-                        <form method="post" class="d-flex flex-wrap gap-1 mb-2">
-                          <input type="hidden" name="IdCita" value="<?= (int) $cita['IdCita'] ?>">
-                          <input type="hidden" name="tokenCitas" value="<?= htmlspecialchars($_SESSION['tokenCitas']) ?>">
-                          <?php if ($cita['Fecha'] === $hoyAgenda) { ?>
-                            <button class="btn btn-sm btn-outline-success" name="accionEstado" value="confirmar">Confirmar llegada</button>
-                          <?php } ?>
-                          <button class="btn btn-sm btn-outline-danger" name="accionEstado" value="cancelar">Cancelar cita</button>
-                        </form>
-                      <?php } ?>
-                    <?php } ?>
-                  <?php } ?>
-                </div>
-              <?php } ?>
+        <div class="admin-card">
+          <div class="admin-card-header flex-wrap">
+            <h2>Listado de citas</h2>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <form method="get" action="citas.php" class="d-flex gap-2">
+                <label class="visually-hidden" for="filtroEstado">Filtrar por estado</label>
+                <select class="form-select form-select-sm admin-filtro" id="filtroEstado" name="estado">
+                  <option value="" <?= $estado === '' ? 'selected' : '' ?>>Todos los estados</option>
+                  <option value="Pendiente" <?= $estado === 'Pendiente' ? 'selected' : '' ?>>Pendiente</option>
+                  <option value="Confirmada" <?= $estado === 'Confirmada' ? 'selected' : '' ?>>Confirmada</option>
+                  <option value="Cancelada" <?= $estado === 'Cancelada' ? 'selected' : '' ?>>Cancelada</option>
+                </select>
+                <button type="submit" class="btn btn-sm admin-btn-filtrar">Filtrar</button>
+              </form>
+              <a href="citas.php?ci=" class="btn btn-sm admin-btn-agregar" role="button">
+                <i class="bi bi-plus-lg"></i> Agregar cita
+              </a>
             </div>
           </div>
-        </section>
+
+          <form class="d-flex gap-2 mb-3 mt-3 mx-3 mx-lg-4" action="citas.php" method="get">
+            <input class="form-control" type="date" name="fecha" value="<?= htmlspecialchars($fechaFiltro) ?>">
+            <button class="btn admin-btn-agregar ms-2" type="submit" title="Filtrar por fecha"><i class="bi bi-search"></i></button>
+            <?php if ($fechaFiltro !== ''): ?>
+              <a class="btn admin-btn-cancelar ms-2" href="citas.php">Limpiar</a>
+            <?php endif; ?>
+          </form>
+
+          <div class="table-responsive">
+            <table class="table admin-tabla mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Hora</th>
+                  <th scope="col">Cliente</th>
+                  <th scope="col">Mascota</th>
+                  <th scope="col">Servicio</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col" class="text-end">Acciones</th>
+                </tr>
+              </thead>
+
+
+              <!-- listado de citas -->
+              <tbody>
+                <?php if (empty($citas)): ?>
+                  <tr>
+                    <td colspan="7" class="text-center">No hay citas registradas.</td>
+                  </tr>
+                  <?php else: foreach ($citas as $c): ?>
+                    <tr class="<?= (int) ($_GET['cita'] ?? 0) === (int) $c['IdCita'] ? 'table-primary' : '' ?>">
+                      <td><?= htmlspecialchars(date('d/m/Y', strtotime($c['Fecha']))) ?></td>
+                      <td><?= htmlspecialchars(substr($c['Hora'], 0, 5)) ?></td>
+                      <td><?= htmlspecialchars($c['ClienteNombre'] . ' ' . $c['ClienteApellido']) ?><br><span class="admin-subtexto">CI: <?= htmlspecialchars($c['CI']) ?></span></td>
+                      <td><?= htmlspecialchars($c['MascotaNombre']) ?></td>
+                      <td><?= htmlspecialchars($c['ServicioNombre']) ?></td>
+                      <td>
+                        <?php
+                        $claseBadge = match ($c['Estado']) {
+                          'Confirmada' => 'badge-success',
+                          'Pendiente'  => 'badge-info',
+                          'Cancelada'  => 'badge-danger',
+                          default      => 'badge-secondary',
+                        };
+                        ?>
+                        <span class="badge <?= $claseBadge ?>"><?= htmlspecialchars($c['Estado']) ?></span>
+                      </td>
+                      <td class="text-end">
+                        <?php if ($c['Estado'] === 'Pendiente') { ?>
+                          <form method="post" action="citas.php" class="d-inline">
+                            <input type="hidden" name="IdCita" value="<?= (int) $c['IdCita'] ?>">
+                            <input type="hidden" name="tokenCitas" value="<?= htmlspecialchars($_SESSION['tokenCitas']) ?>">
+                            <?php if ($c['Fecha'] === $hoyAgenda) { ?>
+                              <button class="btn btn-sm btn-outline-success" name="accionEstado" value="confirmar">Confirmar llegada</button>
+                            <?php } ?>
+                            <button class="btn btn-sm btn-outline-danger" name="accionEstado" value="cancelar">Cancelar cita</button>
+                          </form>
+                        <?php } ?>
+                        <a class="btn btn-sm admin-btn-icono" href="editar_cita.php?id=<?= (int) $c['IdCita'] ?>" aria-label="Cambiar estado" title="Cambiar estado"><i class="bi bi-arrow-repeat"></i> Estado</a>
+                       </td>
+                    </tr>
+                <?php endforeach;
+                endif; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
       </main>
     </div>
   </div>
 
+  <!-- agregar cita -->
+  <div class="modal fade admin-modal <?= $modalAbierto ? 'show' : '' ?>"
+    id="modalCita"
+    tabindex="-1"
+    aria-labelledby="modalCitaTitulo"
+    aria-hidden="<?= $modalAbierto ? 'false' : 'true' ?>"
+    style="<?= $modalAbierto ? 'display:block;' : '' ?>">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="modalCitaTitulo">Agregar cita</h2>
+          <a href="citas.php" class="btn-close" aria-label="Cerrar"></a>
+        </div>
+
+        <?php if (!$clienteEncontrado): ?>
+
+          <!-- pedido de cedula -->
+          <form method="get" action="citas.php">
+            <div class="modal-body">
+              <label class="form-label" for="ci">Cédula del cliente</label>
+              <input class="form-control" type="text" id="ci" name="ci" placeholder="Ej: 45678901"
+                value="<?= htmlspecialchars($_GET['ci'] ?? '') ?>" required>
+              <?php if ($errorCedula): ?>
+                <div class="form-text text-danger"><?= htmlspecialchars($errorCedula) ?></div>
+              <?php endif; ?>
+            </div>
+            <div class="modal-footer">
+              <a href="citas.php" class="btn admin-btn-cancelar">Cancelar</a>
+              <button type="submit" class="btn admin-btn-agregar">Buscar</button>
+            </div>
+          </form>
+
+        <?php else: ?>
+
+          <!-- datos de la cita -->
+          <form method="post" action="citas.php?ci=<?= urlencode((string) $clienteEncontrado['CI']) ?>">
+            <div class="modal-body">
+              <input type="hidden" name="CI" value="<?= htmlspecialchars($clienteEncontrado['CI']) ?>">
+
+              <div class="mb-3">
+                <span class="text-muted">Cliente:</span>
+                <strong><?= htmlspecialchars($clienteEncontrado['Nombre'] . ' ' . $clienteEncontrado['Apellido']) ?></strong>
+              </div>
+
+              <?php if (isset($error)): ?>
+                <div class="alert alert-danger py-2"><?= htmlspecialchars($error) ?></div>
+              <?php endif; ?>
+
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <label class="form-label" for="IdMascota">Mascota</label>
+                  <select class="form-select" id="IdMascota" name="IdMascota" required>
+                    <option value="" selected disabled>Elegir mascota</option>
+                    <?php foreach ($mascotasCliente as $m): ?>
+                      <option value="<?= $m['IdMascota'] ?>"><?= htmlspecialchars($m['Nombre']) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                  <?php if (empty($mascotasCliente)): ?>
+                    <div class="form-text text-warning">Este cliente no tiene mascotas registradas.</div>
+                  <?php endif; ?>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="IdServicio">Servicio</label>
+                  <select class="form-select" id="IdServicio" name="IdServicio" required>
+                    <option value="" selected disabled>Elegir servicio</option>
+                    <?php foreach ($servicios as $s): ?>
+                      <option value="<?= $s['IdServicio'] ?>"><?= htmlspecialchars($s['Nombre']) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="Fecha">Fecha</label>
+                  <input class="form-control" type="date" id="Fecha" name="Fecha" min="<?= $hoyMontevideo ?>" value="<?= htmlspecialchars($fechaFormulario ?? '') ?>" required>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="Hora">Hora</label>
+                  <select class="form-select" id="Hora" name="Hora" required disabled data-hora-inicial="<?= htmlspecialchars($horaFormulario ?? '') ?>">
+                    <option value="" selected disabled>Elegí una fecha primero</option>
+                  </select>
+                </div>
+                <p class="form-text mb-0">La cita se creará pendiente. La llegada se confirma el día de la cita.</p>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <a href="citas.php" class="btn admin-btn-cancelar">Cancelar</a>
+              <button type="submit" name="guardar" class="btn admin-btn-agregar">Guardar</button>
+            </div>
+          </form>
+
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+
+  <?php if ($modalAbierto): ?>
+    <div class="modal-backdrop fade show"></div>
+  <?php endif; ?>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (() => {
+      const fecha = document.getElementById('Fecha');
+      const hora = document.getElementById('Hora');
+      if (!fecha || !hora) return;
+      const horarios = <?= json_encode($horariosPorDia, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+      const horaInicial = hora.dataset.horaInicial;
+      function actualizarHorarios(restaurar = false) {
+        const valor = fecha.value;
+        if (!valor) {
+          hora.disabled = true;
+          hora.innerHTML = '<option value="" selected disabled>Elegí una fecha primero</option>';
+          return;
+        }
+        const jsDia = new Date(valor + 'T00:00:00').getDay();
+        const dia = jsDia === 0 ? 7 : jsDia;
+        const opciones = horarios[dia] || [];
+        if (!opciones.length) {
+          hora.disabled = true;
+          hora.innerHTML = '<option value="" selected disabled>La veterinaria está cerrada ese día</option>';
+          return;
+        }
+        hora.disabled = false;
+        hora.innerHTML = '<option value="" disabled>Elegí un horario</option>' + opciones.map(h => '<option value="' + h + '">' + h + '</option>').join('');
+        if (restaurar && opciones.includes(horaInicial)) hora.value = horaInicial;
+      }
+      fecha.addEventListener('change', () => actualizarHorarios(false));
+      actualizarHorarios(true);
+    })();
+  </script>
 </body>
 
 </html>

@@ -170,7 +170,7 @@ class Cita
      * Agenda filtrada por tipo(s) de servicio (Consulta, Vacunacion, Peluqueria, Cirugia).
      * Se usa para que cada rol de empleado vea solo las citas que le corresponden.
      */
-    public static function listadoCitaPorTipo(array $tipos, ?string $estado = null, ?string $filtro = null): array
+    public static function listadoCitaPorTipo(array $tipos, ?string $estado = null, ?string $filtro = null, ?string $fecha = null): array
     {
         try {
             $conexion = (new Conexion())->establecerConexion();
@@ -198,6 +198,7 @@ class Cita
             WHERE 1=1";
 
             $params = [];
+            $condicionesHaving = [];
 
             if (!empty($tipos)) {
                 $marcadores = [];
@@ -206,16 +207,25 @@ class Cita
                     $marcadores[] = $clave;
                     $params[$clave] = $tipo;
                 }
-                $sql .= " HAVING Tipo IN (" . implode(', ', $marcadores) . ")";
+                $condicionesHaving[] = "Tipo IN (" . implode(', ', $marcadores) . ")";
             }
 
             if (!empty($estado)) {
-                $sql .= (!empty($tipos) ? " AND" : " HAVING") . " c.Estado = :estado";
+                $condicionesHaving[] = "c.Estado = :estado";
                 $params[':estado'] = $estado;
             }
 
             if ($filtro === 'hoy') {
-                $sql .= (!empty($tipos) || !empty($estado) ? " AND" : " HAVING") . " c.Fecha = CURDATE()";
+                $condicionesHaving[] = "c.Fecha = CURDATE()";
+            }
+
+            if (!empty($fecha)) {
+                $condicionesHaving[] = "c.Fecha = :fecha";
+                $params[':fecha'] = $fecha;
+            }
+
+            if (!empty($condicionesHaving)) {
+                $sql .= " HAVING " . implode(' AND ', $condicionesHaving);
             }
 
             $sql .= " ORDER BY c.Fecha, c.Hora";
@@ -370,6 +380,33 @@ class Cita
             // preparo la consulta para pasar los valores por separado al ejecutarla
             $consulta = $conexion->prepare($sql);
             $consulta->execute($parametros);
+            return $consulta->rowCount() === 1;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // Actualizo únicamente el estado desde la pantalla restringida del empleado.
+    public function actualizarEstado(int $id, string $estado): bool
+    {
+        if (!in_array($estado, ['Pendiente', 'Confirmada', 'Cancelada'], true)) {
+            return false;
+        }
+
+        try {
+            $conexion = (new Conexion())->establecerConexion();
+            $consultaActual = $conexion->prepare('SELECT Estado FROM CITA WHERE IdCita = :id');
+            $consultaActual->execute([':id' => $id]);
+            $estadoActual = $consultaActual->fetchColumn();
+            if ($estadoActual === false) {
+                return false;
+            }
+            if ($estadoActual === $estado) {
+                return true;
+            }
+
+            $consulta = $conexion->prepare('UPDATE CITA SET Estado = :estado WHERE IdCita = :id');
+            $consulta->execute([':estado' => $estado, ':id' => $id]);
             return $consulta->rowCount() === 1;
         } catch (PDOException $e) {
             return false;

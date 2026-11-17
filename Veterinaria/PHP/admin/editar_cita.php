@@ -5,6 +5,10 @@ require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
+require_once __DIR__ . '/../includes/horarios_citas.php';
+
+$horariosPorDia = horariosClinicaPorDia();
+$hoyMontevideo = fechaActualMontevideo();
 
 /* se busca la cita que llega en la URL: editar_cita.php?id=5 */
 $id = (int) ($_GET['id'] ?? 0);
@@ -37,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $idServicio = (int) ($_POST['IdServicio'] ?? 0);
   $fecha = trim($_POST['Fecha'] ?? '');
   $hora = trim($_POST['Hora'] ?? '');
-  $estado = $cita['Estado'];
+  $estado = trim($_POST['Estado'] ?? '');
 
   /* la mascota elegida tiene que ser del mismo cliente */
   $mascotaDelCliente = false;
@@ -54,13 +58,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     $error = "Elegí el servicio de la cita.";
   } elseif ($fecha === '') {
     $error = "Falta la fecha de la cita.";
-  } elseif (strtotime($fecha) === false) {
+  } elseif (!fechaClinicaValida($fecha)) {
     $error = "La fecha de la cita no es válida.";
-  } elseif ($fecha !== $cita['Fecha'] && $fecha < date('Y-m-d')) {
+  } elseif ($fecha !== $cita['Fecha'] && $fecha < $hoyMontevideo) {
     /* se puede dejar la fecha que ya tenia, pero no cambiarla a un dia pasado */
     $error = "La fecha no puede ser anterior a hoy.";
-  } elseif ($hora === '') {
-    $error = "Falta la hora de la cita.";
+  } elseif (!horaClinicaPermitida($fecha, $hora)) {
+    $error = "Elegí un horario dentro de la atención de la veterinaria.";
+  } elseif (!in_array($estado, ['Pendiente', 'Confirmada', 'Cancelada'], true)) {
+    $error = "Elegí un estado válido para la cita.";
   } else {
     try {
       $resultado = (new Cita())->editarCita($id, $idServicio, $idMascota, $fecha, $hora, $estado);
@@ -78,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 }
 
 /* el minimo del calendario es hoy, o la fecha original si ya paso */
-$fechaMinima = min(date('Y-m-d'), $cita['Fecha']);
+$fechaMinima = min($hoyMontevideo, $cita['Fecha']);
 ?>
 
 <!DOCTYPE html>
@@ -157,11 +163,17 @@ $fechaMinima = min(date('Y-m-d'), $cita['Fecha']);
               </div>
               <div class="col-sm-6">
                 <label class="form-label" for="Hora">Hora</label>
-                <input class="form-control" type="time" id="Hora" name="Hora" value="<?= htmlspecialchars(substr($datosForm['Hora'] ?? '', 0, 5)) ?>" required>
+                <select class="form-select" id="Hora" name="Hora" required disabled data-hora-inicial="<?= htmlspecialchars(substr($datosForm['Hora'] ?? '', 0, 5)) ?>">
+                  <option value="" selected disabled>Elegí una fecha primero</option>
+                </select>
               </div>
               <div class="col-sm-6">
-                <p class="form-label">Estado</p>
-                <p class="form-control-plaintext"><?= htmlspecialchars($cita['Estado']) ?></p>
+                <label class="form-label" for="Estado">Estado</label>
+                <select class="form-select" id="Estado" name="Estado" required>
+                  <?php foreach (['Pendiente', 'Confirmada', 'Cancelada'] as $estadoOpcion) { ?>
+                    <option value="<?= $estadoOpcion ?>" <?= ($datosForm['Estado'] ?? $cita['Estado']) === $estadoOpcion ? 'selected' : '' ?>><?= $estadoOpcion ?></option>
+                  <?php } ?>
+                </select>
               </div>
             </div>
 
@@ -177,6 +189,36 @@ $fechaMinima = min(date('Y-m-d'), $cita['Fecha']);
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (() => {
+      const fecha = document.getElementById('Fecha');
+      const hora = document.getElementById('Hora');
+      if (!fecha || !hora) return;
+      const horarios = <?= json_encode($horariosPorDia, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+      const horaInicial = hora.dataset.horaInicial;
+      function actualizarHorarios(restaurar = false) {
+        const valor = fecha.value;
+        if (!valor) {
+          hora.disabled = true;
+          hora.innerHTML = '<option value="" selected disabled>Elegí una fecha primero</option>';
+          return;
+        }
+        const jsDia = new Date(valor + 'T00:00:00').getDay();
+        const dia = jsDia === 0 ? 7 : jsDia;
+        const opciones = horarios[dia] || [];
+        if (!opciones.length) {
+          hora.disabled = true;
+          hora.innerHTML = '<option value="" selected disabled>Domingos cerrados</option>';
+          return;
+        }
+        hora.disabled = false;
+        hora.innerHTML = '<option value="" disabled>Elegí un horario</option>' + opciones.map(h => '<option value="' + h + '">' + h + '</option>').join('');
+        if (restaurar && opciones.includes(horaInicial)) hora.value = horaInicial;
+      }
+      fecha.addEventListener('change', () => actualizarHorarios(false));
+      actualizarHorarios(true);
+    })();
+  </script>
 </body>
 
 </html>

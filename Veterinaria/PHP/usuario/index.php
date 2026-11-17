@@ -10,6 +10,7 @@ require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Mascota.php';
 require_once __DIR__ . '/../clases/Cita.php';
 require_once __DIR__ . '/../clases/Servicio.php';
+require_once __DIR__ . '/../includes/horarios_citas.php';
 
 $nombreUsuario = "Usuario";
 $errorAgenda = null;
@@ -20,42 +21,7 @@ $carnet = [];
 $servicios = [];
 $proximaVacuna = null;
 
-// horario de atencion (1 = lunes ... 7 = domingo), igual al que se muestra en "Nosotros"
-$horarioAtencion = [
-  1 => [['08:30', '12:30'], ['15:00', '19:00']],
-  2 => [['08:30', '12:30'], ['15:00', '19:00']],
-  3 => [['08:30', '12:30'], ['15:00', '19:00']],
-  4 => [['08:30', '12:30'], ['15:00', '19:00']],
-  5 => [['08:30', '12:30'], ['15:00', '19:00']],
-  6 => [['09:00', '13:00']],
-  7 => [], // domingo: no atendemos
-];
-$duracionTurno = 30; // minutos entre un turno y el siguiente
-
-// a partir de las franjas de un dia, arma la lista de horas "HH:MM" disponibles
-function generarHorariosDia(array $franjas, int $duracion): array
-{
-  $horarios = [];
-  foreach ($franjas as [$inicio, $fin]) {
-    $actual = DateTime::createFromFormat('H:i', $inicio);
-    $limite = DateTime::createFromFormat('H:i', $fin);
-    while (true) {
-      $siguiente = (clone $actual)->modify("+{$duracion} minutes");
-      if ($siguiente > $limite) {
-        break;
-      }
-      $horarios[] = $actual->format('H:i');
-      $actual = $siguiente;
-    }
-  }
-  return $horarios;
-}
-
-// los horarios ya expandidos de cada dia, listos para validar y para mandar al JS del modal
-$horariosPorDia = [];
-foreach ($horarioAtencion as $dia => $franjas) {
-  $horariosPorDia[$dia] = generarHorariosDia($franjas, $duracionTurno);
-}
+$horariosPorDia = horariosClinicaPorDia();
 
 // $esCliente ya lo calcula includes/carrito.php a partir de la sesión
 if ($esCliente) {
@@ -146,9 +112,9 @@ if ($esCliente) {
       $errorAgenda = 'Elegí una de tus mascotas.';
     } elseif (!in_array($idServicio, array_map('intval', array_column($servicios, 'IdServicio')), true)) {
       $errorAgenda = 'Elegí un servicio disponible.';
-    } elseif (!$fechaValida || $fechaValida->format('Y-m-d') !== $fecha || $fecha < date('Y-m-d')) {
+    } elseif (!$fechaValida || $fechaValida->format('Y-m-d') !== $fecha || $fecha < fechaActualMontevideo()) {
       $errorAgenda = 'La fecha debe ser hoy o posterior.';
-    } elseif (!in_array($hora, $horariosPorDia[(int) $fechaValida->format('N')] ?? [], true)) {
+    } elseif (!horaClinicaPermitida($fecha, $hora)) {
       $errorAgenda = 'Elegí un horario dentro de nuestro horario de atención.';
     } else {
       // guardo la cita como pendiente y redirijo para no reenviar el formulario al recargar
@@ -424,7 +390,7 @@ $mostrarCarrito = true;
                 <div class="row g-3">
                   <div class="col-sm-6">
                     <label class="form-label" for="Fecha">Fecha</label>
-                    <input class="form-control" type="date" id="Fecha" name="Fecha" min="<?= date('Y-m-d') ?>" required>
+                    <input class="form-control" type="date" id="Fecha" name="Fecha" min="<?= fechaActualMontevideo() ?>" required>
                   </div>
                   <div class="col-sm-6">
                     <label class="form-label" for="Hora">Hora</label>

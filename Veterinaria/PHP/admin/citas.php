@@ -5,6 +5,10 @@ require_once __DIR__ . '/../includes/verificar_sesion.php';
 
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
+require_once __DIR__ . '/../includes/horarios_citas.php';
+
+$horariosPorDia = horariosClinicaPorDia();
+$hoyMontevideo = fechaActualMontevideo();
 
 // uso la fecha de Uruguay para comparar con el dia de la cita
 $hoyAgenda = (new DateTimeImmutable('now', new DateTimeZone('America/Montevideo')))->format('Y-m-d');
@@ -101,6 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
   $idServicio = trim($_POST['IdServicio'] ?? '');
   $fecha = trim($_POST['Fecha'] ?? '');
   $hora = trim($_POST['Hora'] ?? '');
+  $fechaFormulario = $fecha;
+  $horaFormulario = $hora;
 
   $sqlCheck = $conexion->prepare("SELECT 1 FROM CLIENTE WHERE CI = :ci");
   $sqlCheck->execute([':ci' => $ci]);
@@ -121,12 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     $error = "Elegí el servicio de la cita.";
   } elseif ($fecha === '') {
     $error = "Falta la fecha de la cita.";
-  } elseif (strtotime($fecha) === false) {
+  } elseif (!fechaClinicaValida($fecha)) {
     $error = "La fecha de la cita no es válida.";
-  } elseif ($fecha < date('Y-m-d')) {
+  } elseif ($fecha < $hoyMontevideo) {
     $error = "La fecha no puede ser anterior a hoy.";
-  } elseif ($hora === '') {
-    $error = "Falta la hora de la cita.";
+  } elseif (!horaClinicaPermitida($fecha, $hora)) {
+    $error = "Elegí un horario dentro de la atención de la veterinaria.";
   } else {
     try {
       $cita = new Cita();
@@ -333,7 +339,7 @@ $modalAbierto = isset($_GET['ci']);
         <?php else: ?>
 
           <!-- datos de la cita -->
-          <form method="post" action="citas.php">
+          <form method="post" action="citas.php?ci=<?= urlencode((string) $clienteEncontrado['CI']) ?>">
             <div class="modal-body">
               <input type="hidden" name="CI" value="<?= htmlspecialchars($clienteEncontrado['CI']) ?>">
 
@@ -370,11 +376,13 @@ $modalAbierto = isset($_GET['ci']);
                 </div>
                 <div class="col-sm-6">
                   <label class="form-label" for="Fecha">Fecha</label>
-                  <input class="form-control" type="date" id="Fecha" name="Fecha" min="<?= date('Y-m-d') ?>" required>
+                  <input class="form-control" type="date" id="Fecha" name="Fecha" min="<?= $hoyMontevideo ?>" value="<?= htmlspecialchars($fechaFormulario ?? '') ?>" required>
                 </div>
                 <div class="col-sm-6">
                   <label class="form-label" for="Hora">Hora</label>
-                  <input class="form-control" type="time" id="Hora" name="Hora" required>
+                  <select class="form-select" id="Hora" name="Hora" required disabled data-hora-inicial="<?= htmlspecialchars($horaFormulario ?? '') ?>">
+                    <option value="" selected disabled>Elegí una fecha primero</option>
+                  </select>
                 </div>
                 <p class="form-text mb-0">La cita se creará pendiente. La llegada se confirma el día de la cita.</p>
               </div>
@@ -395,6 +403,36 @@ $modalAbierto = isset($_GET['ci']);
   <?php endif; ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (() => {
+      const fecha = document.getElementById('Fecha');
+      const hora = document.getElementById('Hora');
+      if (!fecha || !hora) return;
+      const horarios = <?= json_encode($horariosPorDia, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+      const horaInicial = hora.dataset.horaInicial;
+      function actualizarHorarios(restaurar = false) {
+        const valor = fecha.value;
+        if (!valor) {
+          hora.disabled = true;
+          hora.innerHTML = '<option value="" selected disabled>Elegí una fecha primero</option>';
+          return;
+        }
+        const jsDia = new Date(valor + 'T00:00:00').getDay();
+        const dia = jsDia === 0 ? 7 : jsDia;
+        const opciones = horarios[dia] || [];
+        if (!opciones.length) {
+          hora.disabled = true;
+          hora.innerHTML = '<option value="" selected disabled>La veterinaria está cerrada ese día</option>';
+          return;
+        }
+        hora.disabled = false;
+        hora.innerHTML = '<option value="" disabled>Elegí un horario</option>' + opciones.map(h => '<option value="' + h + '">' + h + '</option>').join('');
+        if (restaurar && opciones.includes(horaInicial)) hora.value = horaInicial;
+      }
+      fecha.addEventListener('change', () => actualizarHorarios(false));
+      actualizarHorarios(true);
+    })();
+  </script>
 </body>
 
 </html>
