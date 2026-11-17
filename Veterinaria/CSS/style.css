@@ -1118,18 +1118,8 @@ html[data-theme="dark"] .auth-body .alert-success {
   border-color: rgba(197, 195, 195, 0.42);
 }
 
-[data-theme="light"] .catalogo .filtros-titulo,
-[data-theme="light"] .catalogo .btn-filtros-limpiar {
-  color: #DCEAFF;
-}
-
 [data-theme="light"] .catalogo .btn-filtros-limpiar {
   border-color: #C5C3C3;
-}
-
-[data-theme="light"] .catalogo .btn-filtros-limpiar:hover {
-  background-color: rgba(220, 234, 255, 0.1);
-  color: #DCEAFF;
 }
 
 [data-theme="light"] .catalogo .catalogo-orden,
