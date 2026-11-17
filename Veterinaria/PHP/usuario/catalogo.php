@@ -136,7 +136,6 @@ $categoriasVisuales = [
             <?php endforeach;
             endif; ?>
           </div>
-          <p class="catalogo-creditos text-end mt-3 mb-0"><a href="../../img/productos/creditos.txt">Créditos de imágenes</a></p>
         </section>
       </div>
     </div>

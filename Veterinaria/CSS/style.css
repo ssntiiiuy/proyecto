@@ -651,8 +651,6 @@ body {
   color: #1F2937;
 }
 
-.catalogo-creditos a { color: var(--sienra-text-muted); }
-
 .producto-nombre {
   min-height: 2.9em;
   font-size: 0.98rem;
