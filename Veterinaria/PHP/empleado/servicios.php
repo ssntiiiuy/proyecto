@@ -100,7 +100,7 @@ function obtenerClaseBadge($tipo)
 
 <body>
 
-    <div class="admin-wrapper" data-bs-theme="light">
+    <div class="admin-wrapper">
         <?php
         $paginaActiva = 'servicios';
         include __DIR__ . '/includes/sidebar.php';

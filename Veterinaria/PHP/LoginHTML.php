@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $destino = $destinosEmpleado[$rol] ?? '';
         } elseif ($tipoUsuario === 'cliente') {
             $rol = 'cliente';
-            $destino = $destinoCliente;
+            $destino = 'publico/index.php';
         }
 
         if ($destino !== '') {
