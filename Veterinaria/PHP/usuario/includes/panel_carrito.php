@@ -58,6 +58,13 @@
       <a class="btn btn-outline-secondary w-100 mb-2" href="catalogo.php">Seguir comprando</a>
       <form method="post">
         <input type="hidden" name="tokenCarrito" value="<?= htmlspecialchars($_SESSION['tokenCarrito']) ?>">
+        <label class="form-label small" for="metodoPagoCarrito">Método de pago</label>
+        <select class="form-select mb-3" id="metodoPagoCarrito" required>
+          <option value="" selected disabled>Elegir método</option>
+          <option value="efectivo">Efectivo</option>
+          <option value="tarjeta">Tarjeta de débito/crédito</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
         <button class="btn btn-carrito" name="accionCarrito" value="comprar" <?= !$carritoDisponible ? 'disabled' : '' ?>>Finalizar compra</button>
       </form>
       <p class="carrito-detalle small mt-2 mb-0">Al finalizar se registra la venta y se genera tu factura.</p>

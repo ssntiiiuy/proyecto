@@ -111,13 +111,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
               <h2>Datos de la factura</h2>
             </div>
             <div class="row g-3 p-3 p-lg-4 pt-0">
-              <div class="col-sm-6 col-lg-6">
+              <div class="col-sm-6 col-lg-3">
                 <label class="form-label" for="ci">Cliente <span class="admin-sin-dato">(opcional)</span></label>
                 <select class="form-select" id="ci" name="ci">
                   <option value="" selected>Sin cliente registrado</option>
                   <?php foreach ($clientes as $cl) { ?>
                     <option value="<?= (int)$cl['CI'] ?>"><?= htmlspecialchars($cl['Nombre'] . ' ' . $cl['Apellido']) ?> (CI <?= htmlspecialchars($cl['CI']) ?>)</option>
                   <?php } ?>
+                </select>
+              </div>
+              <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="metodoPago">Método de pago</label>
+                <select class="form-select" id="metodoPago" required>
+                  <option value="" selected disabled>Elegir método</option>
+                  <option value="efectivo">Efectivo</option>
+                  <option value="tarjeta">Tarjeta de débito/crédito</option>
+                  <option value="transferencia">Transferencia</option>
                 </select>
               </div>
               <div class="col-sm-6 col-lg-3">
