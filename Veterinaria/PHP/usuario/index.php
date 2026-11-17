@@ -20,6 +20,43 @@ $carnet = [];
 $servicios = [];
 $proximaVacuna = null;
 
+// horario de atencion (1 = lunes ... 7 = domingo), igual al que se muestra en "Nosotros"
+$horarioAtencion = [
+  1 => [['08:30', '12:30'], ['15:00', '19:00']],
+  2 => [['08:30', '12:30'], ['15:00', '19:00']],
+  3 => [['08:30', '12:30'], ['15:00', '19:00']],
+  4 => [['08:30', '12:30'], ['15:00', '19:00']],
+  5 => [['08:30', '12:30'], ['15:00', '19:00']],
+  6 => [['09:00', '13:00']],
+  7 => [], // domingo: no atendemos
+];
+$duracionTurno = 30; // minutos entre un turno y el siguiente
+
+// a partir de las franjas de un dia, arma la lista de horas "HH:MM" disponibles
+function generarHorariosDia(array $franjas, int $duracion): array
+{
+  $horarios = [];
+  foreach ($franjas as [$inicio, $fin]) {
+    $actual = DateTime::createFromFormat('H:i', $inicio);
+    $limite = DateTime::createFromFormat('H:i', $fin);
+    while (true) {
+      $siguiente = (clone $actual)->modify("+{$duracion} minutes");
+      if ($siguiente > $limite) {
+        break;
+      }
+      $horarios[] = $actual->format('H:i');
+      $actual = $siguiente;
+    }
+  }
+  return $horarios;
+}
+
+// los horarios ya expandidos de cada dia, listos para validar y para mandar al JS del modal
+$horariosPorDia = [];
+foreach ($horarioAtencion as $dia => $franjas) {
+  $horariosPorDia[$dia] = generarHorariosDia($franjas, $duracionTurno);
+}
+
 // $esCliente ya lo calcula includes/carrito.php a partir de la sesión
 if ($esCliente) {
   // guardo un codigo aleatorio para comprobar los formularios de citas
@@ -111,8 +148,8 @@ if ($esCliente) {
       $errorAgenda = 'Elegí un servicio disponible.';
     } elseif (!$fechaValida || $fechaValida->format('Y-m-d') !== $fecha || $fecha < date('Y-m-d')) {
       $errorAgenda = 'La fecha debe ser hoy o posterior.';
-    } elseif (!preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $hora)) {
-      $errorAgenda = 'Ingresá una hora válida.';
+    } elseif (!in_array($hora, $horariosPorDia[(int) $fechaValida->format('N')] ?? [], true)) {
+      $errorAgenda = 'Elegí un horario dentro de nuestro horario de atención.';
     } else {
       // guardo la cita como pendiente y redirijo para no reenviar el formulario al recargar
       $cita = new Cita();
@@ -391,10 +428,12 @@ $mostrarCarrito = true;
                   </div>
                   <div class="col-sm-6">
                     <label class="form-label" for="Hora">Hora</label>
-                    <input class="form-control" type="time" id="Hora" name="Hora" required>
+                    <select class="form-select" id="Hora" name="Hora" required disabled>
+                      <option value="" selected disabled>Elegí una fecha primero</option>
+                    </select>
                   </div>
                 </div>
-                <p class="form-text mb-0 mt-3">El turno quedará pendiente. El personal confirmará tu llegada el día de la cita.</p>
+                <p class="form-text mb-0 mt-3">El turno quedará pendiente: el personal confirmará tu llegada el día de la cita.</p>
               <?php } ?>
             </div>
             <div class="modal-footer">
@@ -407,6 +446,37 @@ $mostrarCarrito = true;
         </div>
       </div>
     </div>
+
+    <script>
+      // horarios ya calculados en PHP: 1 = lunes ... 7 = domingo
+      const horariosPorDia = <?= json_encode($horariosPorDia) ?>;
+
+      document.getElementById('Fecha')?.addEventListener('change', function () {
+        const selectHora = document.getElementById('Hora');
+        const valor = this.value;
+
+        if (!valor) {
+          selectHora.disabled = true;
+          selectHora.innerHTML = '<option value="" selected disabled>Elegí una fecha primero</option>';
+          return;
+        }
+
+        // armo la fecha con hora fija para que no cambie de día por la zona horaria
+        const diaJs = new Date(valor + 'T00:00:00').getDay(); // 0 domingo ... 6 sábado
+        const dia = diaJs === 0 ? 7 : diaJs;
+        const horarios = horariosPorDia[dia] || [];
+
+        if (horarios.length === 0) {
+          selectHora.disabled = true;
+          selectHora.innerHTML = '<option value="" selected disabled>Domingos cerrados.</option>';
+          return;
+        }
+
+        selectHora.disabled = false;
+        selectHora.innerHTML = '<option value="" selected disabled>Elegí un horario</option>' +
+          horarios.map(function (h) { return '<option value="' + h + '">' + h + '</option>'; }).join('');
+      });
+    </script>
   <?php } ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
