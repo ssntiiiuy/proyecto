@@ -63,7 +63,7 @@ try {
 </header>
 
 <!-- Modal de confirmación para cerrar sesión -->
-<div class="modal fade" id="modalCerrarSesionEmpleado" tabindex="-1" aria-labelledby="modalCerrarSesionEmpleadoLabel" aria-hidden="true">
+<div class="modal fade admin-modal" id="modalCerrarSesionEmpleado" tabindex="-1" aria-labelledby="modalCerrarSesionEmpleadoLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
