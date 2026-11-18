@@ -6,6 +6,7 @@ require_once __DIR__ . '/../includes/verificar_sesion.php';
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../clases/Cita.php';
 require_once __DIR__ . '/../includes/horarios_citas.php';
+require_once __DIR__ . '/../clases/Servicio.php';
 
 $horariosPorDia = horariosClinicaPorDia();
 $hoyMontevideo = fechaActualMontevideo();
@@ -60,9 +61,8 @@ $citas = $datosCitas['citas'];
 
 $conexion = (new Conexion())->establecerConexion();
 
-// cargo los servicios disponibles ordenados por nombre
-$sqlServicios = $conexion->query("SELECT IdServicio, Nombre FROM SERVICIO ORDER BY Nombre");
-$servicios = $sqlServicios->fetchAll(PDO::FETCH_ASSOC);
+// cargo solo los servicios cuyo tipo corresponde al rol actual
+$servicios = empty($tipos) ? [] : Servicio::listadoServicios($tipos)['servicios'];
 
 $clienteEncontrado = null;
 $mascotasCliente = [];
