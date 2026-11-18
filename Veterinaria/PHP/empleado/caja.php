@@ -30,15 +30,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
 
   $lineas = [];
   // recorro las filas de la venta usando la cantidad de la misma posicion
-  foreach ($idsProducto as $i => $idProducto) {
-    $idProducto = trim($idProducto);
+  foreach ($idsProducto as $i => $valorItem) {
+    $valorItem = trim($valorItem);
     $cantidad = (int)($cantidades[$i] ?? 0);
-    if ($idProducto === '' || $cantidad <= 0) {
+    if ($valorItem === '' || $cantidad <= 0) {
+      continue;
+    }
+    // el select manda "p_12" (producto) o "s_3" (servicio): separo el prefijo del id
+    [$tipo, $idItem] = array_pad(explode('_', $valorItem, 2), 2, null);
+    if (!in_array($tipo, ['p', 's'], true) || $idItem === null || $idItem === '' || !ctype_digit($idItem)) {
       continue;
     }
     // armo los datos que crearFactura necesita para cada producto o servicio
     $lineas[] = [
-      'idProducto' => (int)$idProducto,
+      'tipo' => $tipo,
+      'id' => (int)$idItem,
       'cantidad' => $cantidad,
     ];
   }
